@@ -2,19 +2,16 @@
 #include "robot.h"
 #include <string>
 
-/**
- * A callback function for LLEMU's center button.
- *
- * When this callback is fired, it will toggle line 2 of the LCD text between
- * "I was pressed!" and nothing.
- */
-void on_center_button() {
-  static bool pressed = false;
-  pressed = !pressed;
-  if (pressed) {
-    pros::lcd::set_text(2, "I was pressed!");
-  } else {
-    pros::lcd::clear_line(2);
+void screen() {
+  // loop forever
+  while (true) {
+    lemlib::Pose pose =
+        Robot::chassis.getPose(); // get the current position of the robot
+    pros::lcd::print(0, "x: %f", pose.x); // print the x position
+    pros::lcd::print(1, "y: %f", pose.y); // print the y position
+    pros::lcd::print(2, "heading: %f",
+                     pose.theta); // print the heading
+    pros::delay(10);
   }
 }
 
@@ -26,9 +23,11 @@ void on_center_button() {
  */
 void initialize() {
   pros::lcd::initialize();
-  pros::lcd::set_text(1, "Hello PROS User!");
-
-  pros::lcd::register_btn1_cb(on_center_button);
+  pros::lcd::set_text(1, "Calibrating chassis...");
+  Robot::chassis.calibrate(); // calibrate the chassis
+  pros::lcd::set_text(1, "Chassis Calibrated!");
+  pros::Task screenTask(
+      screen); // create a task to print the position to the screen
 }
 
 /**
@@ -76,25 +75,32 @@ void autonomous() {}
  * task, not resume it from where it left off.
  */
 void opcontrol() {
-  while (true) {
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // 								  Test Friction Code
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+  Robot::Motors::leftDrive.tare_position();
+  Robot::Motors::leftDrive.tare_position();
+  Robot::Motors::leftDrive.move(127);
+  Robot::Motors::leftDrive.move(127);
+
+  while (true) {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // 								     Drive Code
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     // drivetrain
-    Robot::Motors::leftDrive.move(
-        Robot::control.getAnalog(ControllerAnalog::leftY) * 11);
-    Robot::Motors::rightDrive.move(
-        Robot::control.getAnalog(ControllerAnalog::rightY) * 11);
+    Robot::Motors::leftDrive.move_voltage(
+        pow(Robot::control.getAnalog(ControllerAnalog::leftY), 3) * 12000);
+    Robot::Motors::rightDrive.move_voltage(
+        pow(Robot::control.getAnalog(ControllerAnalog::rightY), 3) * 12000);
 
     // intake / outtake
     if (Robot::control.getDigital(ControllerDigital::L1))
       Robot::Motors::intake.move(11);
     else if (Robot::control.getDigital(ControllerDigital::L2))
       Robot::Motors::intake.move(-11);
-    else
-      Robot::Motors::intake.move(0);
+    else Robot::Motors::intake.move(0);
 
     // shoot / un-shoot?
     if (Robot::control.getDigital(ControllerDigital::R1)) {
@@ -102,14 +108,13 @@ void opcontrol() {
       Robot::control.rumble("-");
     } else if (Robot::control.getDigital(ControllerDigital::R2))
       Robot::Motors::shooter.move(-11);
-    else
-      Robot::Motors::shooter.move(0);
+    else Robot::Motors::shooter.move(0);
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // 							     Driver Feedback
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		// drive temp display
+    // drive temp display
     const auto leftTempArr = Robot::Motors::leftDrive.get_temperatures();
     const auto rightTempArr = Robot::Motors::rightDrive.get_temperatures();
 
@@ -123,7 +128,7 @@ void opcontrol() {
         0, 0,
         leftTempStr + std::string(4 - leftTempStr.length(), ' ') + "DRIVE " +
             std::string(4 - rightTempStr.length(), ' ') + rightTempStr);
-		
+
     pros::delay(20);
   }
 }

@@ -331,6 +331,8 @@
                 "version": "4.8.0"
             }
         },
-        "upload_options": {}
+        "upload_options": {
+            "slot": 4
+        }
     }
 }
