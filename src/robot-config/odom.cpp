@@ -20,7 +20,7 @@ lemlib::TrackingWheel* hori = new lemlib::TrackingWheel(
     Robot::Dimensions::horiEncDistance, Robot::Dimensions::horiEncGearRatio);
 
 lemlib::OdomSensors_t sensors {leftVert, rightVert, hori, nullptr,
-                               &Robot::Sensors::imu};
+                               nullptr/* &Robot::Sensors::imu */};
 
 lemlib::Chassis Robot::chassis {drivetrain, Robot::PIDs::lateralController,
                                 Robot::PIDs::angularController, sensors};

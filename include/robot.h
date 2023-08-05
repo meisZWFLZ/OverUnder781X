@@ -12,7 +12,11 @@ class Robot {
 
         static pros::Motor_Group shooter;
     };
-
+    class Pistons {
+      public: 
+        /** starts retracted */
+        static pros::ADIDigitalOut intakeElevator;
+    };
     class Sensors {
       public:
         static pros::Rotation leftVert;

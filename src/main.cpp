@@ -83,7 +83,13 @@ void opcontrol() {
   Robot::Motors::leftDrive.tare_position();
   Robot::Motors::leftDrive.move(127);
   Robot::Motors::leftDrive.move(127);
-
+  /**
+   * false = retracted
+   *
+   * true = expanded
+   */
+  bool intakeElevatorState = false;
+  bool wasXPressed = false;
   while (true) {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // 								     Drive Code
@@ -97,18 +103,25 @@ void opcontrol() {
 
     // intake / outtake
     if (Robot::control.getDigital(ControllerDigital::L1))
-      Robot::Motors::intake.move(11);
+      Robot::Motors::intake.move(127);
     else if (Robot::control.getDigital(ControllerDigital::L2))
-      Robot::Motors::intake.move(-11);
+      Robot::Motors::intake.move(-127);
     else Robot::Motors::intake.move(0);
 
     // shoot / un-shoot?
     if (Robot::control.getDigital(ControllerDigital::R1)) {
-      Robot::Motors::shooter.move(11);
+      Robot::Motors::shooter.move(127);
       Robot::control.rumble("-");
     } else if (Robot::control.getDigital(ControllerDigital::R2))
-      Robot::Motors::shooter.move(-11);
+      Robot::Motors::shooter.move(-127);
     else Robot::Motors::shooter.move(0);
+    
+    // elevate intake
+    if (Robot::control.getDigital(ControllerDigital::X)) {
+      if (!wasXPressed)
+        Robot::Pistons::intakeElevator.set_value(intakeElevatorState ^= true);
+      wasXPressed = true;
+    } else wasXPressed = false;
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // 							     Driver Feedback
