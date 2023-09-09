@@ -1,6 +1,7 @@
 #include "main.h"
 #include "robot.h"
 #include <string>
+#include "neil_pid.h"
 
 void screen() {
   // loop forever
@@ -22,10 +23,13 @@ void screen() {
  * to keep execution time for this mode under a few seconds.
  */
 void initialize() {
+  printf("get_ang:%i, enodev:%i\n", Robot::Sensors::vert.get_angle(),
+         Robot::Sensors::vert.get_angle() != PROS_ERR);
   pros::lcd::initialize();
   pros::lcd::set_text(1, "Calibrating chassis...");
   Robot::chassis.calibrate(); // calibrate the chassis
   pros::lcd::set_text(1, "Chassis Calibrated!");
+  Robot::chassis.setPose(0, 0, 0);
   pros::Task screenTask(
       screen); // create a task to print the position to the screen
 }
@@ -59,7 +63,10 @@ void competition_initialize() {}
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
-void autonomous() {}
+void autonomous() {
+  // PID::drive(360, -825);
+  Robot::chassis.moveTo(0, 24, 500);
+}
 
 /**
  * Runs the operator control code. This function will be started in its own task
@@ -115,7 +122,7 @@ void opcontrol() {
     } else if (Robot::control.getDigital(ControllerDigital::R2))
       Robot::Motors::shooter.move(-127);
     else Robot::Motors::shooter.move(0);
-    
+
     // elevate intake
     if (Robot::control.getDigital(ControllerDigital::X)) {
       if (!wasXPressed)

@@ -7,20 +7,35 @@ lemlib::Drivetrain_t drivetrain {
     Robot::Dimensions::trackWidth, Robot::Dimensions::driveWheelDiameter,
     Robot::Dimensions::driveWheelRpm};
 
-lemlib::TrackingWheel* leftVert = new lemlib::TrackingWheel(
-    &Robot::Motors::leftDrive, Robot::Dimensions::vertEncDiameter,
-    -Robot::Dimensions::vertEncDistance, Robot::Dimensions::vertEncGearRatio);
+lemlib::TrackingWheel* leftVert =
+    Robot::Sensors::vert.get_angle() != PROS_ERR
+        ? new lemlib::TrackingWheel(
+              &Robot::Sensors::vert, Robot::Dimensions::vertEncDiameter,
+              -Robot::Dimensions::vertEncDistance,
+              Robot::Dimensions::vertEncGearRatio /* 300 */ /* 1 */)
+        : new lemlib::TrackingWheel(&Robot::Sensors::leftDrive,
+                                    Robot::Dimensions::driveWheelDiameter,
+                                    -Robot::Dimensions::trackWidth / 2,
+                                    Robot::Dimensions::driveEncGearRatio);
 
-lemlib::TrackingWheel* rightVert = new lemlib::TrackingWheel(
-    &Robot::Motors::rightDrive, Robot::Dimensions::vertEncDiameter,
-    Robot::Dimensions::vertEncDistance, Robot::Dimensions::vertEncGearRatio);
+lemlib::TrackingWheel* rightVert =
+    Robot::Sensors::vert.get_angle() != PROS_ERR
+        ? nullptr
+        : new lemlib::TrackingWheel(&Robot::Sensors::rightDrive,
+                                    Robot::Dimensions::driveWheelDiameter,
+                                    Robot::Dimensions::trackWidth / 2,
+                                    Robot::Dimensions::driveEncGearRatio);
+lemlib::TrackingWheel* hori =
+    Robot::Sensors::vert.get_angle() != PROS_ERR
+        ? new lemlib::TrackingWheel(&Robot::Sensors::hori,
+                                    Robot::Dimensions::horiEncDiameter,
+                                    Robot::Dimensions::horiEncDistance,
+                                    Robot::Dimensions::horiEncGearRatio)
+        : nullptr;
+;
 
-lemlib::TrackingWheel* hori = new lemlib::TrackingWheel(
-    &Robot::Sensors::hori, Robot::Dimensions::horiEncDiameter,
-    Robot::Dimensions::horiEncDistance, Robot::Dimensions::horiEncGearRatio);
-
-lemlib::OdomSensors_t sensors {leftVert, rightVert, hori, nullptr,
-                               nullptr/* &Robot::Sensors::imu */};
+lemlib::OdomSensors_t sensors {leftVert, rightVert /* nullptr */, hori, nullptr,
+                               &Robot::Sensors::imu};
 
 lemlib::Chassis Robot::chassis {drivetrain, Robot::PIDs::lateralController,
                                 Robot::PIDs::angularController, sensors};

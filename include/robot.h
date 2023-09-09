@@ -19,8 +19,11 @@ class Robot {
     };
     class Sensors {
       public:
-        static pros::Rotation leftVert;
-        static pros::Rotation rightVert;
+        // pid sensors (drivetrain wheels)
+        static pros::Rotation leftDrive;
+        static pros::Rotation rightDrive;
+        // odometry sensors (dedicated odom wheels)
+        static pros::Rotation vert;
         static pros::Rotation hori;
         static pros::Imu imu;
     };
@@ -30,6 +33,7 @@ class Robot {
         static const float trackWidth;
         static const float driveWheelDiameter;
         static const float driveWheelRpm;
+        static const float driveEncGearRatio;
 
         static const float vertEncDiameter;
         static const float vertEncDistance;

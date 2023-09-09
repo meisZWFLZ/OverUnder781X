@@ -2,6 +2,9 @@
 #include "pros/rotation.hpp"
 #include "robot.h"
 
-pros::Rotation Robot::Sensors::rightVert{12};
-pros::Rotation Robot::Sensors::hori{11};
-pros::Imu Robot::Sensors::imu{21};
+pros::Rotation Robot::Sensors::leftDrive{16};
+pros::Rotation Robot::Sensors::rightDrive{17};
+
+pros::Rotation Robot::Sensors::vert{19};
+pros::Rotation Robot::Sensors::hori{6};
+pros::Imu Robot::Sensors::imu{20};
