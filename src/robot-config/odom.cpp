@@ -34,8 +34,8 @@ lemlib::TrackingWheel* hori =
         : nullptr;
 ;
 
-lemlib::OdomSensors_t sensors {leftVert, rightVert /* nullptr */, hori, nullptr,
-                               &Robot::Sensors::imu};
+lemlib::OdomSensors_t Robot::odomSensors {leftVert, rightVert /* nullptr */,
+                                          hori, nullptr, &Robot::Sensors::imu};
 
 lemlib::Chassis Robot::chassis {drivetrain, Robot::PIDs::lateralController,
-                                Robot::PIDs::angularController, sensors};
+                                Robot::PIDs::angularController, odomSensors};

@@ -49,7 +49,7 @@ class Robot {
         static lemlib::ChassisController_t lateralController;
         static lemlib::ChassisController_t angularController;
     };
-
+    static lemlib::OdomSensors_t odomSensors;
     static okapi::Controller control;
     static lemlib::Chassis chassis;
 };

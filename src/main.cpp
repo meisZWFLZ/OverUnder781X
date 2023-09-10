@@ -24,9 +24,24 @@ void screen() {
  */
 void initialize() {
   printf("get_ang:%i, enodev:%i\n", Robot::Sensors::vert.get_angle(),
-         Robot::Sensors::vert.get_angle() != PROS_ERR);
+         Robot::Sensors::vert.get_angle() == PROS_ERR);
   pros::lcd::initialize();
   pros::lcd::set_text(1, "Calibrating chassis...");
+  printf("<sensors = nullptr>\n");
+  if (Robot::odomSensors.horizontal1 == nullptr) printf("  hori1,\n");
+  if (Robot::odomSensors.horizontal2 == nullptr) printf("  hori2,\n");
+  if (Robot::odomSensors.imu == nullptr) printf("  imu,\n");
+  if (Robot::odomSensors.vertical1 == nullptr) printf("  vert1,\n");
+  if (Robot::odomSensors.vertical2 == nullptr) printf("  vert2,\n");
+  printf("<sensors = nullptr/>\n");
+  printf("<error>\n");
+  switch (errno) {
+    case PROS_ERR: printf("  PROS_ERR\n"); break;
+    case ENODEV: printf("  ENODEV\n"); break;
+    case ENXIO: printf("  ENXIO\n"); break;
+  }
+  errno = 0;
+  printf("<error/>\n");
   Robot::chassis.calibrate(); // calibrate the chassis
   pros::lcd::set_text(1, "Chassis Calibrated!");
   Robot::chassis.setPose(0, 0, 0);
@@ -64,8 +79,28 @@ void competition_initialize() {}
  * from where it left off.
  */
 void autonomous() {
-  // PID::drive(360, -825);
-  Robot::chassis.moveTo(0, 24, 500);
+  // move forward one tile
+  // Robot::chassis.moveTo(0, 24, 5000, 200);
+
+  // // move right one tile
+  // Robot::chassis.moveTo(-12, 0, 5000);
+
+  // // move left and right one tile
+  // Robot::chassis.moveTo(24, 0, 500);
+
+  // // turn around
+  Robot::chassis.turnTo(0, -100, 5000);
+
+  // // move in square
+  // Robot::chassis.moveTo(0, 24, 500);
+  // pros::delay(1000);
+  // Robot::chassis.moveTo(24, 24, 500);
+  // pros::delay(1000);
+  // Robot::chassis.moveTo(24, 0, 500);
+  // pros::delay(1000);
+  // Robot::chassis.moveTo(0, 0, 500);
+  // pros::delay(1000);
+  
 }
 
 /**
