@@ -1,18 +1,59 @@
 #include "main.h"
 #include "robot.h"
+#include <numeric>
 #include <string>
+#include <vector>
 #include "neil_pid.h"
+
+float average(std::vector<float> const& v) {
+  if (v.empty()) { return 0; }
+
+  auto const count = static_cast<float>(v.size());
+  return std::reduce(v.begin(), v.end()) / count;
+}
+
+const float get_wattage(pros::Motor_Group& group) {
+  std::vector<float> watts = {};
+  for (int i = 0; i < group.size(); i++) watts.push_back(group[i].get_power());
+  return average(watts);
+}
 
 void screen() {
   // loop forever
+  pros::Controller controller(pros::controller_id_e_t::E_CONTROLLER_MASTER);
+  lemlib::Pose pose =
+      Robot::chassis.getPose(); // get the current position of the robot
   while (true) {
-    lemlib::Pose pose =
-        Robot::chassis.getPose(); // get the current position of the robot
+    pros::lcd::clear_line(0);
     pros::lcd::print(0, "x: %f", pose.x); // print the x position
+    pros::lcd::clear_line(1);
     pros::lcd::print(1, "y: %f", pose.y); // print the y position
+    pros::lcd::clear_line(2);
     pros::lcd::print(2, "heading: %f",
                      pose.theta); // print the heading
-    pros::delay(10);
+    if (!controller.get_digital(
+            pros::controller_digital_e_t::E_CONTROLLER_DIGITAL_UP)) {
+    } else {
+      // display wattage
+      // controller.clear_line(0);
+      printf("in: %fw\n", get_wattage(Robot::Motors::intake));
+      // char intake[15];
+      // sprintf(intake, "in: %fw",
+      //         get_wattage(Robot::Motors::intake)); // print the x position
+      // controller.set_text(0, 0, intake);
+      // // controller.clear_line(1);
+      char shooter[15];
+      sprintf(shooter, "fly: %fw",
+              get_wattage(Robot::Motors::shooter)); // print the x position
+      controller.set_text(0, 0, shooter);
+      // char drive[15];
+      // sprintf(drive, "dri: %fw",
+      //         (get_wattage(Robot::Motors::leftDrive) +
+      //          get_wattage(Robot::Motors::rightDrive)) /
+      //             2); // print the x position
+      // controller.set_text(2, 0, drive); // print the heading
+    }
+    pros::delay(200);
   }
 }
 
@@ -100,7 +141,6 @@ void autonomous() {
   // pros::delay(1000);
   // Robot::chassis.moveTo(0, 0, 500);
   // pros::delay(1000);
-  
 }
 
 /**

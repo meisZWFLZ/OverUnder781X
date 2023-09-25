@@ -333,7 +333,7 @@
     },
     "upload_options": {
       "slot": 4,
-      "after": "run"
+      "after": "none"
     }
   }
 }
