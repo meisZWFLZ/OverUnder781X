@@ -5,7 +5,7 @@
         "target": "v5",
         "templates": {
             "LemLib": {
-                "location": "C:\\Users\\user\\AppData\\Roaming\\PROS\\templates\\LemLib@0.4.7",
+                "location": "C:\\Users\\user\\AppData\\Roaming\\PROS\\templates\\LemLib@0.5.0-beta1",
                 "metadata": {
                     "origin": "local"
                 },
@@ -13,19 +13,21 @@
                 "py/object": "pros.conductor.templates.local_template.LocalTemplate",
                 "supported_kernels": "^3.8.0",
                 "system_files": [
-                    "firmware\\LemLib.a",
                     "include\\lemlib\\logger.hpp",
-                    "include\\lemlib\\chassis\\trackingWheel.hpp",
-                    "include\\lemlib\\pid.hpp",
                     "include\\lemlib\\chassis\\chassis.hpp",
+                    "include\\lemlib\\pid.hpp",
+                    "firmware\\LemLib.a",
+                    "include\\lemlib\\chassis\\odom.hpp",
                     "include\\lemlib\\util.hpp",
-                    "include\\lemlib\\api.hpp",
                     "include\\lemlib\\pose.hpp",
-                    "include\\lemlib\\chassis\\odom.hpp"
+                    "firmware\\asset.mk",
+                    "include\\lemlib\\asset.hpp",
+                    "include\\lemlib\\chassis\\trackingWheel.hpp",
+                    "include\\lemlib\\api.hpp"
                 ],
                 "target": "v5",
                 "user_files": [],
-                "version": "0.4.7"
+                "version": "0.5.0-beta1"
             },
             "kernel": {
                 "location": "C:\\Users\\user\\AppData\\Roaming\\PROS\\templates\\kernel@3.8.0",
