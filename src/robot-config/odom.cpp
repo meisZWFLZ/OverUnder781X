@@ -15,15 +15,15 @@ lemlib::TrackingWheel* leftVert =
               Robot::Dimensions::vertEncGearRatio /* 300 */ /* 1 */)
         : new lemlib::TrackingWheel(&Robot::Sensors::leftDrive,
                                     Robot::Dimensions::driveWheelDiameter,
-                                    -Robot::Dimensions::trackWidth / 2,
+                                    Robot::Dimensions::trackWidth / 2,
                                     Robot::Dimensions::driveEncGearRatio);
 
-lemlib::TrackingWheel* rightVert =
+lemlib::TrackingWheel* rightVert = /* nullptr; */
     Robot::Sensors::vert.get_angle() != PROS_ERR
         ? nullptr
         : new lemlib::TrackingWheel(&Robot::Sensors::rightDrive,
                                     Robot::Dimensions::driveWheelDiameter,
-                                    Robot::Dimensions::trackWidth / 2,
+                                    -Robot::Dimensions::trackWidth / 2,
                                     Robot::Dimensions::driveEncGearRatio);
 lemlib::TrackingWheel* hori =
     Robot::Sensors::vert.get_angle() != PROS_ERR
@@ -32,7 +32,6 @@ lemlib::TrackingWheel* hori =
                                     Robot::Dimensions::horiEncDistance,
                                     Robot::Dimensions::horiEncGearRatio)
         : nullptr;
-;
 
 lemlib::OdomSensors_t Robot::odomSensors {leftVert, rightVert /* nullptr */,
                                           hori, nullptr, &Robot::Sensors::imu};

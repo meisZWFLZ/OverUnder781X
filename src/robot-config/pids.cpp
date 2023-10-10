@@ -13,8 +13,8 @@ lemlib::ChassisController_t Robot::PIDs::lateralController {
 
 // turning PID
 lemlib::ChassisController_t Robot::PIDs::angularController {
-    0, // kP
-    0, // kD
+    9, // kP
+    70, // kD`
     1, // smallErrorRange
     100, // smallErrorTimeout
     3, // largeErrorRange

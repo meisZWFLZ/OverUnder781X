@@ -1,6 +1,6 @@
 #include "robot.h"
 
-const float Robot::Dimensions::trackWidth = 10.25;
+const float Robot::Dimensions::trackWidth =      10.25;
 const float Robot::Dimensions::driveWheelDiameter = 3.25;
 const float Robot::Dimensions::driveWheelRpm = 400;
 const float Robot::Dimensions::driveEncGearRatio = 2;

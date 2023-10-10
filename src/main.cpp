@@ -1,9 +1,15 @@
 #include "main.h"
 #include "robot.h"
+#include <iostream>
 #include <numeric>
 #include <string>
 #include <vector>
 #include "neil_pid.h"
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <sstream>
+#include <string.h>
 
 float average(std::vector<float> const& v) {
   if (v.empty()) { return 0; }
@@ -21,15 +27,15 @@ const float get_wattage(pros::Motor_Group& group) {
 void screen() {
   // loop forever
   pros::Controller controller(pros::controller_id_e_t::E_CONTROLLER_MASTER);
-  lemlib::Pose pose =
-      Robot::chassis.getPose(); // get the current position of the robot
   while (true) {
+    lemlib::Pose pose =
+        Robot::chassis.getPose(); // get the current position of the robot
     pros::lcd::clear_line(0);
-    pros::lcd::print(0, "x: %f", pose.x); // print the x position
+    pros::lcd::print(0, "x: %f in", pose.x); // print the x position
     pros::lcd::clear_line(1);
-    pros::lcd::print(1, "y: %f", pose.y); // print the y position
+    pros::lcd::print(1, "y: %f in", pose.y); // print the y position
     pros::lcd::clear_line(2);
-    pros::lcd::print(2, "heading: %f",
+    pros::lcd::print(2, "heading: %f deg",
                      pose.theta); // print the heading
     if (!controller.get_digital(
             pros::controller_digital_e_t::E_CONTROLLER_DIGITAL_UP)) {
@@ -120,17 +126,21 @@ void competition_initialize() {}
  * from where it left off.
  */
 void autonomous() {
+  printf("auton start");
+
   // move forward one tile
   // Robot::chassis.moveTo(0, 24, 5000, 200);
 
   // // move right one tile
   // Robot::chassis.moveTo(-12, 0, 5000);
 
-  // // move left and right one tile
-  // Robot::chassis.moveTo(24, 0, 500);
+  // // move right and forward one tile
+  Robot::chassis.moveTo(12, 24, 1000);
 
+  // turn 90 deg
+  // Robot::chassis.turnTo(1000, 0, 5000);
   // // turn around
-  Robot::chassis.turnTo(0, -100, 5000);
+  // Robot::chassis.turnTo(0, -24, 5000);
 
   // // move in square
   // Robot::chassis.moveTo(0, 24, 500);
@@ -160,11 +170,35 @@ void opcontrol() {
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // 								  Test Friction Code
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // std::string myStr = "";
+  // std::cout << "What's your name? ";
+  // getline(std::cin, myStr);
+  // std::cout << "Hello " << myStr << std::endl;
 
-  Robot::Motors::leftDrive.tare_position();
-  Robot::Motors::leftDrive.tare_position();
-  Robot::Motors::leftDrive.move(127);
-  Robot::Motors::leftDrive.move(127);
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // 								  Test Terminal input
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // FILE* serialIn = fopen("sin", "w");
+
+  // std::string input = "";
+  // while (1) {
+  //   std::cout << "ECHO > " << std::endl;
+  //   std::getline(std::cin, input);
+  //   std::cout << std::endl;
+  //   std::cout << input << std::endl;
+  // }
+  // pros::c::fdctl(serialIn->_file, SERCTL_ACTIVATE, NULL);
+  // while (true) {
+  //   std::string input;
+  //   std::cout << "ECHO > " << std::endl;
+  //   std::getline(std::cin, input);
+  //   std::cout << std::endl;
+  //   std::cout << input << std::endl;
+  // }
+  // Robot::Motors::leftDrive.tare_position();
+  // Robot::Motors::leftDrive.tare_position();
+  // Robot::Motors::leftDrive.move(127);
+  // Robot::Motors::leftDrive.move(127);
   /**
    * false = retracted
    *
