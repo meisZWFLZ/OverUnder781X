@@ -5,7 +5,8 @@
 lemlib::Drivetrain_t drivetrain {
     &Robot::Motors::leftDrive, &Robot::Motors::rightDrive,
     Robot::Dimensions::trackWidth, Robot::Dimensions::driveWheelDiameter,
-    Robot::Dimensions::driveWheelRpm};
+    Robot::Dimensions::driveWheelRpm,
+    Robot::Tunables::chasePower};
 
 lemlib::TrackingWheel* leftVert =
     Robot::Sensors::vert.get_angle() != PROS_ERR
@@ -36,5 +37,5 @@ lemlib::TrackingWheel* hori =
 lemlib::OdomSensors_t Robot::odomSensors {leftVert, rightVert /* nullptr */,
                                           hori, nullptr, &Robot::Sensors::imu};
 
-lemlib::Chassis Robot::chassis {drivetrain, Robot::PIDs::lateralController,
-                                Robot::PIDs::angularController, odomSensors};
+lemlib::Chassis Robot::chassis {drivetrain, Robot::Tunables::lateralController,
+                                Robot::Tunables::angularController, odomSensors};

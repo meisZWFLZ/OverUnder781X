@@ -44,10 +44,11 @@ class Robot {
         static const float horiEncGearRatio;
     };
 
-    class PIDs {
+    class Tunables {
       public:
         static lemlib::ChassisController_t lateralController;
         static lemlib::ChassisController_t angularController;
+        static const float chasePower;
     };
     static lemlib::OdomSensors_t odomSensors;
     static okapi::Controller control;

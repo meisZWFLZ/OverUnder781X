@@ -1,7 +1,8 @@
+#include "lemlib/chassis/chassis.hpp"
 #include "robot.h"
 
 // forward/backward PID
-lemlib::ChassisController_t Robot::PIDs::lateralController {
+lemlib::ChassisController_t Robot::Tunables::lateralController {
     20, // kP
     40, // kD
     1, // smallErrorRange
@@ -12,7 +13,7 @@ lemlib::ChassisController_t Robot::PIDs::lateralController {
 };
 
 // turning PID
-lemlib::ChassisController_t Robot::PIDs::angularController {
+lemlib::ChassisController_t Robot::Tunables::angularController {
     9, // kP
     70, // kD`
     1, // smallErrorRange
@@ -21,3 +22,6 @@ lemlib::ChassisController_t Robot::PIDs::angularController {
     500, // largeErrorTimeout
     0 // slew rate
 };
+
+// chasePower
+const float Robot::Tunables::chasePower = 1;

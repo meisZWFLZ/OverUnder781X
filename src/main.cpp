@@ -135,7 +135,7 @@ void autonomous() {
   // Robot::chassis.moveTo(-12, 0, 5000);
 
   // // move right and forward one tile
-  Robot::chassis.moveTo(12, 24, 1000);
+  Robot::chassis.moveTo(0, 24, 0,5000);
 
   // turn 90 deg
   // Robot::chassis.turnTo(1000, 0, 5000);
@@ -212,10 +212,13 @@ void opcontrol() {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     // drivetrain
-    Robot::Motors::leftDrive.move_voltage(
-        pow(Robot::control.getAnalog(ControllerAnalog::leftY), 3) * 12000);
-    Robot::Motors::rightDrive.move_voltage(
-        pow(Robot::control.getAnalog(ControllerAnalog::rightY), 3) * 12000);
+    // Robot::Motors::leftDrive.move_voltage(
+    //     pow(Robot::control.getAnalog(ControllerAnalog::leftY), 3) * 12000);
+    // Robot::Motors::rightDrive.move_voltage(
+    //     pow(Robot::control.getAnalog(ControllerAnalog::rightY), 3) * 12000);
+    // Robot::chassis.curvature(Robot::control.getAnalog(ControllerAnalog::leftY)*127, Robot::control.getAnalog(ControllerAnalog::rightX)*127,20);
+    Robot::chassis.tank(Robot::control.getAnalog(ControllerAnalog::leftY)*127, Robot::control.getAnalog(ControllerAnalog::rightY)*127,15);
+
 
     // intake / outtake
     if (Robot::control.getDigital(ControllerDigital::L1))
