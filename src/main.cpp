@@ -207,8 +207,8 @@ void opcontrol() {
    */
   bool intakeElevatorState = false;
   bool wasXPressed = false;
-  int shooterState = 0;
-  bool wasShootPressed = false;
+  // int shooterState = 0;
+  // bool wasShootPressed = false;
   while (true) {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // 								     Drive Code
@@ -230,21 +230,27 @@ void opcontrol() {
       Robot::Motors::intake.move(-127);
     else Robot::Motors::intake.move(0);
 
-    // shoot / un-shoot?
+    // // shoot / un-shoot?
     if (Robot::control.getDigital(ControllerDigital::R1)) {
-      if(!wasShootPressed || shooterState <= 0) {
-        Robot::Motors::shooter.move(shooterState = shooterState != 0 ? 0 : 127);
-        Robot::control.rumble("-");
-      }
-      wasShootPressed = true;
-    } else if (Robot::control.getDigital(ControllerDigital::R2)) {
-      if(!wasShootPressed || shooterState >= 0) {
-        Robot::Motors::shooter.move(shooterState = shooterState != 0 ? 0 : -127);
-        Robot::control.rumble("-");
-      }
-      wasShootPressed = true;
-    } 
-    else wasShootPressed = false;
+      Robot::Motors::shooter.move(127);
+      Robot::control.rumble("-");
+    } else if (Robot::control.getDigital(ControllerDigital::R2))
+      Robot::Motors::shooter.move(-127);
+    else Robot::Motors::shooter.move(0);
+    // if (Robot::control.getDigital(ControllerDigital::R1)) {
+    //   if(!wasShootPressed) {
+    //     Robot::Motors::shooter.move(shooterState = shooterState != 0 ? 0 : 127);
+    //     Robot::control.rumble("-");
+    //   }
+    //   wasShootPressed = true;
+    // } else if (Robot::control.getDigital(ControllerDigital::R2)) {
+    //   if(!wasShootPressed) {
+    //     Robot::Motors::shooter.move(shooterState = shooterState != 0 ? 0 : -127);
+    //     Robot::control.rumble("-");
+    //   }
+    //   wasShootPressed = true;
+    // } 
+    // else wasShootPressed = false;
 
     // elevate intake
     if (Robot::control.getDigital(ControllerDigital::X)) {
