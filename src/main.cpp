@@ -206,6 +206,8 @@ void opcontrol() {
    */
   bool intakeElevatorState = false;
   bool wasXPressed = false;
+  int shooterState = 0;
+  bool wasShootPressed = false;
   while (true) {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // 								     Drive Code
@@ -229,11 +231,19 @@ void opcontrol() {
 
     // shoot / un-shoot?
     if (Robot::control.getDigital(ControllerDigital::R1)) {
-      Robot::Motors::shooter.move(127);
-      Robot::control.rumble("-");
-    } else if (Robot::control.getDigital(ControllerDigital::R2))
-      Robot::Motors::shooter.move(-127);
-    else Robot::Motors::shooter.move(0);
+      if(!wasShootPressed || shooterState <= 0) {
+        Robot::Motors::shooter.move(shooterState = shooterState != 0 ? 0 : 127);
+        Robot::control.rumble("-");
+      }
+      wasShootPressed = true;
+    } else if (Robot::control.getDigital(ControllerDigital::R2)) {
+      if(!wasShootPressed || shooterState >= 0) {
+        Robot::Motors::shooter.move(shooterState = shooterState != 0 ? 0 : -127);
+        Robot::control.rumble("-");
+      }
+      wasShootPressed = true;
+    } 
+    else wasShootPressed = false;
 
     // elevate intake
     if (Robot::control.getDigital(ControllerDigital::X)) {
