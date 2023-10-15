@@ -29,7 +29,7 @@ void screen() {
   pros::Controller controller(pros::controller_id_e_t::E_CONTROLLER_MASTER);
   while (true) {
     lemlib::Pose pose =
-        Robot::chassis.getPose(); // get the current position of the robot
+        Robot::chassis->getPose(); // get the current position of the robot
     pros::lcd::clear_line(0);
     pros::lcd::print(0, "x: %f in", pose.x); // print the x position
     pros::lcd::clear_line(1);
@@ -70,16 +70,17 @@ void screen() {
  * to keep execution time for this mode under a few seconds.
  */
 void initialize() {
-  printf("get_ang:%i, enodev:%i\n", Robot::Sensors::vert.get_angle(),
-         Robot::Sensors::vert.get_angle() == PROS_ERR);
+  Robot::initializeOdometryConfig();
+  printf("get_ang:%i, horiPresent:%i\n", Robot::Sensors::hori.get_angle(),
+         Robot::Sensors::hori.get_angle() != PROS_ERR);
   pros::lcd::initialize();
   pros::lcd::set_text(1, "Calibrating chassis...");
   printf("<sensors = nullptr>\n");
-  if (Robot::odomSensors.horizontal1 == nullptr) printf("  hori1,\n");
-  if (Robot::odomSensors.horizontal2 == nullptr) printf("  hori2,\n");
-  if (Robot::odomSensors.imu == nullptr) printf("  imu,\n");
-  if (Robot::odomSensors.vertical1 == nullptr) printf("  vert1,\n");
-  if (Robot::odomSensors.vertical2 == nullptr) printf("  vert2,\n");
+  if (Robot::odomSensors->horizontal1 == nullptr) printf("  hori1,\n");
+  if (Robot::odomSensors->horizontal2 == nullptr) printf("  hori2,\n");
+  if (Robot::odomSensors->imu == nullptr) printf("  imu,\n");
+  if (Robot::odomSensors->vertical1 == nullptr) printf("  vert1,\n");
+  if (Robot::odomSensors->vertical2 == nullptr) printf("  vert2,\n");
   printf("<sensors = nullptr/>\n");
   printf("<error>\n");
   switch (errno) {
@@ -89,9 +90,9 @@ void initialize() {
   }
   errno = 0;
   printf("<error/>\n");
-  Robot::chassis.calibrate(); // calibrate the chassis
+  Robot::chassis->calibrate(); // calibrate the chassis
   pros::lcd::set_text(1, "Chassis Calibrated!");
-  Robot::chassis.setPose(0, 0, 0);
+  Robot::chassis->setPose(0, 0, 0);
   pros::Task screenTask(
       screen); // create a task to print the position to the screen
 }
@@ -135,7 +136,7 @@ void autonomous() {
   // Robot::chassis.moveTo(-12, 0, 5000);
 
   // // move right and forward one tile
-  Robot::chassis.moveTo(0, 24, 0,5000);
+  Robot::chassis->moveTo(0, 24, 0,5000);
 
   // turn 90 deg
   // Robot::chassis.turnTo(1000, 0, 5000);
@@ -219,7 +220,7 @@ void opcontrol() {
     // Robot::Motors::rightDrive.move_voltage(
     //     pow(Robot::control.getAnalog(ControllerAnalog::rightY), 3) * 12000);
     // Robot::chassis.curvature(Robot::control.getAnalog(ControllerAnalog::leftY)*127, Robot::control.getAnalog(ControllerAnalog::rightX)*127,20);
-    Robot::chassis.tank(Robot::control.getAnalog(ControllerAnalog::leftY)*127, Robot::control.getAnalog(ControllerAnalog::rightY)*127,15);
+    Robot::chassis->tank(Robot::control.getAnalog(ControllerAnalog::leftY)*127, Robot::control.getAnalog(ControllerAnalog::rightY)*127,15);
 
 
     // intake / outtake

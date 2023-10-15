@@ -50,7 +50,8 @@ class Robot {
         static lemlib::ChassisController_t angularController;
         static const float chasePower;
     };
-    static lemlib::OdomSensors_t odomSensors;
+    static void initializeOdometryConfig(); 
+    static lemlib::OdomSensors_t *odomSensors;
     static okapi::Controller control;
-    static lemlib::Chassis chassis;
+    static lemlib::Chassis *chassis;
 };
