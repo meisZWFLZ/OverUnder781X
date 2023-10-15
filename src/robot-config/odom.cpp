@@ -27,7 +27,7 @@ lemlib::TrackingWheel* rightVert = /* nullptr; */
                                     -Robot::Dimensions::trackWidth / 2,
                                     Robot::Dimensions::driveEncGearRatio);
 lemlib::TrackingWheel* hori =
-    Robot::Sensors::vert.get_angle() != PROS_ERR
+    Robot::Sensors::hori.get_angle() != PROS_ERR
         ? new lemlib::TrackingWheel(&Robot::Sensors::hori,
                                     Robot::Dimensions::horiEncDiameter,
                                     Robot::Dimensions::horiEncDistance,
