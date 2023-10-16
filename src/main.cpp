@@ -1,5 +1,6 @@
 #include "main.h"
 #include "robot.h"
+#include "auton.h"
 #include <iostream>
 #include <numeric>
 #include <string>
@@ -128,6 +129,10 @@ void competition_initialize() {}
  */
 void autonomous() {
   printf("auton start");
+  // score alliance triball
+  Robot::chassis->setPose(-72+Robot::Dimensions::drivetrainWidth/2 + 24, -72+Robot::Dimensions::drivetrainLength/2, 0);
+  auton::actions::scoreAllianceTriball();
+
 
   // move forward one tile
   // Robot::chassis.moveTo(0, 24, 5000, 200);
@@ -136,7 +141,7 @@ void autonomous() {
   // Robot::chassis.moveTo(-12, 0, 5000);
 
   // // move right and forward one tile
-  Robot::chassis->moveTo(0, 24, 0,5000);
+  // Robot::chassis->moveTo(0, 24, 0,5000);
 
   // turn 90 deg
   // Robot::chassis.turnTo(1000, 0, 5000);
