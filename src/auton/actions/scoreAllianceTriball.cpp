@@ -1,12 +1,11 @@
 #include "auton.h"
 #include "pros/rtos.hpp"
 #include "robot.h"
+#include "fieldDimensions.h"
 
-constexpr int BOTTOM_LEFT_X = -72;
-constexpr int BOTTOM_LEFT_Y = -72;
-constexpr int UP = 0;
+using namespace fieldDimensions;
 void auton::actions::scoreAllianceTriball() {
-  Robot::chassis->moveTo(BOTTOM_LEFT_X + 12,BOTTOM_LEFT_Y + 27, UP, 5000);
+  Robot::chassis->moveTo(MAX_X - TILE_RADIUS,MAX_Y - TILE_LENGTH*1.5 - 5, UP, 5000);
   pros::delay(100);
   Robot::Actions::outtake();
   pros::delay(250);
