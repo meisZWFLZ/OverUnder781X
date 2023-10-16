@@ -14,3 +14,6 @@ const float Robot::Dimensions::vertEncGearRatio = 1;
 const float Robot::Dimensions::horiEncDiameter = 2.75;
 const float Robot::Dimensions::horiEncDistance = 7.0/8.0;
 const float Robot::Dimensions::horiEncGearRatio = 1;
+
+const float Robot::Dimensions::drivetrainWidth = 13;
+const float Robot::Dimensions::drivetrainLength = 13.75;

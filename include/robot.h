@@ -42,8 +42,23 @@ class Robot {
         static const float horiEncDiameter;
         static const float horiEncDistance;
         static const float horiEncGearRatio;
-    };
 
+        static const float drivetrainWidth;
+        static const float drivetrainLength;
+    };
+    class Actions {
+    public:
+      static void outtake();
+      static void intake();
+      static void stopIntake();
+
+      static void shoot();
+      static void unshoot();
+      static void stopShooter();
+
+      static void raiseIntake();
+      static void lowerIntake();
+    };
     class Tunables {
       public:
         static lemlib::ChassisController_t lateralController;
