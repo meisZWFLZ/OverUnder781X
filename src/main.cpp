@@ -130,9 +130,19 @@ void competition_initialize() {}
 void autonomous() {
   printf("auton start");
   // score alliance triball
-  Robot::chassis->setPose(-72+Robot::Dimensions::drivetrainWidth/2 + 24, -72+Robot::Dimensions::drivetrainLength/2, 0);
-  auton::actions::scoreAllianceTriball();
+  // lemlib::Logger::initialize();
+  // Robot::chassis->setPose(41.5, -65.125, 0);
+  // Robot::chassis->moveTo(60, -45, 0, 5000, false, true, 0, 0.6, 127, true);
 
+  // shoot le ball 
+  // Robot::chassis->setPose(-24, -24, 0);
+  // auton::actions::shootTriballIntoOffensiveZone();
+
+
+  Robot::chassis->setPose((-72+Robot::Dimensions::drivetrainWidth/2 + 24),
+  -72+Robot::Dimensions::drivetrainLength/2, 0);
+  auton::actions::touchElevationBar();
+  // auton::actions::scoreAllianceTriball();
 
   // move forward one tile
   // Robot::chassis.moveTo(0, 24, 5000, 200);

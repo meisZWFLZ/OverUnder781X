@@ -5,7 +5,7 @@
 
 using namespace fieldDimensions;
 void auton::actions::scoreAllianceTriball() {
-  Robot::chassis->moveTo(MAX_X - TILE_RADIUS,MAX_Y - TILE_LENGTH*1.5 - 5, UP, 5000);
+  Robot::chassis->moveTo(/* leftOrRight()* */60/* (MAX_X - TILE_RADIUS) */,-45/* (MIN_Y + ( TILE_LENGTH*1.5 - 9)) */, UP, 5000,false,true,0,0.6);
   pros::delay(100);
   Robot::Actions::outtake();
   pros::delay(250);
