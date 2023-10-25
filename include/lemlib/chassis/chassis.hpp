@@ -18,7 +18,6 @@
 #include "lemlib/asset.hpp"
 #include "lemlib/chassis/trackingWheel.hpp"
 #include "lemlib/pose.hpp"
-#include "lemlib/logger.hpp"
 
 namespace lemlib {
 /**
@@ -126,8 +125,9 @@ class Chassis {
         /**
          * @brief Calibrate the chassis sensors
          *
+         * @param calibrateIMU whether the IMU should be calibrated. true by default
          */
-        void calibrate();
+        void calibrate(bool calibrateIMU = true);
         /**
          * @brief Set the pose of the chassis
          *
