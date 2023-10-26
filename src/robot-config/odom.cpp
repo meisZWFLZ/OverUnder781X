@@ -20,7 +20,7 @@ lemlib::TrackingWheel* leftVert =
               Robot::Dimensions::vertEncGearRatio /* 300 */ /* 1 */)
         : new lemlib::TrackingWheel(&Robot::Sensors::leftDrive,
                                     Robot::Dimensions::driveWheelDiameter,
-                                    Robot::Dimensions::trackWidth / 2,
+                                    -Robot::Dimensions::trackWidth / 2,
                                     Robot::Dimensions::driveEncGearRatio);
 
 lemlib::TrackingWheel* rightVert = nullptr;
