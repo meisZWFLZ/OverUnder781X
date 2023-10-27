@@ -17,6 +17,7 @@ void AutonSelector::initScreen() { pros::lcd::initialize(); }
 void AutonSelector::init() {
   AutonSelector::initScreen();
   AutonSelector::attachListeners();
+  AutonSelector::updateDisplay();
 }
 
 void AutonSelector::increment() {
