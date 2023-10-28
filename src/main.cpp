@@ -222,6 +222,8 @@ void opcontrol() {
    */
   bool intakeElevatorState = false;
   bool wasXPressed = false;
+  bool wingsState = false;
+  bool wasUpPressed = false;
   // int shooterState = 0;
   // bool wasShootPressed = false;
   while (true) {
@@ -273,6 +275,12 @@ void opcontrol() {
         Robot::Pistons::intakeElevator.set_value(intakeElevatorState ^= true);
       wasXPressed = true;
     } else wasXPressed = false;
+
+    if (Robot::control.getDigital(ControllerDigital::X)) {
+      if (!wasUpPressed)
+        Robot::Pistons::wings.set_value(wingsState ^= true);
+      wasUpPressed = true;
+    } else wasUpPressed = false;
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // 							     Driver Feedback
