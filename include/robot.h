@@ -16,6 +16,7 @@ class Robot {
       public: 
         /** starts retracted */
         static pros::ADIDigitalOut intakeElevator;
+        static pros::ADIDigitalOut wings;
     };
     class Sensors {
       public:
@@ -58,6 +59,9 @@ class Robot {
 
       static void raiseIntake();
       static void lowerIntake();
+
+      static void expandWings();
+      static void retractWings();
     };
     class Tunables {
       public:
