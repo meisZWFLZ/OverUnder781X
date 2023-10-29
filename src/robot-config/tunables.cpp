@@ -4,7 +4,7 @@
 // forward/backward PID
 lemlib::ChassisController_t Robot::Tunables::lateralController {
     20, // kP
-    40, // kD
+    25, // kD
     1, // smallErrorRange
     500, // smallErrorTimeout
     3, // largeErrorRange
@@ -15,7 +15,7 @@ lemlib::ChassisController_t Robot::Tunables::lateralController {
 // turning PID
 lemlib::ChassisController_t Robot::Tunables::angularController {
     9, // kP
-    70, // kD`
+    50, // kD`
     1, // smallErrorRange
     100, // smallErrorTimeout
     3, // largeErrorRange

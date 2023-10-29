@@ -131,7 +131,6 @@ void autonomous() {
   printf("auton start");
   // score alliance triball
   // lemlib::Logger::initialize();
-  // Robot::chassis->setPose(41.5, -65.125, 0);
   // Robot::chassis->moveTo(60, -45, 0, 5000, false, true, 0, 0.6, 127, true);
 
   // shoot le ball 
@@ -139,13 +138,17 @@ void autonomous() {
   // auton::actions::shootTriballIntoOffensiveZone();
 
 
-  Robot::chassis->setPose((-72+Robot::Dimensions::drivetrainWidth/2 + 24),
-  -72+Robot::Dimensions::drivetrainLength/2, 0);
+  // Robot::chassis->setPose((-72+Robot::Dimensions::drivetrainWidth/2 + 24),
+  // -72+Robot::Dimensions::drivetrainLength/2, 0);
+  Robot::chassis->setPose(fieldDimensions::MIN_X, -65.125, 0);
+  Robot::chassis->setPose(41.5, -65.125, 0);
+  // Robot::Actions::expandWings();
+  auton::actions::scoreAllianceTriball();
   auton::actions::touchElevationBar();
-  // auton::actions::scoreAllianceTriball();
 
   // move forward one tile
-  // Robot::chassis.moveTo(0, 24, 5000, 200);
+  // Robot::chassis->setPose(0, 0, 0);
+  // Robot::chassis->moveTo(0, 24, 0, 2000);
 
   // // move right one tile
   // Robot::chassis.moveTo(-12, 0, 5000);
@@ -154,7 +157,7 @@ void autonomous() {
   // Robot::chassis->moveTo(0, 24, 0,5000);
 
   // turn 90 deg
-  // Robot::chassis.turnTo(1000, 0, 5000);
+  // Robot::chassis->turnTo(0, -1000, 5000);
   // // turn around
   // Robot::chassis.turnTo(0, -24, 5000);
 
@@ -276,7 +279,7 @@ void opcontrol() {
       wasXPressed = true;
     } else wasXPressed = false;
 
-    if (Robot::control.getDigital(ControllerDigital::X)) {
+    if (Robot::control.getDigital(ControllerDigital::up)) {
       if (!wasUpPressed)
         Robot::Pistons::wings.set_value(wingsState ^= true);
       wasUpPressed = true;
