@@ -6,6 +6,12 @@ int leftOrRight(int ifLeft = -1, int ifRight = 1);
 
 namespace actions {
 void removeMatchLoad();
+/**
+ * @brief pushes triball in match load zone to offensive zone 
+ * @zone DEFENSIVE ZONE
+ * @order MUST BE FIRST ACTION
+ */
+void pushMatchLoadZoneTriball();
 void scoreAllianceTriball();
 void touchElevationBar();
 void shootTriballIntoOffensiveZone();
