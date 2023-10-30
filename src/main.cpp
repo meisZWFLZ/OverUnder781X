@@ -11,6 +11,7 @@
 #include <vector>
 #include <sstream>
 #include <string.h>
+#include "fieldDimensions.h"
 
 float average(std::vector<float> const& v) {
   if (v.empty()) { return 0; }
@@ -133,17 +134,45 @@ void autonomous() {
   // lemlib::Logger::initialize();
   // Robot::chassis->moveTo(60, -45, 0, 5000, false, true, 0, 0.6, 127, true);
 
-  // shoot le ball 
+  // shoot le ball
   // Robot::chassis->setPose(-24, -24, 0);
   // auton::actions::shootTriballIntoOffensiveZone();
 
-
   // Robot::chassis->setPose((-72+Robot::Dimensions::drivetrainWidth/2 + 24),
   // -72+Robot::Dimensions::drivetrainLength/2, 0);
-  Robot::chassis->setPose(fieldDimensions::MIN_X, -65.125, 0);
-  Robot::chassis->setPose(41.5, -65.125, 0);
+  using namespace fieldDimensions;
+
+  Robot::chassis->setPose(
+      -(fieldDimensions::MIN_X + TILE_LENGTH +
+        Robot::Dimensions::drivetrainWidth / 2),
+      (fieldDimensions::MIN_Y + Robot::Dimensions::drivetrainLength / 2), 0);
   // Robot::Actions::expandWings();
+  // auton::actions::pushMatchLoadZoneTriball();
+  // pros::delay(500);
   auton::actions::scoreAllianceTriball();
+
+  // auton::actions::touchElevationBar();
+  // Robot::chassis->moveTo(0 + TILE_RADIUS, MIN_Y + (TILE_LENGTH * 2), LEFT,
+  //                        3000);
+  // Robot::Actions::intake();
+  // Robot::chassis->tank(96, 96);
+  // pros::delay(500);
+  // Robot::Actions::stopIntake();
+  // Robot::chassis->turnTo(0, 10000, 3000);
+  // Robot::chassis->moveTo(0 + Robot::Dimensions::drivetrainWidth/2 - 1, MIN_Y + (TILE_LENGTH * 2.5), UP,
+  //                        3000);
+  // Robot::Actions::expandWings();
+  // Robot::chassis->turnTo(10000, 0, 3000);
+  // Robot::Actions::outtake();
+  // pros::delay(150);
+  // Robot::chassis->tank(127, 127);
+  // pros::delay(800);
+  // Robot::Actions::retractWings();
+  // Robot::Actions::stopIntake();
+  // Robot::chassis->tank(-64, -60);
+  // pros::delay(175);
+
+  
   auton::actions::touchElevationBar();
 
   // move forward one tile
@@ -239,9 +268,11 @@ void opcontrol() {
     //     pow(Robot::control.getAnalog(ControllerAnalog::leftY), 3) * 12000);
     // Robot::Motors::rightDrive.move_voltage(
     //     pow(Robot::control.getAnalog(ControllerAnalog::rightY), 3) * 12000);
-    // Robot::chassis.curvature(Robot::control.getAnalog(ControllerAnalog::leftY)*127, Robot::control.getAnalog(ControllerAnalog::rightX)*127,20);
-    Robot::chassis->tank(Robot::control.getAnalog(ControllerAnalog::leftY)*127, Robot::control.getAnalog(ControllerAnalog::rightY)*127,15);
-
+    // Robot::chassis.curvature(Robot::control.getAnalog(ControllerAnalog::leftY)*127,
+    // Robot::control.getAnalog(ControllerAnalog::rightX)*127,20);
+    Robot::chassis->tank(
+        Robot::control.getAnalog(ControllerAnalog::leftY) * 127,
+        Robot::control.getAnalog(ControllerAnalog::rightY) * 127, 15);
 
     // intake / outtake
     if (Robot::control.getDigital(ControllerDigital::L1))
@@ -253,23 +284,22 @@ void opcontrol() {
     // // shoot / un-shoot?
     if (Robot::control.getDigital(ControllerDigital::R1)) {
       Robot::Motors::shooter.move(127);
-      Robot::control.rumble("-");
     } else if (Robot::control.getDigital(ControllerDigital::R2))
       Robot::Motors::shooter.move(-127);
     else Robot::Motors::shooter.move(0);
     // if (Robot::control.getDigital(ControllerDigital::R1)) {
     //   if(!wasShootPressed) {
-    //     Robot::Motors::shooter.move(shooterState = shooterState != 0 ? 0 : 127);
-    //     Robot::control.rumble("-");
+    //     Robot::Motors::shooter.move(shooterState = shooterState != 0 ? 0 :
+    //     127); Robot::control.rumble("-");
     //   }
     //   wasShootPressed = true;
     // } else if (Robot::control.getDigital(ControllerDigital::R2)) {
     //   if(!wasShootPressed) {
-    //     Robot::Motors::shooter.move(shooterState = shooterState != 0 ? 0 : -127);
-    //     Robot::control.rumble("-");
+    //     Robot::Motors::shooter.move(shooterState = shooterState != 0 ? 0 :
+    //     -127); Robot::control.rumble("-");
     //   }
     //   wasShootPressed = true;
-    // } 
+    // }
     // else wasShootPressed = false;
 
     // elevate intake
@@ -280,8 +310,7 @@ void opcontrol() {
     } else wasXPressed = false;
 
     if (Robot::control.getDigital(ControllerDigital::up)) {
-      if (!wasUpPressed)
-        Robot::Pistons::wings.set_value(wingsState ^= true);
+      if (!wasUpPressed) Robot::Pistons::wings.set_value(wingsState ^= true);
       wasUpPressed = true;
     } else wasUpPressed = false;
 
