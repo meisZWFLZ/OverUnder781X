@@ -117,6 +117,52 @@ void disabled() {}
  */
 void competition_initialize() {}
 
+void score4BallAuto() {
+  using namespace fieldDimensions;
+  // pick up and shoot first triball
+  Robot::chassis->moveTo(0 + TILE_RADIUS, MIN_Y + (TILE_LENGTH * 2), LEFT - 15,
+                         3000);
+  Robot::Actions::intake();
+  Robot::Actions::shoot();
+  Robot::chassis->tank(96, 96);
+  pros::delay(500);
+  Robot::Actions::stopIntake();
+  Robot::Actions::stopShooter();
+
+  // pick up second triball
+  Robot::chassis->moveTo(0 + TILE_RADIUS, MIN_Y + (TILE_LENGTH * 3), LEFT,
+                         3000);
+  Robot::Actions::intake();
+  Robot::chassis->tank(96, 96);
+  pros::delay(500);
+  Robot::Actions::stopIntake();
+  Robot::chassis->turnTo(0, 10000, 3000);
+
+  // Robot::chassis->moveTo(0 + Robot::Dimensions::drivetrainWidth/2 - 1, MIN_Y
+  // + (TILE_LENGTH * 2.5), UP,
+  //                        3000);
+
+  // Plow triballs into goal
+  Robot::Actions::expandWings();
+  Robot::chassis->turnTo(10000, 0, 3000);
+  Robot::Actions::outtake();
+  pros::delay(150);
+  Robot::chassis->tank(127, 127);
+  pros::delay(800);
+  Robot::Actions::retractWings();
+  Robot::Actions::stopIntake();
+  Robot::chassis->tank(-64, -60);
+  pros::delay(175);
+}
+
+void intakeAndShoot() {
+  using namespace fieldDimensions;
+
+  auton::actions::intakeTriball(
+      {-TILE_LENGTH-2, 0 - Robot::Dimensions::drivetrainLength / 2 - 2.5, UP});
+  auton::actions::shootTriballIntoOffensiveZone();
+}
+
 /**
  * Runs the user autonomous code. This function will be started in its own task
  * with the default priority and stack size whenever the robot is enabled via
@@ -143,36 +189,18 @@ void autonomous() {
   using namespace fieldDimensions;
 
   Robot::chassis->setPose(
-      -(fieldDimensions::MIN_X + TILE_LENGTH +
+      (fieldDimensions::MIN_X + TILE_LENGTH +
         Robot::Dimensions::drivetrainWidth / 2),
       (fieldDimensions::MIN_Y + Robot::Dimensions::drivetrainLength / 2), 0);
   // Robot::Actions::expandWings();
-  // auton::actions::pushMatchLoadZoneTriball();
-  // pros::delay(500);
+  auton::actions::pushMatchLoadZoneTriball();
+  pros::delay(500);
   auton::actions::scoreAllianceTriball();
 
-  // auton::actions::touchElevationBar();
-  // Robot::chassis->moveTo(0 + TILE_RADIUS, MIN_Y + (TILE_LENGTH * 2), LEFT,
-  //                        3000);
-  // Robot::Actions::intake();
-  // Robot::chassis->tank(96, 96);
-  // pros::delay(500);
-  // Robot::Actions::stopIntake();
-  // Robot::chassis->turnTo(0, 10000, 3000);
-  // Robot::chassis->moveTo(0 + Robot::Dimensions::drivetrainWidth/2 - 1, MIN_Y + (TILE_LENGTH * 2.5), UP,
-  //                        3000);
-  // Robot::Actions::expandWings();
-  // Robot::chassis->turnTo(10000, 0, 3000);
-  // Robot::Actions::outtake();
-  // pros::delay(150);
-  // Robot::chassis->tank(127, 127);
-  // pros::delay(800);
-  // Robot::Actions::retractWings();
-  // Robot::Actions::stopIntake();
-  // Robot::chassis->tank(-64, -60);
-  // pros::delay(175);
+  intakeAndShoot();
 
-  
+  // score4BallAuto();
+
   auton::actions::touchElevationBar();
 
   // move forward one tile

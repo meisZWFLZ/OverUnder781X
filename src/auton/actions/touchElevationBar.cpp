@@ -6,8 +6,8 @@
 using namespace fieldDimensions;
 
 void auton::actions::touchElevationBar() {
-  Robot::chassis->moveTo(leftOrRight() * (0 + TILE_RADIUS - 4),
-                         (MIN_Y + TILE_LENGTH * 1.5 + 0.75),
+  Robot::chassis->moveTo(leftOrRight() * (0 + TILE_RADIUS - 4.5),
+                         (MIN_Y + TILE_LENGTH * 1.5 + 0.7),
                          leftOrRight() * LEFT + 10, 5000);
   // Robot::chassis->moveTo(/* auton?::leftOrRight()*
   // */0-Robot::Dimensions::drivetrainLength/2, MIN_Y + TILE_RADIUS, RIGHT,
@@ -21,7 +21,7 @@ void auton::actions::touchElevationBar() {
   // pros::delay(400);
   // Robot::chassis->tank(0, 0);
   Robot::Actions::expandWings();
-  Robot::chassis->tank(leftOrRight(-24, 48), leftOrRight(48, -24), 0);
-  pros::delay(500);
+  Robot::chassis->tank(leftOrRight(-30, 56), leftOrRight(56, -30), 0);
+  pros::delay(600);
   Robot::chassis->tank(0, 0);
 }

@@ -1,3 +1,5 @@
+#include "lemlib/api.hpp"
+
 namespace auton {
  /** 
   * @returns -1 when robot starts on left side/defensive zone and +1 on right side/offensive zone   
@@ -15,5 +17,6 @@ void pushMatchLoadZoneTriball();
 void scoreAllianceTriball();
 void touchElevationBar();
 void shootTriballIntoOffensiveZone();
+void intakeTriball(lemlib::Pose pose);
 } // namespace actions
 } // namespace auton
