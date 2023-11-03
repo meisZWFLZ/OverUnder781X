@@ -1,4 +1,5 @@
 #include "auton.h"
+#include "pros/misc.hpp"
 #include "pros/rtos.hpp"
 #include "robot.h"
 #include "fieldDimensions.h"
@@ -6,22 +7,23 @@
 using namespace fieldDimensions;
 
 void auton::actions::touchElevationBar() {
-  Robot::chassis->moveTo(leftOrRight() * (0 + TILE_RADIUS - 4.5),
-                         (MIN_Y + TILE_LENGTH * 1.5 + 0.7),
-                         leftOrRight() * LEFT + 10, 5000);
-  // Robot::chassis->moveTo(/* auton?::leftOrRight()*
-  // */0-Robot::Dimensions::drivetrainLength/2, MIN_Y + TILE_RADIUS, RIGHT,
-  // 5000);
-  // Robot::chassis->tank(127, 127);;
-  // Robot::chassis->moveTo(-(0 + Robot::Dimensions::drivetrainLength/2),(MIN_Y
-  // + TILE_LENGTH + 1 + Robot::Dimensions::drivetrainWidth), RIGHT, 5000, 0, 1,
-  // 0, 0);
-  // pros::delay(500);
-  // Robot::chassis->tank(24, 24);
-  // pros::delay(400);
-  // Robot::chassis->tank(0, 0);
+  const lemlib::Pose target {static_cast<float>(leftOrRight() * (0 + TILE_RADIUS - 6)),
+                         (MIN_Y + TILE_LENGTH * 1.5 + 1),
+                         static_cast<float>(leftOrRight() * (LEFT + 10))};
+                         
+  Robot::chassis->moveTo(target.x,target.y,target.theta, 5000, true, true, 0, 0.7);
+  while(Robot::chassis->getPose().distance(target) > 12)
+    pros::delay(20);
   Robot::Actions::expandWings();
+  while(Robot::chassis->getPose().distance(target) > 3 || Robot::Motors::leftDrive.at(0).get_voltage() > 2  || Robot::Motors::rightDrive.at(0).get_voltage() > 2)
+    pros::delay(20);
+  
+  pros::delay(500);
+  // Robot::chassis->turnTo(-leftOrRight()*100000, 100000, 5000, false, false, 56);
+  // while(pros::competition::is_autonomous()) {
+  //   pros::delay(10);
+  // }
   Robot::chassis->tank(leftOrRight(-30, 56), leftOrRight(56, -30), 0);
-  pros::delay(600);
-  Robot::chassis->tank(0, 0);
+  // pros::delay(600);
+  // Robot::chassis->tank(0, 0);
 }

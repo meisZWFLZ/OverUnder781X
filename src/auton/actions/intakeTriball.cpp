@@ -11,10 +11,11 @@ void auton::actions::intakeTriball(const lemlib::Pose pose) {
                          pose.y,
                          pose.theta, 5000, true);
   pros::delay(500);
-  while(Robot::chassis->getPose().distance(pose) > 8)
+  while(Robot::chassis->getPose().distance(pose) > 12)
     pros::delay(20);
+  Robot::Actions::lowerIntake();
   Robot::Actions::intake();
-  while(Robot::chassis->getPose().distance(pose) > 3 || Robot::Motors::leftDrive.at(0).get_voltage() > 2  || Robot::Motors::rightDrive.at(0).get_voltage() > 2)
+  while(Robot::chassis->getPose().distance(pose) > 3 || Robot::Motors::leftDrive.at(0).get_voltage() > 0.5  || Robot::Motors::rightDrive.at(0).get_voltage() > 0.5)
     pros::delay(20);
   pros::delay(500);
   Robot::chassis->tank(127, 127);
@@ -22,5 +23,6 @@ void auton::actions::intakeTriball(const lemlib::Pose pose) {
   Robot::chassis->tank(-127, -127);
   pros::delay(175);
   Robot::chassis->tank(0, 0);
-  Robot::Actions::stopIntake();
+  // Robot::Actions::stopIntake();
+  Robot::Actions::raiseIntake();
 }

@@ -14,9 +14,9 @@ void auton::actions::pushMatchLoadZoneTriball() {
   Robot::chassis->tank(127, 172);
   pros::delay(100);
   Robot::chassis->tank(0, 0);
-  pros::delay(225);
+  pros::delay(196);
   Robot::Actions::outtake();
-  pros::delay(25);
+  pros::delay(54);
   Robot::chassis->tank(-127, 172);
   pros::delay(500);
   Robot::Actions::stopIntake();

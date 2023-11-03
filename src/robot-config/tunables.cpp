@@ -24,4 +24,4 @@ lemlib::ChassisController_t Robot::Tunables::angularController {
 };
 
 // chasePower
-const float Robot::Tunables::chasePower = 1;
+const float Robot::Tunables::chasePower = 1000;

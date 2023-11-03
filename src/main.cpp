@@ -159,7 +159,7 @@ void intakeAndShoot() {
   using namespace fieldDimensions;
 
   auton::actions::intakeTriball(
-      {-TILE_LENGTH-2, 0 - Robot::Dimensions::drivetrainLength / 2 - 2.5, UP});
+      {-TILE_LENGTH-2, 0 - Robot::Dimensions::drivetrainLength / 2 - 0.85, UP});
   auton::actions::shootTriballIntoOffensiveZone();
 }
 
@@ -189,15 +189,15 @@ void autonomous() {
   using namespace fieldDimensions;
 
   Robot::chassis->setPose(
-      (fieldDimensions::MIN_X + TILE_LENGTH +
+      -(fieldDimensions::MIN_X + TILE_LENGTH +
         Robot::Dimensions::drivetrainWidth / 2),
       (fieldDimensions::MIN_Y + Robot::Dimensions::drivetrainLength / 2), 0);
   // Robot::Actions::expandWings();
-  auton::actions::pushMatchLoadZoneTriball();
-  pros::delay(500);
+  // auton::actions::pushMatchLoadZoneTriball();
+  // pros::delay(500);
   auton::actions::scoreAllianceTriball();
 
-  intakeAndShoot();
+  // intakeAndShoot();
 
   // score4BallAuto();
 

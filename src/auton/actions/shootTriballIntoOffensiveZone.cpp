@@ -9,12 +9,12 @@ void auton::actions::shootTriballIntoOffensiveZone() {
   Robot::Actions::shoot();
   Robot::Actions::intake();
   pros::delay(200);
-  Robot::chassis->tank(127,127);
-  pros::delay(200);
   Robot::chassis->tank(-127,-127);
-  pros::delay(300);
-  Robot::chassis->tank(0,0);
   pros::delay(100);
+  Robot::chassis->tank(127,127);
+  pros::delay(100);
+  Robot::chassis->tank(0,0);
+  pros::delay(350);
   Robot::Actions::stopShooter();
   Robot::Actions::stopIntake();
 }
