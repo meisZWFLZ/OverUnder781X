@@ -1,3 +1,4 @@
+#include "selector.h"
 namespace auton {
  /** 
   * @returns -1 when robot starts on left side/defensive zone and +1 on right side/offensive zone   
@@ -10,4 +11,10 @@ void scoreAllianceTriball();
 void touchElevationBar();
 void shootTriballIntoOffensiveZone();
 } // namespace actions
+
+namespace autons {
+  Auton defensive;
+  Auton offensive;
+  Auton skills;
+}
 } // namespace auton

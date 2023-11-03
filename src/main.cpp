@@ -25,7 +25,6 @@ const float get_wattage(pros::Motor_Group& group) {
   for (int i = 0; i < group.size(); i++) watts.push_back(group[i].get_power());
   return average(watts);
 }
-
 void screen() {
   // loop forever
   pros::Controller controller(pros::controller_id_e_t::E_CONTROLLER_MASTER);
@@ -66,6 +65,11 @@ void screen() {
 }
 
 pros::Task screenTask;
+void addAutons() {
+  auton::AutonSelector::addAuton(&auton::autons::defensive);
+  auton::AutonSelector::addAuton(&auton::autons::offensive);
+  auton::AutonSelector::addAuton(&auton::autons::skills);
+}
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.

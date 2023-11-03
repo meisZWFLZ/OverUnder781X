@@ -1,3 +1,4 @@
+#include "lemlib/api.hpp"
 namespace fieldDimensions {
   enum HEADING {
     LEFT = 270,
@@ -13,5 +14,6 @@ namespace fieldDimensions {
 
   constexpr int TILE_LENGTH = 24;
   constexpr int TILE_RADIUS = TILE_LENGTH / 2;
-
+  // @TODO
+  lemlib::Pose nextToMatchLoadZone{};
 }
