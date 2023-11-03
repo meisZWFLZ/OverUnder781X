@@ -11,6 +11,7 @@
 #include <vector>
 #include <sstream>
 #include <string.h>
+#include "selector.h"
 
 float average(std::vector<float> const& v) {
   if (v.empty()) { return 0; }
@@ -31,12 +32,12 @@ void screen() {
   while (true) {
     lemlib::Pose pose =
         Robot::chassis->getPose(); // get the current position of the robot
-    pros::lcd::clear_line(0);
-    pros::lcd::print(0, "x: %f in", pose.x); // print the x position
     pros::lcd::clear_line(1);
-    pros::lcd::print(1, "y: %f in", pose.y); // print the y position
+    pros::lcd::print(1, "x: %f in", pose.x); // print the x position
     pros::lcd::clear_line(2);
-    pros::lcd::print(2, "heading: %f deg",
+    pros::lcd::print(2, "y: %f in", pose.y); // print the y position
+    pros::lcd::clear_line(3);
+    pros::lcd::print(3, "heading: %f deg",
                      pose.theta); // print the heading
     if (!controller.get_digital(
             pros::controller_digital_e_t::E_CONTROLLER_DIGITAL_UP)) {
@@ -63,6 +64,8 @@ void screen() {
     pros::delay(200);
   }
 }
+
+pros::Task screenTask;
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -94,8 +97,10 @@ void initialize() {
   Robot::chassis->calibrate(); // calibrate the chassis
   pros::lcd::set_text(1, "Chassis Calibrated!");
   Robot::chassis->setPose(0, 0, 0);
-  pros::Task screenTask(
-      screen); // create a task to print the position to the screen
+
+  auton::AutonSelector::init();
+  auton::AutonSelector::enable();
+  screenTask = pros::Task{screen}; // create a task to print the position to the screen
 }
 
 /**
@@ -128,45 +133,10 @@ void competition_initialize() {}
  * from where it left off.
  */
 void autonomous() {
+  auton::AutonSelector::disable();
   printf("auton start");
-  // score alliance triball
-  // lemlib::Logger::initialize();
-  // Robot::chassis->setPose(41.5, -65.125, 0);
-  // Robot::chassis->moveTo(60, -45, 0, 5000, false, true, 0, 0.6, 127, true);
-
-  // shoot le ball 
-  // Robot::chassis->setPose(-24, -24, 0);
-  // auton::actions::shootTriballIntoOffensiveZone();
-
-
-  Robot::chassis->setPose((-72+Robot::Dimensions::drivetrainWidth/2 + 24),
-  -72+Robot::Dimensions::drivetrainLength/2, 0);
-  auton::actions::touchElevationBar();
-  // auton::actions::scoreAllianceTriball();
-
-  // move forward one tile
-  // Robot::chassis.moveTo(0, 24, 5000, 200);
-
-  // // move right one tile
-  // Robot::chassis.moveTo(-12, 0, 5000);
-
-  // // move right and forward one tile
-  // Robot::chassis->moveTo(0, 24, 0,5000);
-
-  // turn 90 deg
-  // Robot::chassis.turnTo(1000, 0, 5000);
-  // // turn around
-  // Robot::chassis.turnTo(0, -24, 5000);
-
-  // // move in square
-  // Robot::chassis.moveTo(0, 24, 500);
-  // pros::delay(1000);
-  // Robot::chassis.moveTo(24, 24, 500);
-  // pros::delay(1000);
-  // Robot::chassis.moveTo(24, 0, 500);
-  // pros::delay(1000);
-  // Robot::chassis.moveTo(0, 0, 500);
-  // pros::delay(1000);
+  
+  auton::AutonSelector::runAuton();
 }
 
 /**
@@ -183,6 +153,7 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
+  auton::AutonSelector::disable();
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // 								  Test Friction Code
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

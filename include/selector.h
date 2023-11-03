@@ -12,10 +12,13 @@ class AutonSelector {
   private:
     static std::vector<Auton*> autons;
     static int index;
+    /** Whether the AutonSelector is enabled */
+    static bool state;
+    
+    static void incrementListener();
+    static void decrementListener();
 
-    static void increment();
-    static void decrement();
-
+    static void clearDisplay();
     static void updateDisplay();
 
     // remove once LVGL is done
@@ -25,7 +28,12 @@ class AutonSelector {
     AutonSelector() = delete;
   public:
     static void addAuton(Auton* auton);
+    static void addAutons(Auton* auton[]);
     static void runAuton();
+
+    static void enable();
+    static void disable();
+    static bool isEnabled();
 
     static void init();
 };
