@@ -18,5 +18,6 @@ void scoreAllianceTriball();
 void touchElevationBar();
 void shootTriballIntoOffensiveZone();
 void intakeTriball(lemlib::Pose pose);
+void prepareForMatchloading();
 } // namespace actions
 } // namespace auton

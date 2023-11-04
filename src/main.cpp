@@ -159,7 +159,8 @@ void intakeAndShoot() {
   using namespace fieldDimensions;
 
   auton::actions::intakeTriball(
-      {-TILE_LENGTH-2, 0 - Robot::Dimensions::drivetrainLength / 2 - 0.85, UP});
+      {-TILE_LENGTH - 2, 0 - Robot::Dimensions::drivetrainLength / 2 - 0.85,
+       UP});
   auton::actions::shootTriballIntoOffensiveZone();
 }
 
@@ -275,6 +276,14 @@ void opcontrol() {
   // Robot::Motors::leftDrive.tare_position();
   // Robot::Motors::leftDrive.move(127);
   // Robot::Motors::leftDrive.move(127);
+
+  using namespace fieldDimensions;
+  Robot::chassis->setPose(
+      (MIN_X + TILE_LENGTH +
+        Robot::Dimensions::drivetrainWidth / 2),
+      (MIN_Y + Robot::Dimensions::drivetrainLength / 2), UP);
+  auton::actions::prepareForMatchloading();
+
   /**
    * false = retracted
    *
@@ -284,6 +293,12 @@ void opcontrol() {
   bool wasXPressed = false;
   bool wingsState = false;
   bool wasUpPressed = false;
+
+  // disable drive
+  bool macroRunning = false;
+  pros::Task* macroTask = nullptr;
+  bool prevR1 = Robot::control.getDigital(ControllerDigital::R1);
+  bool prevR2 = Robot::control.getDigital(ControllerDigital::R2);
   // int shooterState = 0;
   // bool wasShootPressed = false;
   while (true) {
@@ -298,23 +313,65 @@ void opcontrol() {
     //     pow(Robot::control.getAnalog(ControllerAnalog::rightY), 3) * 12000);
     // Robot::chassis.curvature(Robot::control.getAnalog(ControllerAnalog::leftY)*127,
     // Robot::control.getAnalog(ControllerAnalog::rightX)*127,20);
-    Robot::chassis->tank(
-        Robot::control.getAnalog(ControllerAnalog::leftY) * 127,
-        Robot::control.getAnalog(ControllerAnalog::rightY) * 127, 15);
+    // if (macroTask == nullptr) {
+    //   macroRunning = false;
+    //   printf("macro null\n");
+    // }
+    // if (macroTask != nullptr) printf("state:%i \n", macroTask->get_state());
+    if ((macroRunning &&
+         (std::abs(Robot::control.getAnalog(ControllerAnalog::leftY)) > 0.1 ||
+          std::abs(Robot::control.getAnalog(ControllerAnalog::rightY)) > 0.1)) ||
+        (macroTask != nullptr &&
+         macroTask->get_state() == pros::E_TASK_STATE_SUSPENDED)) {
+      macroRunning = false;
+      macroTask->suspend();
+      macroTask->remove();
+      // delete &macroTask;
+      macroTask = nullptr;
+    }
+    if (!macroRunning)
+      Robot::chassis->tank(
+          Robot::control.getAnalog(ControllerAnalog::leftY) * 127,
+          Robot::control.getAnalog(ControllerAnalog::rightY) * 127, 15);
 
     // intake / outtake
-    if (Robot::control.getDigital(ControllerDigital::L1))
-      Robot::Motors::intake.move(127);
-    else if (Robot::control.getDigital(ControllerDigital::L2))
-      Robot::Motors::intake.move(-127);
-    else Robot::Motors::intake.move(0);
+    if (!macroRunning) {
+      if (Robot::control.getDigital(ControllerDigital::L1))
+        Robot::Motors::intake.move(127);
+      else if (Robot::control.getDigital(ControllerDigital::L2))
+        Robot::Motors::intake.move(-127);
+      else Robot::Motors::intake.move(0);
+    }
 
-    // // shoot / un-shoot?
-    if (Robot::control.getDigital(ControllerDigital::R1)) {
-      Robot::Motors::shooter.move(127);
-    } else if (Robot::control.getDigital(ControllerDigital::R2))
-      Robot::Motors::shooter.move(-127);
-    else Robot::Motors::shooter.move(0);
+    // // shoot / un-shoot? / shootMacro
+    const bool r1 = Robot::control.getDigital(ControllerDigital::R1);
+    const bool r2 = Robot::control.getDigital(ControllerDigital::R2);
+    // printf("run shooter macro");
+    if (!(prevR1 && prevR2) && r1 && r2) {
+      printf("run shooter macro\n");
+      // pros::Task::delay(1000);
+      if (!macroRunning && macroTask == nullptr) {
+        printf("start shooter macro\n");
+        macroRunning = true;
+        macroTask =
+            new pros::Task(Robot::Actions::shootMacro, TASK_PRIORITY_DEFAULT,
+                           TASK_STACK_DEPTH_DEFAULT, "shooterMacro");
+      } else if (macroRunning && macroTask != nullptr) {
+        printf("stop shooter macro\n");
+        macroRunning = false;
+        macroTask->suspend();
+        macroTask->remove();
+        // delete &macroTask;
+        macroTask = nullptr;
+      }
+    }
+    if (!macroRunning && !(r1 && r2)) {
+      if (r1) Robot::Motors::shooter.move(127);
+      else if (r2) Robot::Motors::shooter.move(-127);
+      else Robot::Motors::shooter.move(0);
+    }
+    prevR1 = r1;
+    prevR2 = r2;
     // if (Robot::control.getDigital(ControllerDigital::R1)) {
     //   if(!wasShootPressed) {
     //     Robot::Motors::shooter.move(shooterState = shooterState != 0 ? 0 :

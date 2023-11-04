@@ -54,6 +54,7 @@ class Robot {
       static void stopIntake();
 
       static void shoot();
+      static void shootMacro();
       static void unshoot();
       static void stopShooter();
 
