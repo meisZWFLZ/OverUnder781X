@@ -36,6 +36,8 @@ class AutonSelector {
     static void disable();
     static bool isEnabled();
 
+    static char *getCurrentAuton();
+
     static void init();
 };
 

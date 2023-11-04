@@ -60,3 +60,6 @@ bool AutonSelector::isEnabled() {
 void AutonSelector::runAuton() { 
   autons[index]->run(); 
 }
+char* AutonSelector::getCurrentAuton() {
+  return autons[index]->label;
+}
