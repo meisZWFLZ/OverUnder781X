@@ -12,5 +12,6 @@ void Robot::Actions::shootMacro() {
   pros::Task::delay(350);
   Robot::Actions::stopShooter();
   Robot::Actions::stopIntake();
-  pros::Task::current().suspend();
+  // if (strcmp(pros::Task::current().get_name(), "shootMacro") == 0)
+  // pros::Task::current().suspend();
 }
