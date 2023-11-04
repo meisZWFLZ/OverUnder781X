@@ -4,8 +4,8 @@
 
 using namespace fieldDimensions;
 void runSkills() {
-    Robot::chassis->setPose(nextToMatchLoadZone.x, nextToMatchLoadZone.y, nextToMatchLoadZone.theta, false);
+    Robot::chassis->setPose(leftStartingPose, false);
     // @todo add skills auton
 }
 
-auton::Auton auton::autons::skills = {"skills", runSkills};
+auton::Auton auton::autons::skills = {(char*)("skills"), runSkills};

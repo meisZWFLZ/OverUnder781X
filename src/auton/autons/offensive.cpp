@@ -4,8 +4,8 @@
 
 using namespace fieldDimensions;
 void runOffensive() {
-    Robot::chassis->setPose(-nextToMatchLoadZone.x, nextToMatchLoadZone.y, nextToMatchLoadZone.theta, false);
+    Robot::chassis->setPose(rightStartingPose, false);
     // @todo add offensive auton
 }
 
-auton::Auton auton::autons::offensive = {"offensive / right", runOffensive};
+auton::Auton auton::autons::offensive = {(char*)("offensive / right"), runOffensive};

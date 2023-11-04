@@ -64,7 +64,7 @@ void screen() {
   }
 }
 
-pros::Task screenTask;
+pros::Task* screenTask;
 void addAutons() {
   auton::AutonSelector::addAuton(&auton::autons::defensive);
   auton::AutonSelector::addAuton(&auton::autons::offensive);
@@ -104,7 +104,7 @@ void initialize() {
 
   auton::AutonSelector::init();
   auton::AutonSelector::enable();
-  screenTask = pros::Task{screen}; // create a task to print the position to the screen
+  screenTask = new pros::Task{screen}; // create a task to print the position to the screen
 }
 
 /**

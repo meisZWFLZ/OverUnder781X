@@ -4,8 +4,8 @@
 
 using namespace fieldDimensions;
 void runDefensive() {
-    Robot::chassis->setPose(nextToMatchLoadZone.x, nextToMatchLoadZone.y, nextToMatchLoadZone.theta, false);
+    Robot::chassis->setPose(leftStartingPose, false);
     // @todo add defensive auton
 }
 
-auton::Auton auton::autons::defensive = {"defensive / left", runDefensive};
+auton::Auton auton::autons::defensive = {(char*)("defensive / left"), runDefensive};

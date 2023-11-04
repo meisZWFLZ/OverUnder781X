@@ -1,3 +1,4 @@
+#pragma once
 #include "selector.h"
 namespace auton {
  /** 
@@ -13,8 +14,8 @@ void shootTriballIntoOffensiveZone();
 } // namespace actions
 
 namespace autons {
-  Auton defensive;
-  Auton offensive;
-  Auton skills;
+  extern Auton defensive;
+  extern Auton offensive;
+  extern Auton skills;
 }
 } // namespace auton

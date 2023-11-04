@@ -1,3 +1,4 @@
+#pragma once
 #include <string>
 #include <vector>
 #include <functional>
@@ -29,7 +30,6 @@ class AutonSelector {
     AutonSelector() = delete;
   public:
     static void addAuton(Auton* auton);
-    static void addAutons(Auton* auton[]);
     static void runAuton();
 
     static void enable();

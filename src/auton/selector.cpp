@@ -5,6 +5,7 @@
 using namespace auton;
 
 int AutonSelector::index = 0;
+bool AutonSelector::state = false;
 std::vector<Auton*> AutonSelector::autons {};
 
 void AutonSelector::attachListeners() {
@@ -42,7 +43,6 @@ void AutonSelector::updateDisplay() {
 }
 
 void AutonSelector::addAuton(Auton* auton) { autons.push_back(auton); }
-void AutonSelector::addAutons(Auton* newAutons[]) { autons.emplace_back(newAutons); }
 
 void AutonSelector::enable() {
   AutonSelector::state = true;
