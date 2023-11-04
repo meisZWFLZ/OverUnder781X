@@ -101,7 +101,8 @@ void initialize() {
   Robot::chassis->calibrate(); // calibrate the chassis
   pros::lcd::set_text(1, "Chassis Calibrated!");
   Robot::chassis->setPose(0, 0, 0);
-
+  
+  addAutons();
   auton::AutonSelector::init();
   auton::AutonSelector::enable();
   screenTask = new pros::Task{screen}; // create a task to print the position to the screen
