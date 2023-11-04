@@ -12,6 +12,7 @@
 #include <sstream>
 #include <string.h>
 #include "fieldDimensions.h"
+#include "selector.h"
 
 float average(std::vector<float> const& v) {
   if (v.empty()) { return 0; }
@@ -25,19 +26,18 @@ const float get_wattage(pros::Motor_Group& group) {
   for (int i = 0; i < group.size(); i++) watts.push_back(group[i].get_power());
   return average(watts);
 }
-
 void screen() {
   // loop forever
   pros::Controller controller(pros::controller_id_e_t::E_CONTROLLER_MASTER);
   while (true) {
     lemlib::Pose pose =
         Robot::chassis->getPose(); // get the current position of the robot
-    pros::lcd::clear_line(0);
-    pros::lcd::print(0, "x: %f in", pose.x); // print the x position
     pros::lcd::clear_line(1);
-    pros::lcd::print(1, "y: %f in", pose.y); // print the y position
+    pros::lcd::print(1, "x: %f in", pose.x); // print the x position
     pros::lcd::clear_line(2);
-    pros::lcd::print(2, "heading: %f deg",
+    pros::lcd::print(2, "y: %f in", pose.y); // print the y position
+    pros::lcd::clear_line(3);
+    pros::lcd::print(3, "heading: %f deg",
                      pose.theta); // print the heading
     if (!controller.get_digital(
             pros::controller_digital_e_t::E_CONTROLLER_DIGITAL_UP)) {
@@ -63,6 +63,13 @@ void screen() {
     }
     pros::delay(200);
   }
+}
+
+pros::Task* screenTask;
+void addAutons() {
+  auton::AutonSelector::addAuton(&auton::autons::defensive);
+  auton::AutonSelector::addAuton(&auton::autons::offensive);
+  auton::AutonSelector::addAuton(&auton::autons::skills);
 }
 
 /**
@@ -95,8 +102,11 @@ void initialize() {
   Robot::chassis->calibrate(); // calibrate the chassis
   pros::lcd::set_text(1, "Chassis Calibrated!");
   Robot::chassis->setPose(0, 0, 0);
-  pros::Task screenTask(
-      screen); // create a task to print the position to the screen
+  
+  addAutons();
+  auton::AutonSelector::init();
+  auton::AutonSelector::enable();
+  screenTask = new pros::Task{screen}; // create a task to print the position to the screen
 }
 
 /**
@@ -176,37 +186,25 @@ void intakeAndShoot() {
  * from where it left off.
  */
 void autonomous() {
+  auton::AutonSelector::disable();
   printf("auton start");
   // score alliance triball
   // lemlib::Logger::initialize();
+  // Robot::chassis->setPose(41.5, -65.125, 0);
   // Robot::chassis->moveTo(60, -45, 0, 5000, false, true, 0, 0.6, 127, true);
 
-  // shoot le ball
+  // shoot le ball 
   // Robot::chassis->setPose(-24, -24, 0);
   // auton::actions::shootTriballIntoOffensiveZone();
 
-  // Robot::chassis->setPose((-72+Robot::Dimensions::drivetrainWidth/2 + 24),
-  // -72+Robot::Dimensions::drivetrainLength/2, 0);
-  using namespace fieldDimensions;
 
-  Robot::chassis->setPose(
-      -(fieldDimensions::MIN_X + TILE_LENGTH +
-        Robot::Dimensions::drivetrainWidth / 2),
-      (fieldDimensions::MIN_Y + Robot::Dimensions::drivetrainLength / 2), 0);
-  // Robot::Actions::expandWings();
-  // auton::actions::pushMatchLoadZoneTriball();
-  // pros::delay(500);
-  auton::actions::scoreAllianceTriball();
-
-  // intakeAndShoot();
-
-  // score4BallAuto();
-
+  Robot::chassis->setPose((-72+Robot::Dimensions::drivetrainWidth/2 + 24),
+  -72+Robot::Dimensions::drivetrainLength/2, 0);
   auton::actions::touchElevationBar();
+  // auton::actions::scoreAllianceTriball();
 
   // move forward one tile
-  // Robot::chassis->setPose(0, 0, 0);
-  // Robot::chassis->moveTo(0, 24, 0, 2000);
+  // Robot::chassis.moveTo(0, 24, 5000, 200);
 
   // // move right one tile
   // Robot::chassis.moveTo(-12, 0, 5000);
@@ -215,7 +213,7 @@ void autonomous() {
   // Robot::chassis->moveTo(0, 24, 0,5000);
 
   // turn 90 deg
-  // Robot::chassis->turnTo(0, -1000, 5000);
+  // Robot::chassis.turnTo(1000, 0, 5000);
   // // turn around
   // Robot::chassis.turnTo(0, -24, 5000);
 
@@ -244,6 +242,7 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
+  auton::AutonSelector::disable();
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // 								  Test Friction Code
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
