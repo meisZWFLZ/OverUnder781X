@@ -26,6 +26,7 @@ const float get_wattage(pros::Motor_Group& group) {
   for (int i = 0; i < group.size(); i++) watts.push_back(group[i].get_power());
   return average(watts);
 }
+
 void screen() {
   // loop forever
   pros::Controller controller(pros::controller_id_e_t::E_CONTROLLER_MASTER);
@@ -66,6 +67,7 @@ void screen() {
 }
 
 pros::Task* screenTask;
+
 void addAutons() {
   auton::AutonSelector::addAuton(&auton::autons::defensive);
   auton::AutonSelector::addAuton(&auton::autons::offensive);
@@ -102,11 +104,12 @@ void initialize() {
   Robot::chassis->calibrate(); // calibrate the chassis
   pros::lcd::set_text(1, "Chassis Calibrated!");
   Robot::chassis->setPose(0, 0, 0);
-  
+
   addAutons();
   auton::AutonSelector::init();
   auton::AutonSelector::enable();
-  screenTask = new pros::Task{screen}; // create a task to print the position to the screen
+  screenTask = new pros::Task {
+      screen}; // create a task to print the position to the screen
 }
 
 /**
@@ -188,19 +191,20 @@ void intakeAndShoot() {
 void autonomous() {
   auton::AutonSelector::disable();
   printf("auton start");
+
+  auton::AutonSelector::runAuton();
   // score alliance triball
   // lemlib::Logger::initialize();
   // Robot::chassis->setPose(41.5, -65.125, 0);
   // Robot::chassis->moveTo(60, -45, 0, 5000, false, true, 0, 0.6, 127, true);
 
-  // shoot le ball 
+  // shoot le ball
   // Robot::chassis->setPose(-24, -24, 0);
   // auton::actions::shootTriballIntoOffensiveZone();
 
-
-  Robot::chassis->setPose((-72+Robot::Dimensions::drivetrainWidth/2 + 24),
-  -72+Robot::Dimensions::drivetrainLength/2, 0);
-  auton::actions::touchElevationBar();
+  // Robot::chassis->setPose((-72+Robot::Dimensions::drivetrainWidth/2 + 24),
+  // -72+Robot::Dimensions::drivetrainLength/2, 0);
+  // auton::actions::touchElevationBar();
   // auton::actions::scoreAllianceTriball();
 
   // move forward one tile
@@ -243,45 +247,16 @@ void autonomous() {
  */
 void opcontrol() {
   auton::AutonSelector::disable();
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  // 								  Test Friction Code
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  // std::string myStr = "";
-  // std::cout << "What's your name? ";
-  // getline(std::cin, myStr);
-  // std::cout << "Hello " << myStr << std::endl;
-
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  // 								  Test Terminal input
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  // FILE* serialIn = fopen("sin", "w");
-
-  // std::string input = "";
-  // while (1) {
-  //   std::cout << "ECHO > " << std::endl;
-  //   std::getline(std::cin, input);
-  //   std::cout << std::endl;
-  //   std::cout << input << std::endl;
-  // }
-  // pros::c::fdctl(serialIn->_file, SERCTL_ACTIVATE, NULL);
-  // while (true) {
-  //   std::string input;
-  //   std::cout << "ECHO > " << std::endl;
-  //   std::getline(std::cin, input);
-  //   std::cout << std::endl;
-  //   std::cout << input << std::endl;
-  // }
-  // Robot::Motors::leftDrive.tare_position();
-  // Robot::Motors::leftDrive.tare_position();
-  // Robot::Motors::leftDrive.move(127);
-  // Robot::Motors::leftDrive.move(127);
+  
+  Robot::Actions::retractWings();
 
   using namespace fieldDimensions;
   Robot::chassis->setPose(
-      (MIN_X + TILE_LENGTH +
-        Robot::Dimensions::drivetrainWidth / 2),
+      (MIN_X + TILE_LENGTH + Robot::Dimensions::drivetrainWidth / 2),
       (MIN_Y + Robot::Dimensions::drivetrainLength / 2), UP);
-  auton::actions::prepareForMatchloading();
+
+  if (!std::strcmp(auton::AutonSelector::getCurrentAuton(), (char*)("skills")))
+    auton::actions::prepareForMatchloading();
 
   /**
    * false = retracted
@@ -319,7 +294,8 @@ void opcontrol() {
     // if (macroTask != nullptr) printf("state:%i \n", macroTask->get_state());
     if ((macroRunning &&
          (std::abs(Robot::control.getAnalog(ControllerAnalog::leftY)) > 0.1 ||
-          std::abs(Robot::control.getAnalog(ControllerAnalog::rightY)) > 0.1)) ||
+          std::abs(Robot::control.getAnalog(ControllerAnalog::rightY)) >
+              0.1)) ||
         (macroTask != nullptr &&
          macroTask->get_state() == pros::E_TASK_STATE_SUSPENDED)) {
       macroRunning = false;

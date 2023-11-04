@@ -35,10 +35,10 @@ void AutonSelector::decrementListener() {
   AutonSelector::updateDisplay();
 }
 
-void AutonSelector::clearDisplay() {
-  pros::lcd::clear_line(0);
-}
+void AutonSelector::clearDisplay() { pros::lcd::clear_line(0); }
+
 void AutonSelector::updateDisplay() {
+  printf("auto: %i\n", index);
   pros::lcd::set_text(0, autons[index]->label);
 }
 
@@ -48,18 +48,17 @@ void AutonSelector::enable() {
   AutonSelector::state = true;
   AutonSelector::updateDisplay();
 }
+
 void AutonSelector::disable() {
   AutonSelector::state = false;
   AutonSelector::clearDisplay();
 }
 
-bool AutonSelector::isEnabled() {
-  return AutonSelector::state;
+bool AutonSelector::isEnabled() { return AutonSelector::state; }
+
+void AutonSelector::runAuton() {
+  printf("auto: %i\n", index);
+  autons[index]->run();
 }
 
-void AutonSelector::runAuton() { 
-  autons[index]->run(); 
-}
-char* AutonSelector::getCurrentAuton() {
-  return autons[index]->label;
-}
+char* AutonSelector::getCurrentAuton() { return autons[index]->label; }
