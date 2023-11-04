@@ -11,9 +11,9 @@ void runDefensive() {
   // @todo add defensive auton
 
   pushMatchLoadZoneTriball();
-  scoreAllianceTriball();
+  // scoreAllianceTriball();
   intakeTriball(
-      {-TILE_LENGTH - 2, 0 - Robot::Dimensions::drivetrainLength / 2 - 0.85,
+      {-TILE_LENGTH - 2, 0 - Robot::Dimensions::drivetrainLength / 2 - 2.25,
        UP});
   shootTriballIntoOffensiveZone();
   touchElevationBar();
