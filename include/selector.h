@@ -1,11 +1,12 @@
 #include <string>
 #include <vector>
+#include <functional>
 
 namespace auton {
 
 struct Auton {
     char* label;
-    void run();
+    std::function<void(void)> run;
 };
 
 class AutonSelector {
@@ -14,7 +15,7 @@ class AutonSelector {
     static int index;
     /** Whether the AutonSelector is enabled */
     static bool state;
-    
+
     static void incrementListener();
     static void decrementListener();
 
