@@ -9,7 +9,7 @@ using namespace fieldDimensions;
 void auton::actions::prepareForMatchloading() {
   Robot::Actions::lowerIntake();
   Robot::Actions::shoot();
-  Robot::chassis->moveTo(MIN_X + TILE_RADIUS + 3 , MIN_Y + TILE_LENGTH - 4, -108,
+  Robot::chassis->moveTo(MIN_X + TILE_RADIUS + 1, MIN_Y + TILE_LENGTH - 4, -108,
                          5000, false, true, 0, 0.4);
   // Robot::chassis->moveTo(target.x,target.y,target.theta, 5000, true, true, 0,
   // 0.7); while(Robot::chassis->getPose().distance(target) > 12)
