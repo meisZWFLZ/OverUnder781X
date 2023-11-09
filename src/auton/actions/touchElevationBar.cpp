@@ -8,7 +8,7 @@ using namespace fieldDimensions;
 
 void auton::actions::touchElevationBar() {
   const lemlib::Pose target {static_cast<float>(leftOrRight() * (0 + TILE_RADIUS - 6)),
-                         (MIN_Y + TILE_LENGTH * 1.5 + 1),
+                         (MIN_Y + TILE_LENGTH * 1.5 - 3.5),
                          static_cast<float>(leftOrRight() * (LEFT + 10))};
                          
   Robot::chassis->moveTo(target.x,target.y,target.theta, 5000, true, true, 0, 0.7);

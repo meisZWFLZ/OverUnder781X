@@ -13,11 +13,11 @@ void runDefensive() {
   pushMatchLoadZoneTriball();
   // scoreAllianceTriball();
   intakeTriball(
-      {-TILE_LENGTH - 2, 0 - Robot::Dimensions::drivetrainLength / 2 - 2.25,
+      {-TILE_LENGTH - 2, 0 - Robot::Dimensions::drivetrainLength / 2 - 6.25,
        UP});
   shootTriballIntoOffensiveZone();
   touchElevationBar();
 }
 
 auton::Auton auton::autons::defensive = {(char*)("defensive / left"),
-                                         runDefensive};
+                                         runDefensive}
