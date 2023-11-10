@@ -20,4 +20,4 @@ void runDefensive() {
 }
 
 auton::Auton auton::autons::defensive = {(char*)("defensive / left"),
-                                         runDefensive}
+                                         runDefensive};
