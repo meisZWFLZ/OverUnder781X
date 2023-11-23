@@ -82,34 +82,34 @@ void addAutons() {
  */
 void initialize() {
   Robot::initializeOdometryConfig();
-  printf("get_ang:%i, horiPresent:%i\n", Robot::Sensors::hori.get_angle(),
-         Robot::Sensors::hori.get_angle() != PROS_ERR);
+  // printf("get_ang:%i, horiPresent:%i\n", Robot::Sensors::hori.get_angle(),
+  //        Robot::Sensors::hori.get_angle() != PROS_ERR);
   pros::lcd::initialize();
   pros::lcd::set_text(1, "Calibrating chassis...");
-  printf("<sensors = nullptr>\n");
-  if (Robot::odomSensors->horizontal1 == nullptr) printf("  hori1,\n");
-  if (Robot::odomSensors->horizontal2 == nullptr) printf("  hori2,\n");
-  if (Robot::odomSensors->imu == nullptr) printf("  imu,\n");
-  if (Robot::odomSensors->vertical1 == nullptr) printf("  vert1,\n");
-  if (Robot::odomSensors->vertical2 == nullptr) printf("  vert2,\n");
-  printf("<sensors = nullptr/>\n");
-  printf("<error>\n");
-  switch (errno) {
-    case PROS_ERR: printf("  PROS_ERR\n"); break;
-    case ENODEV: printf("  ENODEV\n"); break;
-    case ENXIO: printf("  ENXIO\n"); break;
-  }
-  errno = 0;
-  printf("<error/>\n");
+  // printf("<sensors = nullptr>\n");
+  // if (Robot::odomSensors->horizontal1 == nullptr) printf("  hori1,\n");
+  // if (Robot::odomSensors->horizontal2 == nullptr) printf("  hori2,\n");
+  // if (Robot::odomSensors->imu == nullptr) printf("  imu,\n");
+  // if (Robot::odomSensors->vertical1 == nullptr) printf("  vert1,\n");
+  // if (Robot::odomSensors->vertical2 == nullptr) printf("  vert2,\n");
+  // printf("<sensors = nullptr/>\n");
+  // printf("<error>\n");
+  // switch (errno) {
+  //   case PROS_ERR: printf("  PROS_ERR\n"); break;
+  //   case ENODEV: printf("  ENODEV\n"); break;
+  //   case ENXIO: printf("  ENXIO\n"); break;
+  // }
+  // errno = 0;
+  // printf("<error/>\n");
   Robot::chassis->calibrate(); // calibrate the chassis
   pros::lcd::set_text(1, "Chassis Calibrated!");
-  Robot::chassis->setPose(0, 0, 0);
+  // Robot::chassis->setPose(0, 0, 0);
 
-  addAutons();
-  auton::AutonSelector::init();
-  auton::AutonSelector::enable();
-  screenTask = new pros::Task {
-      screen}; // create a task to print the position to the screen
+  // addAutons();
+  // auton::AutonSelector::init();
+  // auton::AutonSelector::enable();
+  // screenTask = new pros::Task {
+  //     screen}; // create a task to print the position to the screen
 }
 
 /**
@@ -246,17 +246,17 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
-  auton::AutonSelector::disable();
+  // auton::AutonSelector::disable();
   
-  Robot::Actions::retractWings();
+  // Robot::Actions::retractWings();
 
-  using namespace fieldDimensions;
-  Robot::chassis->setPose(
-      (MIN_X + TILE_LENGTH + Robot::Dimensions::drivetrainWidth / 2),
-      (MIN_Y + Robot::Dimensions::drivetrainLength / 2), UP);
+  // using namespace fieldDimensions;
+  // Robot::chassis->setPose(
+  //     (MIN_X + TILE_LENGTH + Robot::Dimensions::drivetrainWidth / 2),
+  //     (MIN_Y + Robot::Dimensions::drivetrainLength / 2), UP);
 
-  if (!std::strcmp(auton::AutonSelector::getCurrentAuton(), (char*)("skills")))
-    auton::actions::prepareForMatchloading();
+  // if (!std::strcmp(auton::AutonSelector::getCurrentAuton(), (char*)("skills")))
+  //   auton::actions::prepareForMatchloading();
 
   /**
    * false = retracted
