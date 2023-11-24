@@ -7,4 +7,4 @@
 
 pros::Rotation Robot::Sensors::vert {6};
 pros::Rotation Robot::Sensors::hori {15, true};
-pros::Imu Robot::Sensors::imu {11};
+pros::Imu Robot::Sensors::imu {4};
