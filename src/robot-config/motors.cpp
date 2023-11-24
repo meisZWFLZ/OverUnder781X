@@ -6,19 +6,19 @@
 
 // drivetrain
 // left
-pros::Motor leftDriveA {-16, pros::v5::MotorGears::blue};
-pros::Motor leftDriveB {-10, pros::v5::MotorGears::blue};
+pros::Motor leftDriveA {-5, pros::v5::MotorGears::blue};
+pros::Motor leftDriveB {-9, pros::v5::MotorGears::blue};
 // right
-pros::Motor rightDriveA {18, pros::v5::MotorGears::blue, /* true */};
-pros::Motor rightDriveB {13, pros::v5::MotorGears::blue, /* true */};
+pros::Motor rightDriveA {10, pros::v5::MotorGears::blue, /* true */};
+pros::Motor rightDriveB {18, pros::v5::MotorGears::blue, /* true */};
 
 // intake
-pros::Motor intakeA {-12};
+pros::Motor intakeA {-16};
 
 // shooter
-pros::Motor shooterA {-14};
-pros::Motor shooterB {-6};
-pros::Motor shooterC {9};
+pros::Motor shooterA {-21};
+pros::Motor shooterB {-11};
+pros::Motor shooterC {12};
 
 // robot groups
 std::shared_ptr<pros::MotorGroup> Robot::Motors::leftDrive = nullptr; 
