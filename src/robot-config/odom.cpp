@@ -18,10 +18,11 @@ lemlib::TrackingWheel* leftVert =
               &Robot::Sensors::vert, Robot::Dimensions::vertEncDiameter,
               -Robot::Dimensions::vertEncDistance,
               Robot::Dimensions::vertEncGearRatio /* 300 */ /* 1 */)
-        : new lemlib::TrackingWheel(&Robot::Sensors::leftDrive,
+        : nullptr
+        /* new lemlib::TrackingWheel(&Robot::Sensors::leftDrive,
                                     Robot::Dimensions::driveWheelDiameter,
                                     -Robot::Dimensions::trackWidth / 2,
-                                    Robot::Dimensions::driveEncGearRatio);
+                                    Robot::Dimensions::driveEncGearRatio) */;
 
 lemlib::TrackingWheel* rightVert = nullptr;
     // Robot::Sensors::vert.get_angle() != PROS_ERR

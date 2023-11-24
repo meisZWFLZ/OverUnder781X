@@ -21,8 +21,8 @@ class Robot {
     class Sensors {
       public:
         // pid sensors (drivetrain wheels)
-        static pros::Rotation leftDrive;
-        static pros::Rotation rightDrive;
+        // static pros::Rotation leftDrive;
+        // static pros::Rotation rightDrive;
         // odometry sensors (dedicated odom wheels)
         static pros::Rotation vert;
         static pros::Rotation hori;
