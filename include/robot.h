@@ -10,7 +10,8 @@ class Robot {
 
         static pros::Motor_Group intake;
 
-        static pros::Motor_Group shooter;
+        static pros::Motor_Group topShooter;
+        static pros::Motor_Group bottomShooter;
     };
     class Pistons {
       public: 

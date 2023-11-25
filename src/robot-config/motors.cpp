@@ -21,4 +21,5 @@ pros::Motor shooterC {12};
 pros::Motor_Group Robot::Motors::leftDrive {leftDriveA, leftDriveB};
 pros::Motor_Group Robot::Motors::rightDrive {rightDriveA, rightDriveB};
 pros::Motor_Group Robot::Motors::intake {intakeA};
-pros::Motor_Group Robot::Motors::shooter {shooterA, shooterB, shooterC};
+pros::Motor_Group Robot::Motors::topShooter {shooterA};
+pros::Motor_Group Robot::Motors::bottomShooter { shooterB, shooterC};

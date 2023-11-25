@@ -51,10 +51,10 @@ void screen() {
       //         get_wattage(Robot::Motors::intake)); // print the x position
       // controller.set_text(0, 0, intake);
       // // controller.clear_line(1);
-      char shooter[15];
-      sprintf(shooter, "fly: %fw",
-              get_wattage(Robot::Motors::shooter)); // print the x position
-      controller.set_text(0, 0, shooter);
+      // char shooter[15];
+      // sprintf(shooter, "fly: %fw",
+      //         get_wattage(Robot::Motors::shooter)); // print the x position
+      // controller.set_text(0, 0, shooter);
       // char drive[15];
       // sprintf(drive, "dri: %fw",
       //         (get_wattage(Robot::Motors::leftDrive) +
@@ -247,7 +247,7 @@ void autonomous() {
  */
 void opcontrol() {
   // auton::AutonSelector::disable();
-  
+
   // Robot::Actions::retractWings();
 
   // using namespace fieldDimensions;
@@ -255,7 +255,8 @@ void opcontrol() {
   //     (MIN_X + TILE_LENGTH + Robot::Dimensions::drivetrainWidth / 2),
   //     (MIN_Y + Robot::Dimensions::drivetrainLength / 2), UP);
 
-  // if (!std::strcmp(auton::AutonSelector::getCurrentAuton(), (char*)("skills")))
+  // if (!std::strcmp(auton::AutonSelector::getCurrentAuton(),
+  // (char*)("skills")))
   //   auton::actions::prepareForMatchloading();
 
   /**
@@ -293,7 +294,8 @@ void opcontrol() {
     // }
     // if (macroTask != nullptr) printf("state:%i \n", macroTask->get_state());
     // if ((macroRunning &&
-    //      (std::abs(Robot::control.getAnalog(ControllerAnalog::leftY)) > 0.1 ||
+    //      (std::abs(Robot::control.getAnalog(ControllerAnalog::leftY)) > 0.1
+    //      ||
     //       std::abs(Robot::control.getAnalog(ControllerAnalog::rightY)) >
     //           0.1)) ||
     //     (macroTask != nullptr &&
@@ -305,17 +307,17 @@ void opcontrol() {
     //   macroTask = nullptr;
     // }
     // if (!macroRunning)
-      Robot::chassis->tank(
-          Robot::control.getAnalog(ControllerAnalog::leftY) * 127,
-          Robot::control.getAnalog(ControllerAnalog::rightY) * 127, 15);
+    Robot::chassis->tank(
+        Robot::control.getAnalog(ControllerAnalog::leftY) * 127,
+        Robot::control.getAnalog(ControllerAnalog::rightY) * 127, 15);
 
     // intake / outtake
     // if (!macroRunning) {
-      if (Robot::control.getDigital(ControllerDigital::L1))
-        Robot::Motors::intake.move(127);
-      else if (Robot::control.getDigital(ControllerDigital::L2))
-        Robot::Motors::intake.move(-127);
-      else Robot::Motors::intake.move(0);
+    if (Robot::control.getDigital(ControllerDigital::L1))
+      Robot::Motors::intake.move(127);
+    else if (Robot::control.getDigital(ControllerDigital::L2))
+      Robot::Motors::intake.move(-127);
+    else Robot::Motors::intake.move(0);
     // }
 
     // // shoot / un-shoot? / shootMacro
@@ -341,9 +343,16 @@ void opcontrol() {
     //   }
     // }
     // if (!macroRunning && !(r1 && r2)) {
-      if (r1) Robot::Motors::shooter.move(127);
-      else if (r2) Robot::Motors::shooter.move(-127);
-      else Robot::Motors::shooter.move(0);
+    if (r1) {
+      Robot::Motors::topShooter.move(127);
+      Robot::Motors::bottomShooter.move(127 - 32);
+    } else if (r2) {
+      Robot::Motors::topShooter.move(-127);
+      Robot::Motors::bottomShooter.move(-127);
+    } else {
+      Robot::Motors::topShooter.move(0);
+      Robot::Motors::bottomShooter.move(0);
+    }
     // }
     // prevR1 = r1;
     // prevR2 = r2;
