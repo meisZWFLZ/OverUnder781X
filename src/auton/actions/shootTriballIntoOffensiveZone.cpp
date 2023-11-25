@@ -5,6 +5,7 @@
 
 using namespace fieldDimensions;
 void auton::actions::shootTriballIntoOffensiveZone() {
-  Robot::chassis->turnTo(MAX_X-TILE_RADIUS,0, 5000, false, true);
+  Robot::chassis->turnToPose(MAX_X-TILE_RADIUS,0_in, 5000_ms, true);
+  Robot::chassis->waitUntilDone();
   Robot::Actions::shootMacro();
 }

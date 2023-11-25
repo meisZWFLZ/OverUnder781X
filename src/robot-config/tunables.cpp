@@ -1,25 +1,26 @@
 #include "lemlib/chassis/chassis.hpp"
+#include "lemlib/units.hpp"
 #include "robot.h"
 
 // forward/backward PID
-lemlib::ChassisController_t Robot::Tunables::lateralController {
+lemlib::ControllerSettings<Length> Robot::Tunables::lateralController {
     20, // kP
     25, // kD
-    1, // smallErrorRange
-    500, // smallErrorTimeout
-    3, // largeErrorRange
-    500, // largeErrorTimeout
+    1_in, // smallErrorRange
+    500_ms, // smallErrorTimeout
+    3_in, // largeErrorRange
+    500_ms, // largeErrorTimeout
     50 // slew rate
 };
 
 // turning PID
-lemlib::ChassisController_t Robot::Tunables::angularController {
+lemlib::ControllerSettings<Angle> Robot::Tunables::angularController {
     9, // kP
     50, // kD`
-    1, // smallErrorRange
-    100, // smallErrorTimeout
-    3, // largeErrorRange
-    500, // largeErrorTimeout
+    1_deg, // smallErrorRange
+    100_ms, // smallErrorTimeout
+    3_deg, // largeErrorRange
+    500_ms, // largeErrorTimeout
     0 // slew rate
 };
 

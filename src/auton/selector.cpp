@@ -1,5 +1,4 @@
 #include "selector.h"
-#include "pros/llemu.hpp"
 #include <cmath>
 
 using namespace auton;
@@ -9,11 +8,11 @@ bool AutonSelector::state = false;
 std::vector<Auton*> AutonSelector::autons {};
 
 void AutonSelector::attachListeners() {
-  pros::lcd::register_btn0_cb(AutonSelector::decrementListener);
-  pros::lcd::register_btn2_cb(AutonSelector::incrementListener);
+  // pros::lcd::register_btn1_cb(AutonSelector::decrementListener);
+//   pros::lcd::register_btn1_cb(AutonSelector::incrementListener);
 }
 
-void AutonSelector::initScreen() { pros::lcd::initialize(); }
+void AutonSelector::initScreen() { /* pros::lcd::initialize(); */ }
 
 void AutonSelector::init() {
   AutonSelector::initScreen();
@@ -35,11 +34,11 @@ void AutonSelector::decrementListener() {
   AutonSelector::updateDisplay();
 }
 
-void AutonSelector::clearDisplay() { pros::lcd::clear_line(0); }
+void AutonSelector::clearDisplay() { /* pros::lcd::clear_line(0); */ }
 
 void AutonSelector::updateDisplay() {
   printf("auto: %i\n", index);
-  pros::lcd::set_text(0, autons[index]->label);
+  // pros::lcd::set_text(0, autons[index]->label);
 }
 
 void AutonSelector::addAuton(Auton* auton) { autons.push_back(auton); }

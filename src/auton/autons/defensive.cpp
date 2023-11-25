@@ -7,13 +7,13 @@ using namespace fieldDimensions;
 void runDefensive() {
   using namespace fieldDimensions;
   using namespace auton::actions;
-  Robot::chassis->setPose(leftStartingPose, false);
+  Robot::chassis->setPose(leftStartingPose);
   // @todo add defensive auton
 
   pushMatchLoadZoneTriball();
   // scoreAllianceTriball();
   intakeTriball(
-      {-TILE_LENGTH - 2, 0 - Robot::Dimensions::drivetrainLength / 2 - 6.25,
+      {-TILE_LENGTH - 2_in, 0_in - Robot::Dimensions::drivetrainLength / 2 - 6.25_in,
        UP});
   shootTriballIntoOffensiveZone();
   touchElevationBar();

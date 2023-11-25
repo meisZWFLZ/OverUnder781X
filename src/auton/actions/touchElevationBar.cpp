@@ -7,16 +7,15 @@
 using namespace fieldDimensions;
 
 void auton::actions::touchElevationBar() {
-  const lemlib::Pose target {static_cast<float>(leftOrRight() * (0 + TILE_RADIUS - 6)),
-                         (MIN_Y + TILE_LENGTH * 1.5 - 3.5),
-                         static_cast<float>(leftOrRight() * (LEFT + 10))};
+  const lemlib::Pose target {leftOrRight() * (0_in + TILE_RADIUS - 6_in),
+                         (MIN_Y + TILE_LENGTH * 1.5 - 3.5_in),
+                         leftOrRight() * (LEFT + 10_deg)};
                          
-  Robot::chassis->moveTo(target.x,target.y,target.theta, 5000, true, true, 0, 0.7);
-  while(Robot::chassis->getPose().distance(target) > 12)
+  Robot::chassis->moveTo(target.x,target.y,target.theta, 5000_ms, false, 0, 0, 0.7);
+  while(Robot::chassis->getPose().distance(target) > 12_in)
     pros::delay(20);
   Robot::Actions::expandWings();
-  while(Robot::chassis->getPose().distance(target) > 3 || Robot::Motors::leftDrive.at(0).get_voltage() > 2  || Robot::Motors::rightDrive.at(0).get_voltage() > 2)
-    pros::delay(20);
+  Robot::chassis->waitUntilDone();
   
   pros::delay(500);
   // Robot::chassis->turnTo(-leftOrRight()*100000, 100000, 5000, false, false, 56);

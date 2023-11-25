@@ -5,7 +5,7 @@
 using namespace fieldDimensions;
 
 void runOffensive() {
-  Robot::chassis->setPose(rightStartingPose, false);
+  Robot::chassis->setPose(rightStartingPose);
   // @todo add offensive auton
 
   auton::actions::scoreAllianceTriball();

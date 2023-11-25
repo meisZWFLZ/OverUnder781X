@@ -5,7 +5,6 @@
 #include <numeric>
 #include <string>
 #include <vector>
-#include "neil_pid.h"
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -21,11 +20,11 @@ float average(std::vector<float> const& v) {
   return std::reduce(v.begin(), v.end()) / count;
 }
 
-const float get_wattage(pros::Motor_Group& group) {
-  std::vector<float> watts = {};
-  for (int i = 0; i < group.size(); i++) watts.push_back(group[i].get_power());
-  return average(watts);
-}
+// const float get_wattage(pros::MotorGroup& group) {
+//   std::vector<float> watts = {};
+//   for (int i = 0; i < group.size(); i++) watts.push_back(group[i].get_power());
+//   return average(watts);
+// }
 
 void screen() {
   // loop forever
@@ -45,16 +44,16 @@ void screen() {
     } else {
       // display wattage
       // controller.clear_line(0);
-      printf("in: %fw\n", get_wattage(Robot::Motors::intake));
+      // printf("in: %fw\n", get_wattage(Robot::Motors::intake));
       // char intake[15];
       // sprintf(intake, "in: %fw",
       //         get_wattage(Robot::Motors::intake)); // print the x position
       // controller.set_text(0, 0, intake);
       // // controller.clear_line(1);
-      char shooter[15];
-      sprintf(shooter, "fly: %fw",
-              get_wattage(Robot::Motors::shooter)); // print the x position
-      controller.set_text(0, 0, shooter);
+      // char shooter[15];
+      // sprintf(shooter, "fly: %fw",
+      //         get_wattage(Robot::Motors::shooter)); // print the x position
+      // controller.set_text(0, 0, shooter);
       // char drive[15];
       // sprintf(drive, "dri: %fw",
       //         (get_wattage(Robot::Motors::leftDrive) +
@@ -101,7 +100,7 @@ void initialize() {
   // }
   // errno = 0;
   // printf("<error/>\n");
-  Robot::chassis->calibrate(); // calibrate the chassis
+  Robot::chassis->initialize(); // calibrate the chassis
   pros::lcd::set_text(1, "Chassis Calibrated!");
   // Robot::chassis->setPose(0, 0, 0);
 
@@ -133,8 +132,8 @@ void competition_initialize() {}
 void score4BallAuto() {
   using namespace fieldDimensions;
   // pick up and shoot first triball
-  Robot::chassis->moveTo(0 + TILE_RADIUS, MIN_Y + (TILE_LENGTH * 2), LEFT - 15,
-                         3000);
+  Robot::chassis->moveTo(0_in + TILE_RADIUS, MIN_Y + (TILE_LENGTH * 2), LEFT - 15_deg,
+                         3000_ms);
   Robot::Actions::intake();
   Robot::Actions::shoot();
   Robot::chassis->tank(96, 96);
@@ -143,13 +142,13 @@ void score4BallAuto() {
   Robot::Actions::stopShooter();
 
   // pick up second triball
-  Robot::chassis->moveTo(0 + TILE_RADIUS, MIN_Y + (TILE_LENGTH * 3), LEFT,
-                         3000);
+  Robot::chassis->moveTo(0_in + TILE_RADIUS, MIN_Y + (TILE_LENGTH * 3), LEFT,
+                         3000_ms);
   Robot::Actions::intake();
   Robot::chassis->tank(96, 96);
   pros::delay(500);
   Robot::Actions::stopIntake();
-  Robot::chassis->turnTo(0, 10000, 3000);
+  Robot::chassis->turnToPose(0_in, 10000_in, 3000_ms);
 
   // Robot::chassis->moveTo(0 + Robot::Dimensions::drivetrainWidth/2 - 1, MIN_Y
   // + (TILE_LENGTH * 2.5), UP,
@@ -157,7 +156,7 @@ void score4BallAuto() {
 
   // Plow triballs into goal
   Robot::Actions::expandWings();
-  Robot::chassis->turnTo(10000, 0, 3000);
+  Robot::chassis->turnToPose(10000_in, 0_in, 3000_ms);
   Robot::Actions::outtake();
   pros::delay(150);
   Robot::chassis->tank(127, 127);
@@ -172,7 +171,7 @@ void intakeAndShoot() {
   using namespace fieldDimensions;
 
   auton::actions::intakeTriball(
-      {-TILE_LENGTH - 2, 0 - Robot::Dimensions::drivetrainLength / 2 - 0.85,
+      {-TILE_LENGTH - 2_in, 0_in - Robot::Dimensions::drivetrainLength / 2 - 0.85_in,
        UP});
   auton::actions::shootTriballIntoOffensiveZone();
 }
@@ -306,21 +305,21 @@ void opcontrol() {
     // }
     // if (!macroRunning)
       Robot::chassis->tank(
-          Robot::control.getAnalog(ControllerAnalog::leftY) * 127,
-          Robot::control.getAnalog(ControllerAnalog::rightY) * 127, 15);
+          Robot::control.getAnalog(okapi::ControllerAnalog::leftY) * 127,
+          Robot::control.getAnalog(okapi::ControllerAnalog::rightY) * 127, 15);
 
     // intake / outtake
     // if (!macroRunning) {
-      if (Robot::control.getDigital(ControllerDigital::L1))
+      if (Robot::control.getDigital(okapi::ControllerDigital::L1))
         Robot::Motors::intake.move(127);
-      else if (Robot::control.getDigital(ControllerDigital::L2))
+      else if (Robot::control.getDigital(okapi::ControllerDigital::L2))
         Robot::Motors::intake.move(-127);
       else Robot::Motors::intake.move(0);
     // }
 
     // // shoot / un-shoot? / shootMacro
-    const bool r1 = Robot::control.getDigital(ControllerDigital::R1);
-    const bool r2 = Robot::control.getDigital(ControllerDigital::R2);
+    const bool r1 = Robot::control.getDigital(okapi::ControllerDigital::R1);
+    const bool r2 = Robot::control.getDigital(okapi::ControllerDigital::R2);
     // printf("run shooter macro");
     // if (!(prevR1 && prevR2) && r1 && r2) {
     //   printf("run shooter macro\n");
@@ -363,13 +362,13 @@ void opcontrol() {
     // else wasShootPressed = false;
 
     // elevate intake
-    if (Robot::control.getDigital(ControllerDigital::X)) {
+    if (Robot::control.getDigital(okapi::ControllerDigital::X)) {
       if (!wasXPressed)
         Robot::Pistons::intakeElevator.set_value(intakeElevatorState ^= true);
       wasXPressed = true;
     } else wasXPressed = false;
 
-    if (Robot::control.getDigital(ControllerDigital::up)) {
+    if (Robot::control.getDigital(okapi::ControllerDigital::up)) {
       if (!wasUpPressed) Robot::Pistons::wings.set_value(wingsState ^= true);
       wasUpPressed = true;
     } else wasUpPressed = false;
@@ -379,8 +378,8 @@ void opcontrol() {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     // drive temp display
-    const auto leftTempArr = Robot::Motors::leftDrive.get_temperatures();
-    const auto rightTempArr = Robot::Motors::rightDrive.get_temperatures();
+    const auto leftTempArr = Robot::Motors::leftDrive->get_temperature_all();
+    const auto rightTempArr = Robot::Motors::rightDrive->get_temperature_all();
 
     const std::string leftTempStr =
         std::to_string((int)((leftTempArr[0] + leftTempArr[1]) * 0.9) + 32);

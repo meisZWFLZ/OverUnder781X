@@ -3,15 +3,18 @@
 #include "robot.h"
 
 namespace fieldDimensions {
-enum HEADING { LEFT = 270, RIGHT = 90, UP = 0, DOWN = 180 };
+const constexpr Angle LEFT = 270_deg;
+const constexpr Angle RIGHT = 90_deg;
+const constexpr Angle UP = 0_deg;
+const constexpr Angle DOWN = 180_deg;
 
-constexpr int MAX_X = 72;
-constexpr int MIN_X = -72;
-constexpr int MAX_Y = 72;
-constexpr int MIN_Y = -72;
+const constexpr Length MAX_X = 72_in;
+const constexpr Length MIN_X = -72_in;
+const constexpr Length MAX_Y = 72_in;
+const constexpr Length MIN_Y = -72_in;
 
-constexpr int TILE_LENGTH = 24;
-constexpr int TILE_RADIUS = TILE_LENGTH / 2;
+const constexpr Length TILE_LENGTH = 24_in;
+const constexpr Length TILE_RADIUS = TILE_LENGTH / 2;
 // @TODO
 const inline lemlib::Pose leftStartingPose {
     (MIN_X + TILE_LENGTH + Robot::Dimensions::drivetrainWidth / 2),
