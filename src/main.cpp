@@ -343,16 +343,9 @@ void opcontrol() {
     //   }
     // }
     // if (!macroRunning && !(r1 && r2)) {
-    if (r1) {
-      Robot::Motors::topShooter.move(127);
-      Robot::Motors::bottomShooter.move(127 - 32);
-    } else if (r2) {
-      Robot::Motors::topShooter.move(-127);
-      Robot::Motors::bottomShooter.move(-127);
-    } else {
-      Robot::Motors::topShooter.move(0);
-      Robot::Motors::bottomShooter.move(0);
-    }
+    if (r1) Robot::Actions::shoot();
+    else if (r2) Robot::Actions::unshoot();
+    else Robot::Actions::stopShooter();
     // }
     // prevR1 = r1;
     // prevR2 = r2;

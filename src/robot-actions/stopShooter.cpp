@@ -1,5 +1,6 @@
 #include "robot.h"
 
 void Robot::Actions::stopShooter() {
-  Robot::Motors::shooter.move_voltage(0);
+  Robot::Motors::topShooter.move(0);
+  Robot::Motors::bottomShooter.move(0);
 }
