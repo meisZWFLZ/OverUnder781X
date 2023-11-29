@@ -307,10 +307,10 @@ void opcontrol() {
     //   macroTask = nullptr;
     // }
     // if (!macroRunning)
-    Robot::chassis->tank(
-        Robot::control.getAnalog(ControllerAnalog::leftY) * 127,
-        Robot::control.getAnalog(ControllerAnalog::rightY) * 127, 15);
-
+          Robot::chassis->tank(
+          Robot::control.getAnalog(ControllerAnalog::leftY) * 127,
+          Robot::control.getAnalog(ControllerAnalog::rightY) * 127, 15);
+    
     // intake / outtake
     // if (!macroRunning) {
     if (Robot::control.getDigital(ControllerDigital::L1))
@@ -380,20 +380,20 @@ void opcontrol() {
     // 							     Driver Feedback
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    // drive temp display
-    const auto leftTempArr = Robot::Motors::leftDrive.get_temperatures();
-    const auto rightTempArr = Robot::Motors::rightDrive.get_temperatures();
+    // // drive temp display
+    // const auto leftTempArr = Robot::Motors::leftDrive.get_temperatures();
+    // const auto rightTempArr = Robot::Motors::rightDrive.get_temperatures();
 
-    const std::string leftTempStr =
-        std::to_string((int)((leftTempArr[0] + leftTempArr[1]) * 0.9) + 32);
-    const std::string rightTempStr =
-        std::to_string((int)((rightTempArr[0] + rightTempArr[1]) * 0.9) + 32);
+    // const std::string leftTempStr =
+    //     std::to_string((int)((leftTempArr[0] + leftTempArr[1]) * 0.9) + 32);
+    // const std::string rightTempStr =
+    //     std::to_string((int)((rightTempArr[0] + rightTempArr[1]) * 0.9) + 32);
 
-    Robot::control.clearLine(0);
-    Robot::control.setText(
-        0, 0,
-        leftTempStr + std::string(4 - leftTempStr.length(), ' ') + "DRIVE " +
-            std::string(4 - rightTempStr.length(), ' ') + rightTempStr);
+    // Robot::control.clearLine(0);
+    // Robot::control.setText(
+    //     0, 0,
+    //     leftTempStr + std::string(4 - leftTempStr.length(), ' ') + "DRIVE " +
+    //         std::string(4 - rightTempStr.length(), ' ') + rightTempStr);
 
     pros::delay(20);
   }
