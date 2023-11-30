@@ -14,7 +14,7 @@ void auton::actions::touchElevationBar() {
   Robot::chassis->moveTo(target.x,target.y,target.theta, 5000, true, true, 0, 0.7);
   while(Robot::chassis->getPose().distance(target) > 12)
     pros::delay(20);
-  Robot::Actions::expandWings();
+  Robot::Actions::raiseIntake();
   while(Robot::chassis->getPose().distance(target) > 3 || Robot::Motors::leftDrive.at(0).get_voltage() > 2  || Robot::Motors::rightDrive.at(0).get_voltage() > 2)
     pros::delay(20);
   
@@ -23,7 +23,7 @@ void auton::actions::touchElevationBar() {
   // while(pros::competition::is_autonomous()) {
   //   pros::delay(10);
   // }
-  Robot::chassis->tank(leftOrRight(-30, 56), leftOrRight(56, -30), 0);
+  Robot::chassis->tank(leftOrRight(56, -30), leftOrRight(-30, 56),0);
   // pros::delay(600);
   // Robot::chassis->tank(0, 0);
 }

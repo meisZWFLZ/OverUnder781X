@@ -1,5 +1,5 @@
 #include "robot.h"
 
 void Robot::Actions::lowerIntake() {
-  Robot::Pistons::intakeElevator.set_value(true);
+  Robot::Pistons::intakeElevator.set_value(false);
 }

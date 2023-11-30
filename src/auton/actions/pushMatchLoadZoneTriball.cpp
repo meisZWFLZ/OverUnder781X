@@ -10,7 +10,7 @@ void auton::actions::pushMatchLoadZoneTriball() {
   // printf("y:%f\n", target.y);
   // Robot::chassis->moveTo(target.x, target.y, target.theta, 5000, true, 0,
   //                        0.2);
-  Robot::Actions::expandWings();
+  // Robot::Actions::expandWings();
   Robot::chassis->tank(127, 172);
   pros::delay(100);
   Robot::chassis->tank(0, 0);

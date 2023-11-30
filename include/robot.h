@@ -61,6 +61,7 @@ class Robot {
 
       static void raiseIntake();
       static void lowerIntake();
+      static void prepareIntake();
 
       static void expandWings();
       static void retractWings();

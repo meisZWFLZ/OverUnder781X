@@ -1,4 +1,5 @@
 #include "main.h"
+#include "pros/misc.hpp"
 #include "robot.h"
 #include "auton.h"
 #include <iostream>
@@ -13,6 +14,8 @@
 #include <string.h>
 #include "fieldDimensions.h"
 #include "selector.h"
+
+bool autonHasRun =false;
 
 float average(std::vector<float> const& v) {
   if (v.empty()) { return 0; }
@@ -103,13 +106,14 @@ void initialize() {
   // printf("<error/>\n");
   Robot::chassis->calibrate(); // calibrate the chassis
   pros::lcd::set_text(1, "Chassis Calibrated!");
-  // Robot::chassis->setPose(0, 0, 0);
+  Robot::chassis->setPose(0, 0, 0);
+  Robot::Actions::raiseIntake();
 
   // addAutons();
   // auton::AutonSelector::init();
   // auton::AutonSelector::enable();
-  // screenTask = new pros::Task {
-  //     screen}; // create a task to print the position to the screen
+  screenTask = new pros::Task {
+      screen}; // create a task to print the position to the screen
 }
 
 /**
@@ -190,7 +194,11 @@ void intakeAndShoot() {
  */
 void autonomous() {
   auton::AutonSelector::disable();
+  autonHasRun = true;
+  if (pros::competition::is_connected())
+    Robot::Actions::prepareIntake();
   printf("auton start");
+  pros::competition::is_connected();
 
   auton::AutonSelector::runAuton();
   // score alliance triball
@@ -246,9 +254,11 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
-  // auton::AutonSelector::disable();
+  auton::AutonSelector::disable();
+  Robot::Actions::retractWings();
 
-  // Robot::Actions::retractWings();
+  if (pros::competition::is_connected() && !autonHasRun)
+    Robot::Actions::prepareIntake();
 
   // using namespace fieldDimensions;
   // Robot::chassis->setPose(
