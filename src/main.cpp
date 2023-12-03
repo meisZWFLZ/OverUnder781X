@@ -109,9 +109,9 @@ void initialize() {
   Robot::chassis->setPose(0, 0, 0);
   Robot::Actions::raiseIntake();
 
-  // addAutons();
-  // auton::AutonSelector::init();
-  // auton::AutonSelector::enable();
+  addAutons();
+  auton::AutonSelector::init();
+  auton::AutonSelector::enable();
   screenTask = new pros::Task {
       screen}; // create a task to print the position to the screen
 }
