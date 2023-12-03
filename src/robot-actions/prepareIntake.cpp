@@ -2,7 +2,7 @@
 #include "robot.h"
 
 void Robot::Actions::prepareIntake() {
-    Robot::Actions::shoot();
+    Robot::Actions::unshoot();
     pros::delay(50);
     Robot::Actions::stopShooter();
 }
