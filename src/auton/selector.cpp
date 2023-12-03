@@ -1,6 +1,5 @@
 #include "selector.h"
 #include "pros/llemu.hpp"
-#include <cmath>
 
 using namespace auton;
 

@@ -2,20 +2,15 @@
 #include "pros/misc.hpp"
 #include "robot.h"
 #include "auton.h"
-#include <iostream>
 #include <numeric>
 #include <string>
 #include <vector>
 #include "neil_pid.h"
-#include <iostream>
-#include <fstream>
 #include <vector>
-#include <sstream>
-#include <string.h>
 #include "fieldDimensions.h"
 #include "selector.h"
 
-bool autonHasRun =false;
+bool autonHasRun = false;
 
 float average(std::vector<float> const& v) {
   if (v.empty()) { return 0; }
@@ -195,8 +190,7 @@ void intakeAndShoot() {
 void autonomous() {
   auton::AutonSelector::disable();
   autonHasRun = true;
-  if (pros::competition::is_connected())
-    Robot::Actions::prepareIntake();
+  if (pros::competition::is_connected()) Robot::Actions::prepareIntake();
   printf("auton start");
   pros::competition::is_connected();
 
@@ -317,10 +311,10 @@ void opcontrol() {
     //   macroTask = nullptr;
     // }
     // if (!macroRunning)
-          Robot::chassis->tank(
-          Robot::control.getAnalog(ControllerAnalog::leftY) * 127,
-          Robot::control.getAnalog(ControllerAnalog::rightY) * 127, 15);
-    
+    Robot::chassis->tank(
+        Robot::control.getAnalog(ControllerAnalog::leftY) * 127,
+        Robot::control.getAnalog(ControllerAnalog::rightY) * 127, 15);
+
     // intake / outtake
     // if (!macroRunning) {
     if (Robot::control.getDigital(ControllerDigital::L1))
@@ -397,7 +391,8 @@ void opcontrol() {
     // const std::string leftTempStr =
     //     std::to_string((int)((leftTempArr[0] + leftTempArr[1]) * 0.9) + 32);
     // const std::string rightTempStr =
-    //     std::to_string((int)((rightTempArr[0] + rightTempArr[1]) * 0.9) + 32);
+    //     std::to_string((int)((rightTempArr[0] + rightTempArr[1]) * 0.9) +
+    //     32);
 
     // Robot::control.clearLine(0);
     // Robot::control.setText(
