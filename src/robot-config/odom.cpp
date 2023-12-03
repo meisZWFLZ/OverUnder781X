@@ -2,11 +2,11 @@
 #include "lemlib/chassis/trackingWheel.hpp"
 #include "robot.h"
 
-lemlib::OdomSensors_t* Robot::odomSensors = nullptr;
+lemlib::OdomSensors* Robot::odomSensors = nullptr;
 lemlib::Chassis* Robot::chassis = nullptr;
 
 void Robot::initializeOdometryConfig() {
-  lemlib::Drivetrain_t drivetrain {
+  lemlib::Drivetrain drivetrain {
       &Robot::Motors::leftDrive,        &Robot::Motors::rightDrive,
       Robot::Dimensions::trackWidth,    Robot::Dimensions::driveWheelDiameter,
       Robot::Dimensions::driveWheelRpm, Robot::Tunables::chasePower};
@@ -40,7 +40,7 @@ void Robot::initializeOdometryConfig() {
           : nullptr;
 
   Robot::odomSensors =
-      new lemlib::OdomSensors_t {leftVert, rightVert /* nullptr */, hori,
+      new lemlib::OdomSensors {leftVert, rightVert /* nullptr */, hori,
                                  nullptr, /* nullptr */ &Robot::Sensors::imu};
 
   Robot::chassis =

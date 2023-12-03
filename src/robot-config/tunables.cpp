@@ -2,7 +2,7 @@
 #include "robot.h"
 
 // forward/backward PID
-lemlib::ChassisController_t Robot::Tunables::lateralController {
+lemlib::ControllerSettings Robot::Tunables::lateralController {
     20, // kP
     25, // kD
     1, // smallErrorRange
@@ -13,7 +13,7 @@ lemlib::ChassisController_t Robot::Tunables::lateralController {
 };
 
 // turning PID
-lemlib::ChassisController_t Robot::Tunables::angularController {
+lemlib::ControllerSettings Robot::Tunables::angularController {
     9, // kP
     50, // kD`
     1, // smallErrorRange

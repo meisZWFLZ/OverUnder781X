@@ -1,6 +1,8 @@
 #pragma once
-#include "main.h"
-
+#include "pros/motors.hpp"
+#include "pros/adi.hpp"
+#include "okapi/impl/device/controller.hpp"
+#include "lemlib/chassis/chassis.hpp"
 class Robot {
   public:
     class Motors {
@@ -68,12 +70,12 @@ class Robot {
     };
     class Tunables {
       public:
-        static lemlib::ChassisController_t lateralController;
-        static lemlib::ChassisController_t angularController;
+        static lemlib::ControllerSettings lateralController;
+        static lemlib::ControllerSettings angularController;
         static const float chasePower;
     };
     static void initializeOdometryConfig(); 
-    static lemlib::OdomSensors_t *odomSensors;
+    static lemlib::OdomSensors *odomSensors;
     static okapi::Controller control;
     static lemlib::Chassis *chassis;
 };

@@ -1,6 +1,4 @@
 #include "auton.h"
-#include "pros/misc.hpp"
-#include "pros/rtos.hpp"
 #include "robot.h"
 #include "fieldDimensions.h"
 
@@ -10,7 +8,7 @@ void auton::actions::prepareForMatchloading() {
   Robot::Actions::lowerIntake();
   Robot::Actions::shoot();
   Robot::chassis->moveTo(MIN_X + TILE_RADIUS + 1, MIN_Y + TILE_LENGTH - 5, -112,
-                         5000, false, true, 0, 0.4);
+                         5000, false, true, 0, 0.4, false);
   // Robot::chassis->moveTo(target.x,target.y,target.theta, 5000, true, true, 0,
   // 0.7); while(Robot::chassis->getPose().distance(target) > 12)
   //   pros::delay(20);
