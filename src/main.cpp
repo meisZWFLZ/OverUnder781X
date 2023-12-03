@@ -264,12 +264,17 @@ void opcontrol() {
   //   auton::actions::prepareForMatchloading();
 
   /**
+   * false = down
+   *
+   * true = up
+   */
+  bool intakeElevatorState = true;
+  bool wasXPressed = false;
+  /**
    * false = retracted
    *
    * true = expanded
    */
-  bool intakeElevatorState = false;
-  bool wasXPressed = false;
   bool wingsState = false;
   bool wasUpPressed = false;
 
@@ -370,8 +375,11 @@ void opcontrol() {
 
     // elevate intake
     if (Robot::control.getDigital(ControllerDigital::X)) {
-      if (!wasXPressed)
-        Robot::Pistons::intakeElevator.set_value(intakeElevatorState ^= true);
+      if (!wasXPressed) {
+        intakeElevatorState = !intakeElevatorState;
+        if (intakeElevatorState) Robot::Actions::raiseIntake();
+        else Robot::Actions::lowerIntake();
+      }
       wasXPressed = true;
     } else wasXPressed = false;
 
