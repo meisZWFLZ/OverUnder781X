@@ -5,90 +5,84 @@
 #include "fieldDimensions.h"
 
 ASSET(def_score_alliance_txt);
+ASSET(def_elevation_bar_txt);
 
 using namespace fieldDimensions;
+
+// bool waitUntilMotionDone(int timeout = -1) {
+//   const int startTime = pros::millis();
+//   while (Robot::chassis->distTravelled != -1 &&
+//          (timeout == -1 || pros::millis() - startTime < timeout)) {
+//     printf("dist: %f\n", Robot::chassis->distTravelled);
+//     pros::delay(100);
+//   }
+// }
 
 void runDefensive() {
   using namespace fieldDimensions;
   using namespace auton::actions;
-  Robot::chassis->setPose(leftStartingPose, false);
-  const lemlib::Pose scoreAllyTarget = {-36, -15};
+
+  Robot::chassis->setPose(
+      {0 - TILE_LENGTH * 2 - (1 - 1.0 / 8) / 2,
+       MIN_Y + TILE_LENGTH - Robot::Dimensions::drivetrainWidth / 2 - (5.0 / 8),
+       LEFT},
+      false);
+
+  const lemlib::Pose scoreAllyTarget = {-42.5, -12.75};
   const lemlib::Pose intakeMiddleTarget = {
       TILE_LENGTH, Robot::Dimensions::drivetrainLength / 2 - 5, UP};
   const lemlib::Pose outtakeMiddleTarget = {
       0 - Robot::Dimensions::drivetrainLength / 2, -TILE_LENGTH / 2.0, RIGHT};
 
+  Robot::Actions::lowerIntake();
+  pros::delay(200);
+  Robot::chassis->tank(-127, 127);
+
+  while (Robot::chassis->getPose().theta > 90) pros::delay(10);
+
+  Robot::Actions::raiseIntake();
+
+  Robot::chassis->turnTo(0, 0, 500);
+  Robot::chassis->waitUntilDone();
   // Curve around and score into large part of goal
-  Robot::chassis->follow(def_score_alliance_txt, 3250, 10, true);
+  Robot::chassis->follow(def_score_alliance_txt, 13, 2750);
 
   // wait until 5 inches away from, then outtake
-  while (Robot::chassis->getPose().distance(scoreAllyTarget) > 5)
+  while (Robot::chassis->getPose().distance(scoreAllyTarget) > 18)
     pros::delay(10);
   Robot::Actions::outtake();
   printf("time: %ims\n", pros::millis());
 
   // wait until done with pure pursuit motion
-  Robot::chassis->waitUntilDist(-1);
+  Robot::chassis->waitUntilDone();
 
-  // push triball into goal
+  // // back up for ram
+  // Robot::chassis->tank(-127, -127);
+  // pros::delay(200);
+  // ram triball into goal
   Robot::chassis->tank(127, 127);
-  pros::delay(500);
+  pros::delay(100);
+
   // get out of goal
   Robot::chassis->tank(-127, -127);
-  pros::delay(500);
+  pros::delay(200);
   Robot::Actions::stopIntake();
 
-  // UNTESTED:
-  // go to middle triball
-  Robot::chassis->moveTo(intakeMiddleTarget.x, intakeMiddleTarget.y,
-                         intakeMiddleTarget.theta, 2000, true);
-  // wait until within 5 inches to start intaking
-  while (Robot::chassis->getPose().distance(intakeMiddleTarget) > 5)
-    pros::delay(10);
-  Robot::Actions::intake();
-  printf("time: %ims\n", pros::millis());
+  printf("done with ally triball\n");
 
-  // wait until done moving to middle triball
-  Robot::chassis->waitUntilDist(-1);
-  pros::delay(500); // give some time to intake triball
+  Robot::chassis->turnTo(0, -1000000, 750);
+  Robot::chassis->waitUntilDone();
+  Robot::chassis->follow(def_elevation_bar_txt, 12, 3000);
 
-  // get outta there
-  Robot::chassis->tank(-64, -64);
-  pros::delay(250);
-  Robot::Actions::stopIntake();
+  Robot::chassis->turnTo(10000, 10000, 1000);
+  Robot::chassis->waitUntilDone();
 
-  // outtake triball over barrier
-  Robot::chassis->moveTo(outtakeMiddleTarget.x, outtakeMiddleTarget.y,
-                         outtakeMiddleTarget.theta, 2000, true);
-  // wait until 5 inches away from outtake spot
-  while (Robot::chassis->getPose().distance(outtakeMiddleTarget) > 5)
-    pros::delay(10);
-  Robot::Actions::outtake();
-  // wait until done with move to motion
-  Robot::chassis->waitUntilDist(-1);
-
-  // make sure it gets outtook
-  Robot::chassis->tank(127, 127);
+  Robot::chassis->tank(48, 48);
+  Robot::Actions::expandWings();
   pros::delay(500);
-  Robot::Actions::stopIntake();
-
-  // get outta there
-  Robot::chassis->tank(-127, -127);
-  pros::delay(250);
-
-  // @todo remove match load zone triball
-
-  // touch elevation bar
-  Robot::chassis->moveTo(-TILE_RADIUS, TILE_LENGTH * 2 - TILE_RADIUS,
-                         RIGHT - 45, 2500);
-  // zip ties should touch elevation bar
-  Robot::Actions::lowerIntake();
-
-  // make sure we're touching elevation bar
-  Robot::chassis->tank(127, 127);
-  pros::delay(500);
-  // stop
   Robot::chassis->tank(0, 0);
+  pros::delay(2000);
+  Robot::Actions::retractWings();
 }
 
 auton::Auton auton::autons::defensive = {(char*)("defensive / left"),
