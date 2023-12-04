@@ -5,6 +5,10 @@
 
 using namespace fieldDimensions;
 
+ASSET(skills_right_side_txt);
+ASSET(skills_front_1_txt);
+ASSET(skills_front_2_txt);
+
 void delayForMatchLoading(int delay) {
   printf("delay: %i\n", delay);
   pros::delay(delay - 3000);
@@ -24,41 +28,57 @@ void runSkills() {
   Robot::chassis->setPose(leftStartingPose, false);
   // @todo add skills auton
 
-  prepareForMatchloading();
-  Robot::chassis->tank(24, 0);
-  // pros::delay(500);
-  // Robot::chassis->tank(20, 0);
-  delayForMatchLoading(45000);
+  // prepareForMatchloading();
+
+  Robot::chassis->moveTo(MIN_X + TILE_LENGTH - 8, MIN_Y + TILE_LENGTH - 2,
+                         LEFT - 22.5, 3000);
+
+  Robot::chassis->waitUntil(6);
+  Robot::Actions::shoot();
+  Robot::chassis->waitUntilDone();
+  Robot::Actions::lowerIntake();
+
+  delayForMatchLoading(5000);
   Robot::Actions::raiseIntake();
   Robot::Actions::stopShooter();
-  const lemlib::Pose pastBarrier {0 - TILE_LENGTH * 1.5, MIN_Y + TILE_RADIUS};
-  const lemlib::Pose pastElevationBar {0 + TILE_LENGTH, MIN_Y + TILE_RADIUS};
-  printf("goToBarrier\n");
-  // while (Robot::chassis->getPose().distance(pastBarrier) > 3)
-  Robot::chassis->moveTo(pastBarrier.x, pastBarrier.y, RIGHT, 2000, false, true,
-                         0, 0);
 
-  Robot::chassis->turnTo(pastElevationBar.x, pastElevationBar.y, 5000, false,
-                         true);
+  Robot::chassis->turnTo(0, MIN_Y + 12, 1000);
+  Robot::chassis->waitUntilDone();
+  Robot::chassis->follow(skills_right_side_txt, 15, 4000);
+
+  Robot::chassis->waitUntil(50);
+  Robot::Actions::intake();
+  Robot::chassis->waitUntil(112);
+  Robot::Actions::outtake();
+  Robot::chassis->waitUntilDone();
+  Robot::Actions::stopIntake();
 
   Robot::chassis->tank(-127, -127);
-  while (Robot::chassis->getPose().x < 0 + TILE_LENGTH) pros::delay(20);
-  printf("goToStagingPoint\n");
-  Robot::chassis->moveTo(MAX_X - TILE_LENGTH * 1.5, MIN_Y + TILE_RADIUS, UP,
-                         7500, false, true, 0);
-  Robot::chassis->moveTo(0 + TILE_LENGTH, -5, RIGHT, 7500, false, true, 0);
-  Robot::Actions::expandWings();
-  Robot::chassis->turnTo(100000, 0, 2500);
-  Robot::chassis->tank(127, 127);
-  pros::delay(1000);
-  Robot::chassis->tank(-127, -127);
-  pros::delay(500);
-  Robot::chassis->tank(127, 127);
-  pros::delay(1000);
-  Robot::chassis->tank(-127, -127);
-  pros::delay(1000);
+  pros::delay(300);
   Robot::chassis->tank(0, 0);
+
+  Robot::chassis->turnTo(-10000, 0, 3000);
+  Robot::chassis->waitUntilDone();
+  Robot::chassis->follow(skills_front_1_txt, 15, 3000);
+  Robot::chassis->waitUntil(36);
+  Robot::Actions::expandWings();
+  Robot::Actions::outtake();
+  Robot::chassis->waitUntilDone();
   Robot::Actions::retractWings();
+  Robot::chassis->tank(-127, -127);
+  pros::delay(400);
+
+  Robot::chassis->turnTo(0, 10000, 3000);
+  Robot::chassis->waitUntilDone();
+  Robot::chassis->follow(skills_front_2_txt, 15, 3000);
+  // Robot::Actions::expandWings();
+  Robot::Actions::outtake();
+  Robot::chassis->waitUntilDone();
+  Robot::Actions::retractWings();
+  Robot::Actions::stopIntake();
+  Robot::chassis->tank(-127, -96);
+  pros::delay(200);
+  Robot::chassis->tank(0, 0);
 }
 
 auton::Auton auton::autons::skills = {(char*)("skills"), runSkills};
