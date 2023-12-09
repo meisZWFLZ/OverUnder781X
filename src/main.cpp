@@ -107,8 +107,7 @@ void initialize() {
   addAutons();
   auton::AutonSelector::init();
   auton::AutonSelector::enable();
-  new pros::Task {
-      screen}; // create a task to print the position to the screen
+  new pros::Task {screen}; // create a task to print the position to the screen
 }
 
 /**
@@ -259,9 +258,10 @@ void opcontrol() {
   //     (MIN_X + TILE_LENGTH + Robot::Dimensions::drivetrainWidth / 2),
   //     (MIN_Y + Robot::Dimensions::drivetrainLength / 2), UP);
 
-  // if (!std::strcmp(auton::AutonSelector::getCurrentAuton(),
-  // (char*)("skills")))
-  //   auton::actions::prepareForMatchloading();
+  bool skills = false;
+  if (!std::strcmp(auton::AutonSelector::getCurrentAuton(), (char*)("skills")))
+    skills = true;
+  if (skills) auton::actions::prepareForMatchloading();
 
   /**
    * false = down
@@ -281,9 +281,9 @@ void opcontrol() {
   // disable drive
   // bool macroRunning = false;
   // pros::Task* macroTask = nullptr;
-  // bool prevR1 = Robot::control.getDigital(ControllerDigital::R1);
-  // bool prevR2 = Robot::control.getDigital(ControllerDigital::R2);
-  // int shooterState = 0;
+  bool prevR1 = Robot::control.getDigital(ControllerDigital::R1);
+  bool prevR2 = Robot::control.getDigital(ControllerDigital::R2);
+  int shooterState = 0;
   // bool wasShootPressed = false;
   while (true) {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -352,12 +352,23 @@ void opcontrol() {
     //   }
     // }
     // if (!macroRunning && !(r1 && r2)) {
-    if (r1) Robot::Actions::shoot();
-    else if (r2) Robot::Actions::unshoot();
-    else Robot::Actions::stopShooter();
+
+    if (skills) {
+      if (r1 && prevR1 == false) shooterState = shooterState == 0 ? 1 : 0;
+      else if (r2 && prevR2 == false) shooterState = shooterState == 0 ? -1 : 0;
+      switch (shooterState) {
+        case 1: Robot::Actions::shoot(); break;
+        case 0: Robot::Actions::stopShooter(); break;
+        case -1: Robot::Actions::unshoot(); break;
+      }
+      prevR1 = r1;
+      prevR2 = r2;
+    } else {
+      if (r1) Robot::Actions::shoot();
+      else if (r2) Robot::Actions::unshoot();
+      else Robot::Actions::stopShooter();
+    }
     // }
-    // prevR1 = r1;
-    // prevR2 = r2;
     // if (Robot::control.getDigital(ControllerDigital::R1)) {
     //   if(!wasShootPressed) {
     //     Robot::Motors::shooter.move(shooterState = shooterState != 0 ? 0 :
