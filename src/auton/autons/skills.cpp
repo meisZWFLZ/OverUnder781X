@@ -28,15 +28,15 @@ void runSkills() {
   Robot::chassis->setPose(leftStartingPose, false);
   // @todo add skills auton
 
-  // prepareForMatchloading();
+  prepareForMatchloading();
 
-  Robot::chassis->moveTo(MIN_X + TILE_LENGTH - 8, MIN_Y + TILE_LENGTH - 2,
-                         LEFT - 22.5, 3000);
+  // Robot::chassis->moveTo(MIN_X + TILE_LENGTH - 8, MIN_Y + TILE_LENGTH - 2,
+  //                        LEFT - 22.5, 3000);
 
-  Robot::chassis->waitUntil(6);
-  Robot::Actions::shoot();
-  Robot::chassis->waitUntilDone();
-  Robot::Actions::lowerIntake();
+  // Robot::chassis->waitUntil(6);
+  // Robot::Actions::shoot();
+  // Robot::chassis->waitUntilDone();
+  // Robot::Actions::lowerIntake();
 
   delayForMatchLoading(35000);
   Robot::Actions::raiseIntake();
