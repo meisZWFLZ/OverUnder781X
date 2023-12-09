@@ -261,8 +261,12 @@ void opcontrol() {
   bool skills = false;
   if (!std::strcmp(auton::AutonSelector::getCurrentAuton(), (char*)("skills")))
     skills = true;
-  if (skills) auton::actions::prepareForMatchloading();
 
+  if (skills) {
+    Robot::chassis->setPose(fieldDimensions::leftStartingPose, false);
+
+    auton::actions::prepareForMatchloading();
+  }
   /**
    * false = down
    *
