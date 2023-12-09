@@ -38,7 +38,7 @@ void runSkills() {
   Robot::chassis->waitUntilDone();
   Robot::Actions::lowerIntake();
 
-  delayForMatchLoading(40000);
+  delayForMatchLoading(35000);
   Robot::Actions::raiseIntake();
   Robot::Actions::stopShooter();
 
@@ -53,6 +53,11 @@ void runSkills() {
   Robot::chassis->waitUntilDone();
   Robot::Actions::stopIntake();
 
+  Robot::chassis->tank(-127, -127);
+  pros::delay(400);
+  Robot::chassis->tank(127, 127);
+  pros::delay(600);
+  
   Robot::chassis->tank(-127, -127);
   pros::delay(300);
   Robot::chassis->tank(0, 0);
