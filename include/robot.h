@@ -1,8 +1,11 @@
 #pragma once
+#include "catapult.h"
 #include "pros/motors.hpp"
 #include "pros/adi.hpp"
 #include "okapi/impl/device/controller.hpp"
 #include "lemlib/chassis/chassis.hpp"
+#include "pros/rotation.hpp"
+
 class Robot {
   public:
     class Motors {
@@ -12,15 +15,17 @@ class Robot {
 
         static pros::Motor_Group intake;
 
-        static pros::Motor_Group topShooter;
-        static pros::Motor_Group bottomShooter;
+        static pros::Motor_Group elevator;
+        static pros::Motor_Group catapult;
     };
+
     class Pistons {
-      public: 
+      public:
         /** starts retracted */
         static pros::ADIDigitalOut intakeElevator;
         static pros::ADIDigitalOut wings;
     };
+
     class Sensors {
       public:
         // pid sensors (drivetrain wheels)
@@ -30,6 +35,9 @@ class Robot {
         static pros::Rotation vert;
         static pros::Rotation hori;
         static pros::Imu imu;
+        static pros::ADILineSensor cataTriball;
+        static pros::Rotation cata;
+        static pros::ADIPotentiometer elevator;
     };
 
     class Dimensions {
@@ -50,32 +58,43 @@ class Robot {
         static constexpr float drivetrainWidth = 13.5;
         static constexpr float drivetrainLength = 15;
     };
+
     class Actions {
-    public:
-      static void outtake();
-      static void intake();
-      static void stopIntake();
+      public:
+        static void outtake();
+        static void intake();
+        static void stopIntake();
 
-      static void shoot();
-      static void shootMacro();
-      static void unshoot();
-      static void stopShooter();
+        static void shoot();
+        static void matchload();
+        static void stopMatchloading();
 
-      static void raiseIntake();
-      static void lowerIntake();
-      static void prepareIntake();
+        static void raiseIntake();
+        static void lowerIntake();
 
-      static void expandWings();
-      static void retractWings();
+        static void expandWings();
+        static void retractWings();
     };
+
     class Tunables {
       public:
         static lemlib::ControllerSettings lateralController;
         static lemlib::ControllerSettings angularController;
         static const float chasePower;
     };
-    static void initializeOdometryConfig(); 
-    static lemlib::OdomSensors *odomSensors;
+
+    class Subsystems {
+      public:
+        static CatapultStateMachine* catapult;
+
+        static pros::Task* task;
+
+        static void initialize();
+        static void update();
+    };
+
+    static void initializeOdometryConfig();
+    static lemlib::OdomSensors* odomSensors;
     static okapi::Controller control;
-    static lemlib::Chassis *chassis;
+    static lemlib::Chassis* chassis;
 };

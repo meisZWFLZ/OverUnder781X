@@ -40,7 +40,7 @@ void runSkills() {
 
   delayForMatchLoading(35000);
   Robot::Actions::raiseIntake();
-  Robot::Actions::stopShooter();
+  // Robot::Actions::stopShooter();
 
   Robot::chassis->turnTo(0, MIN_Y + 12, 1000);
   Robot::chassis->waitUntilDone();

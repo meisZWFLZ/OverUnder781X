@@ -96,7 +96,7 @@ void intakeAndShoot() {
 void autonomous() {
   auton::AutonSelector::disable();
   autonHasRun = true;
-  if (pros::competition::is_connected()) Robot::Actions::prepareIntake();
+  // if (pros::competition::is_connected()) Robot::Actions::prepareIntake();
   printf("auton start");
   pros::competition::is_connected();
 
@@ -120,8 +120,8 @@ void opcontrol() {
   auton::AutonSelector::disable();
   Robot::Actions::retractWings();
 
-  if (pros::competition::is_connected() && !autonHasRun)
-    Robot::Actions::prepareIntake();
+  // if (pros::competition::is_connected() && !autonHasRun)
+  //   Robot::Actions::prepareIntake();
 
   bool skills = false;
   if (!std::strcmp(auton::AutonSelector::getCurrentAuton(), (char*)("skills")))
@@ -176,15 +176,15 @@ void opcontrol() {
       else if (r2 && prevR2 == false) shooterState = shooterState == 0 ? -1 : 0;
       switch (shooterState) {
         case 1: Robot::Actions::shoot(); break;
-        case 0: Robot::Actions::stopShooter(); break;
-        case -1: Robot::Actions::unshoot(); break;
+        // case 0: Robot::Actions::stopShooter(); break;
+        // case -1: Robot::Actions::unshoot(); break;
       }
       prevR1 = r1;
       prevR2 = r2;
     } else {
       if (r1) Robot::Actions::shoot();
-      else if (r2) Robot::Actions::unshoot();
-      else Robot::Actions::stopShooter();
+      // else if (r2) Robot::Actions::unshoot();
+      // else Robot::Actions::stopShooter();
     }
 
     // elevate intake

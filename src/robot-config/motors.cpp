@@ -13,13 +13,15 @@ pros::Motor rightDriveB {18, pros::E_MOTOR_GEAR_600, /* true */};
 pros::Motor intakeA {16, true};
 
 // shooter
-pros::Motor shooterA {21, true};
-pros::Motor shooterB {11, true};
-pros::Motor shooterC {12};
+pros::Motor elevatorA {16, false};
+pros::Motor elevatorB {17, true};
+
+// shooter
+pros::Motor catapultA {21, true};
 
 // robot groups
 pros::Motor_Group Robot::Motors::leftDrive {leftDriveA, leftDriveB};
 pros::Motor_Group Robot::Motors::rightDrive {rightDriveA, rightDriveB};
 pros::Motor_Group Robot::Motors::intake {intakeA};
-pros::Motor_Group Robot::Motors::topShooter {shooterA};
-pros::Motor_Group Robot::Motors::bottomShooter { shooterB, shooterC};
+pros::Motor_Group Robot::Motors::catapult {catapultA};
+pros::Motor_Group Robot::Motors::elevator {elevatorA, elevatorB};
