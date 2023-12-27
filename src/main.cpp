@@ -1,4 +1,5 @@
 #include "main.h"
+#include "pros/misc.h"
 #include "robot.h"
 #include "auton.h"
 #include <string>
@@ -53,7 +54,8 @@ void initialize() {
   // addAutons();
   // auton::AutonSelector::init();
   // auton::AutonSelector::enable();
-  // new pros::Task {screen}; // create a task to print the position to the screen
+  // new pros::Task {screen}; // create a task to print the position to the
+  // screen
 }
 
 /**
@@ -125,7 +127,8 @@ void opcontrol() {
   //   Robot::Actions::prepareIntake();
 
   // bool skills = false;
-  // if (!std::strcmp(auton::AutonSelector::getCurrentAuton(), (char*)("skills")))
+  // if (!std::strcmp(auton::AutonSelector::getCurrentAuton(),
+  // (char*)("skills")))
   //   skills = true;
 
   // if (skills) {
@@ -148,8 +151,8 @@ void opcontrol() {
   bool wingsState = false;
   bool wasUpPressed = false;
 
-  bool prevR1 = Robot::control.getDigital(ControllerDigital::R1);
-  bool prevR2 = Robot::control.getDigital(ControllerDigital::R2);
+  bool prevR1 = Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_R1);
+  bool prevR2 = Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_R2);
   int shooterState = 0;
   while (true) {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -158,19 +161,19 @@ void opcontrol() {
 
     // drivetrain
     // Robot::chassis->tank(
-    //     Robot::control.getAnalog(ControllerAnalog::leftY) * 127,
-    //     Robot::control.getAnalog(ControllerAnalog::rightY) * 127, 15);
+    //     Robot::control.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y),
+    //     Robot::control.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y));
 
     // intake / outtake
-    if (Robot::control.getDigital(ControllerDigital::L1))
+    if (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_L1))
       Robot::Motors::intake.move(127);
-    else if (Robot::control.getDigital(ControllerDigital::L2))
+    else if (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_L2))
       Robot::Motors::intake.move(-127);
     else Robot::Motors::intake.move(0);
 
     // // shoot / un-shoot? / shootMacro
-    const bool r1 = Robot::control.getDigital(ControllerDigital::R1);
-    const bool r2 = Robot::control.getDigital(ControllerDigital::R2);
+    const bool r1 = Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_R1);
+    const bool r2 = Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_R2);
 
     // if (skills) {
     //   if (r1 && prevR1 == false) shooterState = shooterState == 0 ? 1 : 0;
@@ -183,13 +186,13 @@ void opcontrol() {
     //   prevR1 = r1;
     //   prevR2 = r2;
     // } else {
-      if (r1) Robot::Actions::shoot();
-      else if (r2) Robot::Actions::matchload();
-      else Robot::Actions::stopShooter();
+    if (r1) Robot::Actions::shoot();
+    else if (r2) Robot::Actions::matchload();
+    else Robot::Actions::stopShooter();
     // }
 
     // elevate intake
-    if (Robot::control.getDigital(ControllerDigital::X)) {
+    if (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
       if (!wasXPressed) {
         intakeElevatorState = !intakeElevatorState;
         if (intakeElevatorState) Robot::Actions::raiseIntake();
@@ -198,7 +201,7 @@ void opcontrol() {
       wasXPressed = true;
     } else wasXPressed = false;
 
-    if (Robot::control.getDigital(ControllerDigital::up)) {
+    if (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) {
       if (!wasUpPressed) Robot::Pistons::wings.set_value(wingsState ^= true);
       wasUpPressed = true;
     } else wasUpPressed = false;

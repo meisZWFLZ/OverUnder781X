@@ -1,3 +1,3 @@
 #include "robot.h"
 
-okapi::Controller Robot::control{};
+pros::Controller Robot::control {pros::E_CONTROLLER_MASTER};

@@ -95,6 +95,6 @@ class Robot {
 
     static void initializeOdometryConfig();
     static lemlib::OdomSensors* odomSensors;
-    static okapi::Controller control;
+    static pros::Controller control;
     static lemlib::Chassis* chassis;
 };
