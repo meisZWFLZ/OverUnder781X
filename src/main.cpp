@@ -1,4 +1,5 @@
 #include "main.h"
+#include "catapult.h"
 #include "pros/misc.h"
 #include "robot.h"
 #include "auton.h"
@@ -42,7 +43,6 @@ void addAutons() {
 void initialize() {
   // Robot::initializeOdometryConfig();
   Robot::Subsystems::initialize();
-
   // pros::lcd::initialize();
   // pros::lcd::set_text(1, "Calibrating chassis...");
 
@@ -106,6 +106,35 @@ void autonomous() {
   auton::AutonSelector::runAuton();
 }
 
+// class OnRisingEdgeListener {
+//   private:
+//     void (*callback)();
+//     bool prevButton = false;
+//     const pros::controller_digital_e_t button;
+//     const pros::controller_id_e_t controllerId;
+
+//     void update() {
+//       if (button && !prevButton) callback();
+//       prevButton = button;
+//     }
+
+//     static std::vector<OnRisingEdgeListener*> listeners;
+//   public:
+//     OnRisingEdgeListener(
+//         const pros::controller_digital_e_t button, void (*callback)(),
+//         const pros::controller_id_e_t controllerId =
+//         pros::E_CONTROLLER_MASTER)
+//       : callback(callback), button(button), controllerId(controllerId) {
+//       OnRisingEdgeListener::listeners.push_back(this);
+//     }
+
+//     static void updateAll() {
+//       for (OnRisingEdgeListener* listener : listeners) listener->update();
+//     }
+// };
+
+// std::vector<OnRisingEdgeListener*> OnRisingEdgeListener::listeners {};
+
 /**
  * Runs the operator control code. This function will be started in its own task
  * with the default priority and stack size whenever the robot is enabled via
@@ -122,6 +151,7 @@ void autonomous() {
 void opcontrol() {
   auton::AutonSelector::disable();
   Robot::Actions::retractWings();
+  Robot::Subsystems::catapult->matchload();
 
   // if (pros::competition::is_connected() && !autonHasRun)
   //   Robot::Actions::prepareIntake();
@@ -136,13 +166,7 @@ void opcontrol() {
 
   //   auton::actions::prepareForMatchloading();
   // }
-  /**
-   * false = down
-   *
-   * true = up
-   */
-  bool intakeElevatorState = true;
-  bool wasXPressed = false;
+
   /**
    * false = retracted
    *
@@ -151,9 +175,9 @@ void opcontrol() {
   bool wingsState = false;
   bool wasUpPressed = false;
 
-  bool prevR1 = Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_R1);
-  bool prevR2 = Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_R2);
-  int shooterState = 0;
+  bool prevX = false;
+
+  bool prevEStopCombo = false;
   while (true) {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // 								     Drive Code
@@ -171,36 +195,33 @@ void opcontrol() {
       Robot::Motors::intake.move(-127);
     else Robot::Motors::intake.move(0);
 
-    // // shoot / un-shoot? / shootMacro
-    const bool r1 = Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_R1);
-    const bool r2 = Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_R2);
+    // matchload toggle
+    const bool buttonX =
+        Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_X);
+    if (buttonX && !prevX) {
+      if (Robot::Subsystems::catapult->getIsMatchloading())
+        Robot::Subsystems::catapult->stop();
+      else Robot::Subsystems::catapult->matchload();
+    }
+    prevX = buttonX;
 
-    // if (skills) {
-    //   if (r1 && prevR1 == false) shooterState = shooterState == 0 ? 1 : 0;
-    //   else if (r2 && prevR2 == false) shooterState = shooterState == 0 ? -1 : 0;
-    //   switch (shooterState) {
-    //     case 1: Robot::Actions::shoot(); break;
-    //     case 0: Robot::Actions::matchload(); break;
-    //     case -1: Robot::Actions::stopShooter(); break;
-    //   }
-    //   prevR1 = r1;
-    //   prevR2 = r2;
-    // } else {
-    if (r1) Robot::Actions::shoot();
-    else if (r2) Robot::Actions::matchload();
-    else Robot::Actions::stopShooter();
-    // }
+    // catapult manual fire
+    if (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT))
+      Robot::Subsystems::catapult->fire();
 
-    // elevate intake
-    if (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
-      if (!wasXPressed) {
-        intakeElevatorState = !intakeElevatorState;
-        if (intakeElevatorState) Robot::Actions::raiseIntake();
-        else Robot::Actions::lowerIntake();
-      }
-      wasXPressed = true;
-    } else wasXPressed = false;
+    // catapult emergency stop
+    const bool eStopCombo =
+        Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN) &&
+        Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT);
+    if (eStopCombo && !prevEStopCombo) {
+      if (Robot::Subsystems::catapult->getState() ==
+          CatapultStateMachine::STATE::EMERGENCY_STOPPED)
+        Robot::Subsystems::catapult->cancelEmergencyStop();
+      else Robot::Subsystems::catapult->emergencyStop();
+    }
+    prevEStopCombo = eStopCombo;
 
+    // wing toggle
     if (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) {
       if (!wasUpPressed) Robot::Pistons::wings.set_value(wingsState ^= true);
       wasUpPressed = true;
