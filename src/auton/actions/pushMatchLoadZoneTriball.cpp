@@ -8,7 +8,7 @@ using namespace fieldDimensions;
 void auton::actions::pushMatchLoadZoneTriball() {
   // const lemlib::Pose target = Robot::chassis->getPose() + lemlib::Pose(0, 12, 0);
   // printf("y:%f\n", target.y);
-  // Robot::chassis->moveTo(target.x, target.y, target.theta, 5000, true, 0,
+  // Robot::chassis->moveToPose(target.x, target.y, target.theta, 5000, true, 0,
   //                        0.2);
   // Robot::Actions::expandWings();
   Robot::chassis->tank(127, 172);

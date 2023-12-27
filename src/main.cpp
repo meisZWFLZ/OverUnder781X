@@ -76,15 +76,6 @@ void disabled() {}
  */
 void competition_initialize() {}
 
-void intakeAndShoot() {
-  using namespace fieldDimensions;
-
-  auton::actions::intakeTriball(
-      {-TILE_LENGTH - 2, 0 - Robot::Dimensions::drivetrainLength / 2 - 0.85,
-       UP});
-  auton::actions::shootTriballIntoOffensiveZone();
-}
-
 /**
  * Runs the user autonomous code. This function will be started in its own task
  * with the default priority and stack size whenever the robot is enabled via

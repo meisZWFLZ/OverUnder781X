@@ -30,7 +30,7 @@ void runSkills() {
 
   prepareForMatchloading();
 
-  // Robot::chassis->moveTo(MIN_X + TILE_LENGTH - 8, MIN_Y + TILE_LENGTH - 2,
+  // Robot::chassis->moveToPose(MIN_X + TILE_LENGTH - 8, MIN_Y + TILE_LENGTH - 2,
   //                        LEFT - 22.5, 3000);
 
   // Robot::chassis->waitUntil(6);

@@ -17,20 +17,9 @@ void Robot::initializeOdometryConfig() {
                 &Robot::Sensors::vert, Robot::Dimensions::vertEncDiameter,
                 Robot::Dimensions::vertEncDistance,
                 Robot::Dimensions::vertEncGearRatio /* 300 */ /* 1 */)
-          : nullptr
-      /* new lemlib::TrackingWheel(&Robot::Sensors::leftDrive,
-                                  Robot::Dimensions::driveWheelDiameter,
-                                  -Robot::Dimensions::trackWidth / 2,
-                                  Robot::Dimensions::driveEncGearRatio) */
-      ;
+          : nullptr;
 
   lemlib::TrackingWheel* rightVert = nullptr;
-  // Robot::Sensors::vert.get_angle() != PROS_ERR
-  //     ? nullptr
-  //     : new lemlib::TrackingWheel(&Robot::Sensors::rightDrive,
-  //                                 Robot::Dimensions::driveWheelDiameter,
-  //                                 -Robot::Dimensions::trackWidth / 2,
-  //                                 Robot::Dimensions::driveEncGearRatio);
   lemlib::TrackingWheel* hori =
       (&Robot::Sensors::hori)->get_angle() != PROS_ERR
           ? new lemlib::TrackingWheel(&Robot::Sensors::hori,

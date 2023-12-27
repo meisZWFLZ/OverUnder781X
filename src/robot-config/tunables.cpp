@@ -4,7 +4,9 @@
 // forward/backward PID
 lemlib::ControllerSettings Robot::Tunables::lateralController {
     20, // kP
+    0, // kI
     25, // kD
+    0, // windup range
     1, // smallErrorRange
     500, // smallErrorTimeout
     3, // largeErrorRange
@@ -15,7 +17,9 @@ lemlib::ControllerSettings Robot::Tunables::lateralController {
 // turning PID
 lemlib::ControllerSettings Robot::Tunables::angularController {
     9, // kP
-    50, // kD`
+    0, // kI
+    50, // kD
+    0, // windup range
     1, // smallErrorRange
     100, // smallErrorTimeout
     3, // largeErrorRange
