@@ -13,10 +13,10 @@ class CatapultStateMachine {
                          pros::Rotation* cataRotation);
 
     enum STATE {
-      IDLE, // retracted
-      LOADING, // waiting to receive matchload
+      READY, // retracted and ready to fire
       FIRING, // shooting triball
-      RETRACTING // retracting catapult
+      RETRACTING, // retracting catapult
+      EMERGENCY_STOPPED // emergency stop
     };
 
     /**
@@ -36,6 +36,14 @@ class CatapultStateMachine {
      */
     bool matchload(int millis = INT32_MAX, int triballs = -1);
     void stop();
+    /**
+     * @brief Forces the catapult to stop immediately
+     */
+    void emergencyStop();
+    /**
+     * @brief Resumes the catapult's functions after an emergency stop
+     */
+    void cancelEmergencyStop();
 
     STATE getState() const;
 
@@ -57,8 +65,18 @@ class CatapultStateMachine {
      */
     bool isCataLoadable() const;
 
+    /**
+     * @brief Blocks current thread until match loading is finished.
+     */
+    void waitUntilDoneMatchloading() const;
+
     void update();
   private:
+    /**
+     * @brief Modify triballsLeftToBeFired and triballsFired to indicate a
+     * triball has been fired
+     */
+    void indicateTriballFired();
     void retractCataMotor();
     void stopCataMotor();
 
@@ -73,6 +91,6 @@ class CatapultStateMachine {
     pros::ADILineSensor* triballSensor;
     pros::Rotation* rotation;
 
-    STATE state = IDLE;
+    STATE state = READY;
     bool matchloading = false;
 };
