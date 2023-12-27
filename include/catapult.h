@@ -59,6 +59,9 @@ class CatapultStateMachine {
 
     void update();
   private:
+    void retractCataMotor();
+    void stopCataMotor();
+
     bool isTriballLoaded() const;
 
     lemlib::Timer timer = {0};
@@ -72,5 +75,4 @@ class CatapultStateMachine {
 
     STATE state = IDLE;
     bool matchloading = false;
-    bool stopping = false;
 };

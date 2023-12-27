@@ -31,7 +31,7 @@ void CatapultStateMachine::stop() {
   this->matchloading = false;
   this->timer.set(0);
   this->triballsLeftToBeFired = 0;
-  this->stopping = true;
+  if (LOADING) this->state = IDLE;
 }
 
 bool CatapultStateMachine::isTriballLoaded() const {
@@ -53,34 +53,24 @@ void CatapultStateMachine::update() {
   switch (this->state) {
     case IDLE: break;
     case LOADING:
-      if (this->stopping) {
-        this->state = IDLE;
-        this->stopping = false;
-        printf("stopping from loading\n");
-      } else if (this->isTriballLoaded()) {
+      if (this->isTriballLoaded()) {
         printf("switch to firing\n");
         this->state = FIRING;
       }
       break;
     case FIRING:
-      this->motors->move_voltage(12000);
-      // printf("cata pos: %i\n", this->rotation->get_position());
-
+      this->retractCataMotor();
       if (!this->isCataLoadable()) {
         printf("switch to retracting\n");
         this->state = RETRACTING;
       }
       break;
     case RETRACTING:
-      this->motors->move_voltage(12000);
+      this->retractCataMotor();
       printf("cata pos: %i\n", this->rotation->get_position());
       if (this->isCataLoadable()) {
-        this->motors->move_voltage(0);
-        if (this->stopping) {
-          printf("stopping from retract\n");
-          this->state = IDLE;
-          this->stopping = false;
-        } else if (this->matchloading) {
+        this->stopCataMotor();
+        if (this->matchloading) {
           printf("switch to loading\n");
           this->state = LOADING;
         } else {
@@ -91,6 +81,12 @@ void CatapultStateMachine::update() {
       break;
   }
 }
+
+void CatapultStateMachine::retractCataMotor() {
+  this->motors->move_voltage(12000);
+}
+
+void CatapultStateMachine::stopCataMotor() { this->motors->move_voltage(0); }
 
 int CatapultStateMachine::getTriballsLeft() const {
   return this->triballsLeftToBeFired;
