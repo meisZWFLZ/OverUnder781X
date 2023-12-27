@@ -67,7 +67,7 @@ class Robot {
 
         static void shoot();
         static void matchload();
-        static void stopMatchloading();
+        static void stopShooter();
 
         static void raiseIntake();
         static void lowerIntake();

@@ -6,7 +6,8 @@ pros::Task* Robot::Subsystems::task = nullptr;
 
 void Robot::Subsystems::initialize() {
   Robot::Subsystems::catapult = new CatapultStateMachine(
-      &Robot::Motors::catapult, &Robot::Sensors::cataTriball);
+      &Robot::Motors::catapult, &Robot::Sensors::cataTriball,
+      &Robot::Sensors::cata);
 
   Robot::Subsystems::task = new pros::Task([]() {
     while (true) {
