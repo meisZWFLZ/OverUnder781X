@@ -42,7 +42,6 @@ void CatapultStateMachine::emergencyStop() {
 void CatapultStateMachine::cancelEmergencyStop() { this->state = READY; }
 
 bool CatapultStateMachine::isTriballLoaded() const {
-  printf("triball: %i\n", this->triballSensor->get_value());
   return this->triballSensor->get_value() < 1300;
 }
 
@@ -81,7 +80,6 @@ void CatapultStateMachine::update() {
       break;
     case RETRACTING:
       this->retractCataMotor();
-      printf("cata pos: %i\n", this->rotation->get_position());
       if (this->isCataLoadable()) {
         this->stopCataMotor();
 
