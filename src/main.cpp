@@ -1,5 +1,6 @@
 #include "main.h"
 #include "catapult.h"
+#include "lift.h"
 #include "pros/misc.h"
 #include "robot.h"
 #include "auton.h"
@@ -168,7 +169,18 @@ void opcontrol() {
 
   bool prevX = false;
 
-  bool prevEStopCombo = false;
+  bool prevCataEStopCombo = false;
+  bool prevLiftEStopCombo = false;
+
+  bool prevR1 = false;
+  bool prevR2 = false;
+
+  // timestamp of last R1 press
+  int lastR1Press = 0;
+  // timestamp of last R2 press
+  int lastR2Press = 0;
+
+  const int maxTimeBetweenDoublePress = 50;
   while (true) {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // 								     Drive Code
@@ -201,16 +213,55 @@ void opcontrol() {
       Robot::Subsystems::catapult->fire();
 
     // catapult emergency stop
-    const bool eStopCombo =
+    const bool cataEStopCombo =
         Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN) &&
         Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT);
-    if (eStopCombo && !prevEStopCombo) {
+    if (cataEStopCombo && !prevCataEStopCombo) {
       if (Robot::Subsystems::catapult->getState() ==
           CatapultStateMachine::STATE::EMERGENCY_STOPPED)
         Robot::Subsystems::catapult->cancelEmergencyStop();
       else Robot::Subsystems::catapult->emergencyStop();
     }
-    prevEStopCombo = eStopCombo;
+    prevCataEStopCombo = cataEStopCombo;
+
+    // lift granular control
+    Robot::Subsystems::lift->changeTarget(
+        1 * (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_R1) -
+             Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_R2)));
+
+    // Lift presets
+    const bool r1 = Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_R1);
+    const bool r2 = Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_R2);
+
+    // on rising edge of r1, if r1 was pressed in the last 50ms then set target
+    // to max angle
+    if (r1 && !prevR1 &&
+        pros::millis() - lastR1Press < maxTimeBetweenDoublePress)
+      Robot::Subsystems::lift->setTarget(LiftArmStateMachine::maxAngle);
+    // on rising edge of r2, if r2 was pressed in the last 50ms then set target
+    // to max angle
+    if (r2 && !prevR2 &&
+        pros::millis() - lastR2Press < maxTimeBetweenDoublePress)
+      Robot::Subsystems::lift->setTarget(LiftArmStateMachine::minAngle);
+
+    // on falling edge of r1 & r2, update the last press time
+    if (!r1 && prevR1) lastR1Press = pros::millis();
+    if (!r2 && prevR2) lastR2Press = pros::millis();
+
+    prevR1 = r1;
+    prevR2 = r2;
+
+    // lift emergency stop
+    const bool liftEStopCombo =
+        Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_Y) &&
+        Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_B);
+    if (liftEStopCombo && !prevLiftEStopCombo) {
+      if (Robot::Subsystems::lift->getState() ==
+          LiftArmStateMachine::STATE::EMERGENCY_STOPPED)
+        Robot::Subsystems::lift->cancelEmergencyStop();
+      else Robot::Subsystems::lift->emergencyStop();
+    }
+    prevLiftEStopCombo = liftEStopCombo;
 
     // wing toggle
     if (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) {

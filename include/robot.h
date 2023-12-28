@@ -1,5 +1,6 @@
 #pragma once
 #include "catapult.h"
+#include "lift.h"
 #include "pros/motors.hpp"
 #include "pros/adi.hpp"
 #include "okapi/impl/device/controller.hpp"
@@ -86,6 +87,7 @@ class Robot {
     class Subsystems {
       public:
         static CatapultStateMachine* catapult;
+        static LiftArmStateMachine* lift;
 
         static pros::Task* task;
 

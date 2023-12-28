@@ -29,3 +29,13 @@ lemlib::ControllerSettings Robot::Tunables::angularController {
 
 // chasePower
 const float Robot::Tunables::chasePower = 1000;
+
+const PIDControllerSettings LiftArmStateMachine::pidSettings = {
+    .kP = 0.5,
+    .kI = 0.0,
+    .kD = 0.0,
+    .windupRange = 0.0,
+    .signFlipReset = false};
+
+const float LiftArmStateMachine::acceptableErrorRange = 0.5;
+const float LiftArmStateMachine::BANG_BANG_POWER = 127;
