@@ -36,7 +36,7 @@ void LiftArmStateMachine::update() {
       else this->stopMotors();
       break;
     case MOVING:
-      if (this->isErrorInRange()) {
+      if (this->isErrorInRange() && this->stopMode != NEVER) {
         this->pidController.reset();
         this->state = STOPPED;
       } else switch (this->controllerMode) {
