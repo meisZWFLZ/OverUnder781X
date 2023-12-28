@@ -3,6 +3,7 @@
 #include "robot.h"
 
 CatapultStateMachine* Robot::Subsystems::catapult = nullptr;
+LiftArmStateMachine* Robot::Subsystems::lift = nullptr;
 pros::Task* Robot::Subsystems::task = nullptr;
 
 void Robot::Subsystems::initialize() {
@@ -15,7 +16,7 @@ void Robot::Subsystems::initialize() {
   Robot::Subsystems::task = new pros::Task([]() {
     while (true) {
       Robot::Subsystems::update();
-      pros::delay(10);
+      pros::delay(100);
     }
   });
 }

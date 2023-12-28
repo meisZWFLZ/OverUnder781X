@@ -43,23 +43,29 @@ void CatapultStateMachine::cancelEmergencyStop() { this->state = READY; }
 
 bool CatapultStateMachine::isTriballLoaded() const {
   printf("triball: %i\n", this->triballSensor->get_value());
-  return this->triballSensor->get_value() < 1250;
+  return this->triballSensor->get_value() < 1300;
 }
 
 bool CatapultStateMachine::isCataLoadable() const {
-  printf("cata pos: %i\n", this->rotation->get_position());
+  // printf("cata pos: %i\n", this->rotation->get_position());
   return std::remainder(this->rotation->get_position(), 36000) < 0;
+}
+
+bool CatapultStateMachine::isCataNotLoadable() const {
+  // printf("cata pos: %i\n", this->rotation->get_position());
+  return std::remainder(this->rotation->get_position(), 36000) > 300;
 }
 
 void CatapultStateMachine::update() {
   if (this->matchloading &&
       (this->timer.isDone() || this->triballsLeftToBeFired == 0)) {
+    printf("stop matchloading\n");
     this->matchloading = false;
   }
 
   switch (this->state) {
     case READY:
-      if (!this->isCataLoadable()) this->state = RETRACTING;
+      if (this->isCataNotLoadable()) this->state = RETRACTING;
       if (this->matchloading && this->isTriballLoaded()) {
         printf("switch to firing\n");
         this->state = FIRING;
@@ -67,7 +73,7 @@ void CatapultStateMachine::update() {
       break;
     case FIRING:
       this->retractCataMotor();
-      if (!this->isCataLoadable()) {
+      if (this->isCataNotLoadable()) {
         printf("switch to retracting\n");
         this->state = RETRACTING;
         this->indicateTriballFired();
@@ -88,8 +94,7 @@ void CatapultStateMachine::update() {
 }
 
 void CatapultStateMachine::indicateTriballFired() {
-  this->triballsLeftToBeFired--;
-  if (this->triballsLeftToBeFired < 0) this->triballsLeftToBeFired = 0;
+  if (this->triballsLeftToBeFired > 0) this->triballsLeftToBeFired--;
   this->triballsFired++;
 }
 

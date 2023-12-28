@@ -64,6 +64,10 @@ class CatapultStateMachine {
      * @return whether the rotation sensor indicates the catapult is retracted
      */
     bool isCataLoadable() const;
+    /**
+     * @return whether the rotation sensor indicates the catapult is not retracted
+     */
+    bool isCataNotLoadable() const;
 
     /**
      * @brief Blocks current thread until match loading is finished.
