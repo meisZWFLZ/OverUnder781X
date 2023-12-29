@@ -49,9 +49,9 @@ std::vector<double> LiftArmStateMachine::calcError() const {
 
 double LiftArmStateMachine::calcMaxError() const {
   const auto errs = this->calcError();
-  return *std::max_element(
-      errs.begin(), errs.end(),
-      [](double a, double b) { return std::abs(a) < std::abs(b); });
+  return *std::max_element(errs.begin(), errs.end(), [](double a, double b) {
+    return std::abs(a) < std::abs(b);
+  });
 }
 
 bool LiftArmStateMachine::isErrorInRange() const {
@@ -105,7 +105,7 @@ void LiftArmStateMachine::adjustMaxAngle() {
       }
     }
   }
-  if(isAMotorAtTop) {
+  if (isAMotorAtTop) {
     this->maxCurrentTimer.resume();
   } else {
     this->maxCurrentTimer.reset();
@@ -115,20 +115,21 @@ void LiftArmStateMachine::adjustMaxAngle() {
 
 void LiftArmStateMachine::moveWithPID() {
   const auto errs = this->calcError();
-  for (int i = 0; i < this->motors->size(); i++)
-    this->motors[i].move(this->pidController[i].update(errs[i]));
+  for (int i =0; i < this->motors->size(); i++) {
+    this->motors->at(i).move(this->pidController[i].update(errs[i]));
+  }
 }
 
 void LiftArmStateMachine::moveWithBangBang() {
   const auto errs = this->calcError();
   for (int i = 0; i < this->motors->size(); i++)
-    this->motors[i].move(lemlib::sgn(errs[i]) *
-                         LiftArmStateMachine::BANG_BANG_POWER);
+    this->motors->at(i).move(lemlib::sgn(errs[i]) *
+                             LiftArmStateMachine::BANG_BANG_POWER);
 }
 
 void LiftArmStateMachine::moveWithInternalPID() {
   for (int i = 0; i < this->motors->size(); i++)
-    this->motors[i].move_absolute(this->target, INT32_MAX);
+    this->motors->at(i).move_absolute(this->target, INT32_MAX);
 }
 
 void LiftArmStateMachine::emergencyStop() { this->state = EMERGENCY_STOPPED; }

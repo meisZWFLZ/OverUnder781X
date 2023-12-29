@@ -1,9 +1,7 @@
 #pragma once
 
-#include "lemlib/exitcondition.hpp"
 #include "lemlib/pid.hpp"
 #include "lemlib/timer.hpp"
-#include "pros/adi.hpp"
 #include "pros/motors.hpp"
 #include <vector>
 

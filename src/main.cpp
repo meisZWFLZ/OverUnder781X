@@ -55,12 +55,12 @@ void addAutons() {
  * to keep execution time for this mode under a few seconds.
  */
 void initialize() {
-  // Robot::initializeOdometryConfig();
+  Robot::initializeOdometryConfig();
   Robot::Subsystems::initialize();
   pros::lcd::initialize();
   // pros::lcd::set_text(1, "Calibrating chassis...");
 
-  // Robot::chassis->calibrate(); // calibrate the chassis
+  Robot::chassis->calibrate(); // calibrate the chassis
   // pros::lcd::set_text(1, "Chassis Calibrated!");
   // Robot::chassis->setPose(0, 0, 0);
   // Robot::Actions::raiseIntake();
@@ -205,9 +205,9 @@ void opcontrol() {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     // drivetrain
-    // Robot::chassis->tank(
-    //     Robot::control.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y),
-    //     Robot::control.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y));
+    Robot::chassis->tank(
+        Robot::control.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y),
+        Robot::control.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y));
 
     // intake / outtake
     if (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_L1))

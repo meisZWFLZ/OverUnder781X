@@ -3,11 +3,11 @@
 
 // drivetrain
 // left
-pros::Motor leftDriveA {5, pros::E_MOTOR_GEAR_600, true};
-pros::Motor leftDriveB {9, pros::E_MOTOR_GEAR_600, true};
+pros::Motor leftDriveA {4, pros::E_MOTOR_GEAR_600, true};
+pros::Motor leftDriveB {3, pros::E_MOTOR_GEAR_600, true};
 // right
 pros::Motor rightDriveA {10, pros::E_MOTOR_GEAR_600, /* true */};
-pros::Motor rightDriveB {18, pros::E_MOTOR_GEAR_600, /* true */};
+pros::Motor rightDriveB {16, pros::E_MOTOR_GEAR_600, /* true */};
 
 // intake
 pros::Motor intakeA {17, true};
