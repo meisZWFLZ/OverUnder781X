@@ -1,4 +1,5 @@
 #include "lift.h"
+#include "pros/motors.h"
 #include "pros/rtos.hpp"
 #include "robot.h"
 
@@ -10,13 +11,12 @@ void Robot::Subsystems::initialize() {
   Robot::Subsystems::catapult = new CatapultStateMachine(
       &Robot::Motors::catapult, &Robot::Sensors::cataTriball,
       &Robot::Sensors::cata);
-  Robot::Subsystems::lift = new LiftArmStateMachine(&Robot::Motors::elevator,
-                                                    &Robot::Sensors::elevator);
+  Robot::Subsystems::lift = new LiftArmStateMachine(&Robot::Motors::elevator);
 
   Robot::Subsystems::task = new pros::Task([]() {
     while (true) {
       Robot::Subsystems::update();
-      pros::delay(100);
+      pros::delay(10);
     }
   });
 }

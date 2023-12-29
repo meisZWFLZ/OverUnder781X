@@ -14,15 +14,28 @@ bool autonHasRun = false;
 void screen() {
   // loop forever
   while (true) {
-    lemlib::Pose pose =
-        Robot::chassis->getPose(); // get the current position of the robot
-    pros::lcd::clear_line(1);
-    pros::lcd::print(1, "x: %f in", pose.x); // print the x position
-    pros::lcd::clear_line(2);
-    pros::lcd::print(2, "y: %f in", pose.y); // print the y position
-    pros::lcd::clear_line(3);
-    pros::lcd::print(3, "heading: %f deg",
-                     pose.theta); // print the heading
+    auto angs = Robot::Motors::elevator.get_positions();
+    pros::lcd::print(2, "stopped: %i",
+                     Robot::Subsystems::lift->getState() ==
+                         LiftArmStateMachine::STATE::STOPPED);
+    pros::lcd::print(3, "lift: %4.2f,%4.2f", angs[0], angs[1]);
+    pros::lcd::print(4, "target: %4.2f", Robot::Subsystems::lift->getTarget());
+    pros::lcd::print(5, "current: %i,%i",
+                     Robot::Motors::elevator.at(0).get_current_draw(),
+                     Robot::Motors::elevator.at(1).get_current_draw());
+    auto currLim = Robot::Motors::elevator.are_over_current();
+    pros::lcd::print(6, "curr lim: %i,%i", currLim[0], currLim[1]);
+
+    // lemlib::Pose pose =
+    //     Robot::chassis->getPose(); // get the current position of the
+    //     robot
+    // pros::lcd::clear_line(1);
+    // pros::lcd::print(1, "x: %f in", pose.x); // print the x position
+    // pros::lcd::clear_line(2);
+    // pros::lcd::print(2, "y: %f in", pose.y); // print the y position
+    // pros::lcd::clear_line(3);
+    // pros::lcd::print(3, "heading: %f deg",
+    //                  pose.theta); // print the heading
     pros::delay(200);
   }
 }
@@ -44,7 +57,7 @@ void addAutons() {
 void initialize() {
   // Robot::initializeOdometryConfig();
   Robot::Subsystems::initialize();
-  // pros::lcd::initialize();
+  pros::lcd::initialize();
   // pros::lcd::set_text(1, "Calibrating chassis...");
 
   // Robot::chassis->calibrate(); // calibrate the chassis
@@ -55,8 +68,8 @@ void initialize() {
   // addAutons();
   // auton::AutonSelector::init();
   // auton::AutonSelector::enable();
-  // new pros::Task {screen}; // create a task to print the position to the
-  // screen
+  // create a task to print the position to the screen
+  new pros::Task {screen};
 }
 
 /**
@@ -144,6 +157,7 @@ void opcontrol() {
   auton::AutonSelector::disable();
   Robot::Actions::retractWings();
   Robot::Subsystems::catapult->matchload();
+  Robot::Subsystems::lift->tareAngle();
 
   // if (pros::competition::is_connected() && !autonHasRun)
   //   Robot::Actions::prepareIntake();
@@ -158,6 +172,10 @@ void opcontrol() {
 
   //   auton::actions::prepareForMatchloading();
   // }
+
+  const float liftIncrement =
+      (LiftArmStateMachine::maxAngle - LiftArmStateMachine::minAngle) /
+      ((float)75);
 
   /**
    * false = retracted
@@ -180,7 +198,7 @@ void opcontrol() {
   // timestamp of last R2 press
   int lastR2Press = 0;
 
-  const int maxTimeBetweenDoublePress = 50;
+  const int maxTimeBetweenDoublePress = 150;
   while (true) {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // 								     Drive Code
@@ -226,8 +244,9 @@ void opcontrol() {
 
     // lift granular control
     Robot::Subsystems::lift->changeTarget(
-        1 * (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_R1) -
-             Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_R2)));
+        liftIncrement *
+        (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_R1) -
+         Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_R2)));
 
     // Lift presets
     const bool r1 = Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_R1);

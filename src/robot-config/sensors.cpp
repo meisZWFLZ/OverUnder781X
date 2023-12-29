@@ -10,4 +10,3 @@ pros::Rotation Robot::Sensors::hori {15, true};
 pros::Imu Robot::Sensors::imu {4};
 pros::ADILineSensor Robot::Sensors::cataTriball {'H'};
 pros::Rotation Robot::Sensors::cata {19};
-pros::ADIPotentiometer Robot::Sensors::elevator {'B'};

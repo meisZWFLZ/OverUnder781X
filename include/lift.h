@@ -1,8 +1,11 @@
 #pragma once
 
+#include "lemlib/exitcondition.hpp"
 #include "lemlib/pid.hpp"
+#include "lemlib/timer.hpp"
 #include "pros/adi.hpp"
 #include "pros/motors.hpp"
+#include <vector>
 
 struct PIDControllerSettings {
     float kP;
@@ -29,8 +32,7 @@ class LiftArmStateMachine {
       COAST, // uses pros coast mode
     };
 
-    LiftArmStateMachine(pros::Motor_Group* liftMotors,
-                        pros::ADIPotentiometer* angleSensor);
+    LiftArmStateMachine(pros::Motor_Group* liftMotors);
 
     STATE getState() const;
     STOP_MODE getStoppingMode() const;
@@ -48,8 +50,10 @@ class LiftArmStateMachine {
 
     void update();
 
-    static constexpr float minAngle = 0;
-    static constexpr float maxAngle = 330;
+    void tareAngle();
+
+    static float minAngle;
+    static float maxAngle;
   private:
     void stopMotors();
     pros::motor_brake_mode_e_t getProsStoppingMode() const;
@@ -58,22 +62,30 @@ class LiftArmStateMachine {
     void moveWithPID();
     void moveWithInternalPID();
 
-    float calcError() const;
+    std::vector<double> getAngles() const;
+    std::vector<double> calcError() const;
+    double calcMaxError() const;
     bool isErrorInRange() const;
+
+    /**
+     * @brief if a motor is at current limit, adjust the min/max angle to be
+     * that motor's current angle
+     */
+    void adjustMaxAngle();
+    
+    lemlib::Timer maxCurrentTimer;
 
     static const PIDControllerSettings pidSettings;
 
     static const float acceptableErrorRange;
     static const float BANG_BANG_POWER;
 
-
-    lemlib::PID pidController;
+    std::vector<lemlib::PID> pidController;
 
     pros::Motor_Group* motors;
-    pros::ADIPotentiometer* angleSensor;
 
     float target = 0;
     STATE state = STOPPED;
-    STOP_MODE stopMode = NEVER;
+    STOP_MODE stopMode = BRAKE;
     CONTROLLER_MODE controllerMode = PID;
 };

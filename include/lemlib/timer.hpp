@@ -66,6 +66,7 @@ class Timer {
         uint32_t period;
         uint32_t lastTime;
         uint32_t timeWaited = 0;
+    public:
         bool paused = false;
 };
 } // namespace lemlib
