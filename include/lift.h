@@ -50,8 +50,14 @@ class LiftArmStateMachine {
 
     void tareAngle();
 
+    void changeKP(float change);
+    void changeKD(float change);
+    float getKP() const;
+    float getKD() const;
+
     static float minAngle;
     static float maxAngle;
+
   private:
     void stopMotors();
     pros::motor_brake_mode_e_t getProsStoppingMode() const;

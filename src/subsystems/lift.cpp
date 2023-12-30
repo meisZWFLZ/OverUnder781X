@@ -1,12 +1,6 @@
 #include "lift.h"
-#include "lemlib/pid.hpp"
 #include "lemlib/util.hpp"
-#include "pros/motors.h"
-#include <algorithm>
-#include <climits>
-#include <cstdlib>
 #include <numeric>
-#include <vector>
 
 double avg(const std::vector<double> nums) {
   return std::reduce(nums.begin(), nums.end(), 0) / double(nums.size());
@@ -42,7 +36,8 @@ void LiftArmStateMachine::tareAngle() { motors->tare_position(); }
 
 std::vector<double> LiftArmStateMachine::calcError() const {
   std::vector<double> errs {};
-  for (const auto err : this->getAngles()) errs.push_back(this->target - err);
+  for (const auto err : this->getAngles())
+    errs.push_back(this->target - std::abs(err));
   printf("err: %4.2f,%4.2f\n", errs[0], errs[1]);
   return errs;
 }
@@ -166,3 +161,15 @@ LiftArmStateMachine::CONTROLLER_MODE
 LiftArmStateMachine::getControllerMode() const {
   return this->controllerMode;
 }
+
+void LiftArmStateMachine::changeKP(const float change) {
+  for (auto& pid : this->pidController) pid.kP += change;
+}
+
+void LiftArmStateMachine::changeKD(const float change) {
+  for (auto& pid : this->pidController) pid.kD += change;
+}
+
+float LiftArmStateMachine::getKP() const { return this->pidController[0].kP; }
+
+float LiftArmStateMachine::getKD() const { return this->pidController[0].kD; }

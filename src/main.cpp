@@ -14,10 +14,12 @@ bool autonHasRun = false;
 void screen() {
   // loop forever
   while (true) {
-    auto angs = Robot::Motors::elevator.get_positions();
+    pros::lcd::print(0, "kP: %f", Robot::Subsystems::lift->getKP());
+    pros::lcd::print(1, "kD: %f", Robot::Subsystems::lift->getKD());
     pros::lcd::print(2, "stopped: %i",
                      Robot::Subsystems::lift->getState() ==
                          LiftArmStateMachine::STATE::STOPPED);
+    auto angs = Robot::Motors::elevator.get_positions();
     pros::lcd::print(3, "lift: %4.2f,%4.2f", angs[0], angs[1]);
     pros::lcd::print(4, "target: %4.2f", Robot::Subsystems::lift->getTarget());
     pros::lcd::print(5, "current: %i,%i",
@@ -25,7 +27,6 @@ void screen() {
                      Robot::Motors::elevator.at(1).get_current_draw());
     auto currLim = Robot::Motors::elevator.are_over_current();
     pros::lcd::print(6, "curr lim: %i,%i", currLim[0], currLim[1]);
-
     // lemlib::Pose pose =
     //     Robot::chassis->getPose(); // get the current position of the
     //     robot
@@ -199,10 +200,36 @@ void opcontrol() {
   int lastR2Press = 0;
 
   const int maxTimeBetweenDoublePress = 150;
+
+  bool prevA = 0;
+  bool tuning = false;
   while (true) {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // 								     Drive Code
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    // lift pid tuning
+    const bool buttonA =
+        Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_A);
+    if (buttonA && !prevA) {
+      tuning ^= true;
+      if (tuning) Robot::Subsystems::catapult->emergencyStop();
+      else Robot::Subsystems::catapult->cancelEmergencyStop();
+    }
+    prevA = buttonA;
+    if (tuning) Robot::control.print(1, 1, "tuning");
+    else Robot::control.clear_line(1);
+
+    if (tuning) {
+      if (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT))
+        Robot::Subsystems::lift->changeKD(-0.025);
+      if (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
+        Robot::Subsystems::lift->changeKD(0.025);
+      if (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN))
+        Robot::Subsystems::lift->changeKP(-0.025);
+      if (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_UP))
+        Robot::Subsystems::lift->changeKP(0.025);
+    }
 
     // drivetrain
     Robot::chassis->tank(
@@ -227,20 +254,22 @@ void opcontrol() {
     prevX = buttonX;
 
     // catapult manual fire
-    if (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT))
+    if (!tuning && Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT))
       Robot::Subsystems::catapult->fire();
 
     // catapult emergency stop
-    const bool cataEStopCombo =
-        Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN) &&
-        Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT);
-    if (cataEStopCombo && !prevCataEStopCombo) {
-      if (Robot::Subsystems::catapult->getState() ==
-          CatapultStateMachine::STATE::EMERGENCY_STOPPED)
-        Robot::Subsystems::catapult->cancelEmergencyStop();
-      else Robot::Subsystems::catapult->emergencyStop();
+    if (!tuning) {
+      const bool cataEStopCombo =
+          Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN) &&
+          Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT);
+      if (cataEStopCombo && !prevCataEStopCombo) {
+        if (Robot::Subsystems::catapult->getState() ==
+            CatapultStateMachine::STATE::EMERGENCY_STOPPED)
+          Robot::Subsystems::catapult->cancelEmergencyStop();
+        else Robot::Subsystems::catapult->emergencyStop();
+      }
+      prevCataEStopCombo = cataEStopCombo;
     }
-    prevCataEStopCombo = cataEStopCombo;
 
     // lift granular control
     Robot::Subsystems::lift->changeTarget(
@@ -283,7 +312,7 @@ void opcontrol() {
     prevLiftEStopCombo = liftEStopCombo;
 
     // wing toggle
-    if (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) {
+    if (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_UP) && !tuning) {
       if (!wasUpPressed) Robot::Pistons::wings.set_value(wingsState ^= true);
       wasUpPressed = true;
     } else wasUpPressed = false;

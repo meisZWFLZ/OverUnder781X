@@ -37,7 +37,7 @@ const PIDControllerSettings LiftArmStateMachine::pidSettings = {
     .windupRange = 0.0,
     .signFlipReset = false};
 
-const float LiftArmStateMachine::acceptableErrorRange = 8;
+const float LiftArmStateMachine::acceptableErrorRange = 10;
 const float LiftArmStateMachine::BANG_BANG_POWER = 127;
 
 float LiftArmStateMachine::minAngle = 0;

@@ -27,16 +27,16 @@ class PID {
          *
          */
         void reset();
-    private:
         // gains
-        const float kP;
-        const float kI;
-        const float kD;
+        float kP;
+        float kI;
+        float kD;
 
         // optimizations
         const float windupRange;
         const bool signFlipReset;
 
+    private:
         float integral = 0;
         float prevError = 0;
 };
