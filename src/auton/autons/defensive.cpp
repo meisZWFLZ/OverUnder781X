@@ -34,13 +34,13 @@ void runDefensive() {
   const lemlib::Pose outtakeMiddleTarget = {
       0 - Robot::Dimensions::drivetrainLength / 2, -TILE_LENGTH / 2.0, RIGHT};
 
-  Robot::Actions::lowerIntake();
+  // Robot::Actions::lowerIntake();
   pros::delay(200);
   Robot::chassis->tank(-127, 127);
 
   while (Robot::chassis->getPose().theta > 90) pros::delay(10);
 
-  Robot::Actions::raiseIntake();
+  // Robot::Actions::raiseIntake();
 
   Robot::chassis->turnTo(0, 0, 500);
   Robot::chassis->waitUntilDone();

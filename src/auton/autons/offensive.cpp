@@ -34,7 +34,7 @@ void runOffensive() {
   Robot::chassis->waitUntilDone();
 
   Robot::chassis->tank(127, 127);
-  Robot::Actions::lowerIntake();
+  // Robot::Actions::lowerIntake();
   pros::delay(400);
   Robot::chassis->tank(0, 0);
 }

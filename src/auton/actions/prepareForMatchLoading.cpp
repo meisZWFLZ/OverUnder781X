@@ -11,6 +11,6 @@ void auton::actions::prepareForMatchloading() {
   Robot::chassis->waitUntil(6);
   Robot::Actions::shoot();
   Robot::chassis->waitUntilDone();
-  Robot::Actions::lowerIntake();
+  // Robot::Actions::lowerIntake();
 
 }

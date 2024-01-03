@@ -186,6 +186,8 @@ void opcontrol() {
   bool wingsState = false;
   bool wasUpPressed = false;
 
+  // blocker
+  bool blockerState = false;
   bool prevX = false;
 
   bool prevCataEStopCombo = false;
@@ -202,34 +204,10 @@ void opcontrol() {
   const int maxTimeBetweenDoublePress = 150;
 
   bool prevA = 0;
-  bool tuning = false;
   while (true) {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // 								     Drive Code
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    // lift pid tuning
-    const bool buttonA =
-        Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_A);
-    if (buttonA && !prevA) {
-      tuning ^= true;
-      if (tuning) Robot::Subsystems::catapult->emergencyStop();
-      else Robot::Subsystems::catapult->cancelEmergencyStop();
-    }
-    prevA = buttonA;
-    if (tuning) Robot::control.print(1, 1, "tuning");
-    else Robot::control.clear_line(1);
-
-    if (tuning) {
-      if (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT))
-        Robot::Subsystems::lift->changeKD(-0.025);
-      if (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT))
-        Robot::Subsystems::lift->changeKD(0.025);
-      if (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN))
-        Robot::Subsystems::lift->changeKP(-0.025);
-      if (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_UP))
-        Robot::Subsystems::lift->changeKP(0.025);
-    }
 
     // drivetrain
     Robot::chassis->tank(
@@ -244,21 +222,30 @@ void opcontrol() {
     else Robot::Motors::intake.move(0);
 
     // matchload toggle
-    const bool buttonX =
-        Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_X);
-    if (buttonX && !prevX) {
+    const bool buttonA =
+        Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_A);
+    if (buttonA && !prevA) {
       if (Robot::Subsystems::catapult->getIsMatchloading())
         Robot::Subsystems::catapult->stop();
       else Robot::Subsystems::catapult->matchload();
     }
+    prevA = buttonA;
+
+    // blocker toggle
+    const bool buttonX =
+        Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_X);
+    if (buttonX && !prevX) {
+      blockerState = !blockerState;
+      if (blockerState) Robot::Actions::expandBlocker();
+      else Robot::Actions::retractBlocker();
+    }
     prevX = buttonX;
 
     // catapult manual fire
-    if (!tuning && Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT))
+    if (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT))
       Robot::Subsystems::catapult->fire();
 
     // catapult emergency stop
-    if (!tuning) {
       const bool cataEStopCombo =
           Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN) &&
           Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT);
@@ -269,7 +256,6 @@ void opcontrol() {
         else Robot::Subsystems::catapult->emergencyStop();
       }
       prevCataEStopCombo = cataEStopCombo;
-    }
 
     // lift granular control
     Robot::Subsystems::lift->changeTarget(
@@ -312,7 +298,7 @@ void opcontrol() {
     prevLiftEStopCombo = liftEStopCombo;
 
     // wing toggle
-    if (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_UP) && !tuning) {
+    if (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) {
       if (!wasUpPressed) Robot::Pistons::wings.set_value(wingsState ^= true);
       wasUpPressed = true;
     } else wasUpPressed = false;

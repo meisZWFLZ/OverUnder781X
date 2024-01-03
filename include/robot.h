@@ -23,7 +23,7 @@ class Robot {
     class Pistons {
       public:
         /** starts retracted */
-        static pros::ADIDigitalOut intakeElevator;
+        static pros::ADIDigitalOut blocker;
         static pros::ADIDigitalOut wings;
     };
 
@@ -70,11 +70,11 @@ class Robot {
         static void matchload();
         static void stopShooter();
 
-        static void raiseIntake();
-        static void lowerIntake();
-
         static void expandWings();
         static void retractWings();
+
+        static void expandBlocker();
+        static void retractBlocker();
     };
 
     class Tunables {
