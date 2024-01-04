@@ -13,6 +13,9 @@ bool autonHasRun = false;
 
 void screen() {
   // loop forever
+    Robot::control.clear_line(0);
+    Robot::control.clear_line(1);
+    Robot::control.clear_line(2);
   while (true) {
     // pros::lcd::print(0, "kP: %f", Robot::Subsystems::lift->getKP());
     // pros::lcd::print(1, "kD: %f", Robot::Subsystems::lift->getKD());
@@ -38,9 +41,10 @@ void screen() {
     pros::lcd::print(3, "heading: %f deg",
                      pose.theta); // print the heading
 
-    Robot::control.set_text(1, 1, "b");
-    Robot::control.set_text(2, 2, "c");
-    Robot::control.set_text(3, 3, "d");
+    Robot::control.set_text(0, 1, "b");
+    Robot::control.set_text(1, 2, "c");
+    Robot::control.set_text(2, 3, "d");
+
     pros::delay(200);
   }
 }
@@ -64,11 +68,10 @@ void initialize() {
 
   pros::lcd::initialize();
   Robot::chassis->calibrate(); // calibrate the chassis
-  
-  Robot::Subsystems::initialize();
-  // pros::lcd::set_text(1, "Calibrating chassis...");
 
-  // pros::lcd::set_text(1, "Chassis Calibrated!");
+  pros::lcd::set_text(1, "Calibrating chassis...");
+  Robot::Subsystems::initialize();
+  pros::lcd::set_text(1, "Chassis Calibrated!");
   // Robot::chassis->setPose(0, 0, 0);
   // Robot::Actions::raiseIntake();
 
