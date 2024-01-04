@@ -14,29 +14,33 @@ bool autonHasRun = false;
 void screen() {
   // loop forever
   while (true) {
-    pros::lcd::print(0, "kP: %f", Robot::Subsystems::lift->getKP());
-    pros::lcd::print(1, "kD: %f", Robot::Subsystems::lift->getKD());
-    pros::lcd::print(2, "stopped: %i",
-                     Robot::Subsystems::lift->getState() ==
-                         LiftArmStateMachine::STATE::STOPPED);
-    auto angs = Robot::Motors::elevator.get_positions();
-    pros::lcd::print(3, "lift: %4.2f,%4.2f", angs[0], angs[1]);
+    // pros::lcd::print(0, "kP: %f", Robot::Subsystems::lift->getKP());
+    // pros::lcd::print(1, "kD: %f", Robot::Subsystems::lift->getKD());
+    // pros::lcd::print(2, "stopped: %i",
+    //                  Robot::Subsystems::lift->getState() ==
+    //                      LiftArmStateMachine::STATE::STOPPED);
+    // auto angs = Robot::Motors::elevator.get_positions();
+    // pros::lcd::print(3, "lift: %4.2f,%4.2f", angs[0], angs[1]);
     pros::lcd::print(4, "target: %4.2f", Robot::Subsystems::lift->getTarget());
     pros::lcd::print(5, "current: %i,%i",
                      Robot::Motors::elevator.at(0).get_current_draw(),
                      Robot::Motors::elevator.at(1).get_current_draw());
     auto currLim = Robot::Motors::elevator.are_over_current();
     pros::lcd::print(6, "curr lim: %i,%i", currLim[0], currLim[1]);
-    // lemlib::Pose pose =
-    //     Robot::chassis->getPose(); // get the current position of the
-    //     robot
-    // pros::lcd::clear_line(1);
-    // pros::lcd::print(1, "x: %f in", pose.x); // print the x position
-    // pros::lcd::clear_line(2);
-    // pros::lcd::print(2, "y: %f in", pose.y); // print the y position
-    // pros::lcd::clear_line(3);
-    // pros::lcd::print(3, "heading: %f deg",
-    //                  pose.theta); // print the heading
+    lemlib::Pose pose =
+        Robot::chassis->getPose(); // get the current position of the
+
+    pros::lcd::clear_line(1);
+    pros::lcd::print(1, "x: %f in", pose.x); // print the x position
+    pros::lcd::clear_line(2);
+    pros::lcd::print(2, "y: %f in", pose.y); // print the y position
+    pros::lcd::clear_line(3);
+    pros::lcd::print(3, "heading: %f deg",
+                     pose.theta); // print the heading
+
+    Robot::control.set_text(1, 1, "b");
+    Robot::control.set_text(2, 2, "c");
+    Robot::control.set_text(3, 3, "d");
     pros::delay(200);
   }
 }
@@ -57,11 +61,13 @@ void addAutons() {
  */
 void initialize() {
   Robot::initializeOdometryConfig();
-  Robot::Subsystems::initialize();
+
   pros::lcd::initialize();
+  Robot::chassis->calibrate(); // calibrate the chassis
+  
+  Robot::Subsystems::initialize();
   // pros::lcd::set_text(1, "Calibrating chassis...");
 
-  Robot::chassis->calibrate(); // calibrate the chassis
   // pros::lcd::set_text(1, "Chassis Calibrated!");
   // Robot::chassis->setPose(0, 0, 0);
   // Robot::Actions::raiseIntake();
@@ -244,18 +250,19 @@ void opcontrol() {
     // catapult manual fire
     if (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT))
       Robot::Subsystems::catapult->fire();
+    // else Robot::Subsystems::catapult->stop();
 
     // catapult emergency stop
-      const bool cataEStopCombo =
-          Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN) &&
-          Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT);
-      if (cataEStopCombo && !prevCataEStopCombo) {
-        if (Robot::Subsystems::catapult->getState() ==
-            CatapultStateMachine::STATE::EMERGENCY_STOPPED)
-          Robot::Subsystems::catapult->cancelEmergencyStop();
-        else Robot::Subsystems::catapult->emergencyStop();
-      }
-      prevCataEStopCombo = cataEStopCombo;
+    const bool cataEStopCombo =
+        Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN) &&
+        Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT);
+    if (cataEStopCombo && !prevCataEStopCombo) {
+      if (Robot::Subsystems::catapult->getState() ==
+          CatapultStateMachine::STATE::EMERGENCY_STOPPED)
+        Robot::Subsystems::catapult->cancelEmergencyStop();
+      else Robot::Subsystems::catapult->emergencyStop();
+    }
+    prevCataEStopCombo = cataEStopCombo;
 
     // lift granular control
     Robot::Subsystems::lift->changeTarget(
@@ -303,6 +310,6 @@ void opcontrol() {
       wasUpPressed = true;
     } else wasUpPressed = false;
 
-    pros::delay(20);
+    pros::delay(10);
   }
 }

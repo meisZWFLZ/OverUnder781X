@@ -14,6 +14,7 @@ bool CatapultStateMachine::fire() {
     this->state = FIRING;
     return true;
   }
+  // this->constantFiring = true;
   return false;
 }
 
@@ -25,6 +26,7 @@ bool CatapultStateMachine::matchload(int millis, int triballs) {
   this->triballsLeftToBeFired = triballs;
 
   this->matchloading = true;
+  // this->constantFiring = false;
   return true;
 }
 
@@ -32,6 +34,8 @@ void CatapultStateMachine::stop() {
   this->matchloading = false;
   this->timer.set(0);
   this->triballsLeftToBeFired = 0;
+
+  // this->constantFiring = false;
 }
 
 void CatapultStateMachine::emergencyStop() {
@@ -42,7 +46,7 @@ void CatapultStateMachine::emergencyStop() {
 void CatapultStateMachine::cancelEmergencyStop() { this->state = READY; }
 
 bool CatapultStateMachine::isTriballLoaded() const {
-  return this->triballSensor->get_value() < 1300;
+  return this->triballSensor->get_value() < 1400;
 }
 
 bool CatapultStateMachine::isCataLoadable() const {
@@ -61,10 +65,11 @@ void CatapultStateMachine::update() {
     printf("stop matchloading\n");
     this->matchloading = false;
   }
-
+  const STATE startState = this->state;
   switch (this->state) {
     case READY:
       if (this->isCataNotLoadable()) this->state = RETRACTING;
+      // if(this->matchloading)printf("matchloading\n");
       if (this->matchloading && this->isTriballLoaded()) {
         printf("switch to firing\n");
         this->state = FIRING;
@@ -81,14 +86,16 @@ void CatapultStateMachine::update() {
     case RETRACTING:
       this->retractCataMotor();
       if (this->isCataLoadable()) {
-        this->stopCataMotor();
-
-        printf("switch to idle\n");
-        this->state = READY;
+        {
+        printf("switch to ready\n");
+          this->stopCataMotor();
+          this->state = READY;
+        }
+        break;
+        case EMERGENCY_STOPPED: this->stopCataMotor(); break;
       }
-      break;
-    case EMERGENCY_STOPPED: this->stopCataMotor(); break;
   }
+  if(startState != this->state) this->update();
 }
 
 void CatapultStateMachine::indicateTriballFired() {

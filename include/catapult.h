@@ -83,8 +83,10 @@ class CatapultStateMachine {
     void indicateTriballFired();
     void retractCataMotor();
     void stopCataMotor();
-
+    
     bool isTriballLoaded() const;
+
+    bool constantFiring = false;
 
     lemlib::Timer timer = {0};
 
