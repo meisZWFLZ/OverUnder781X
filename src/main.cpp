@@ -52,8 +52,8 @@ void screen() {
 pros::Task* screenTask;
 
 void addAutons() {
-  auton::AutonSelector::addAuton(&auton::autons::defensive);
   auton::AutonSelector::addAuton(&auton::autons::offensive);
+  auton::AutonSelector::addAuton(&auton::autons::defensive);
   auton::AutonSelector::addAuton(&auton::autons::skills);
 }
 
@@ -75,9 +75,9 @@ void initialize() {
   // Robot::chassis->setPose(0, 0, 0);
   // Robot::Actions::raiseIntake();
 
-  // addAutons();
-  // auton::AutonSelector::init();
-  // auton::AutonSelector::enable();
+  addAutons();
+  auton::AutonSelector::init();
+  auton::AutonSelector::enable();
   // create a task to print the position to the screen
   new pros::Task {screen};
 }
@@ -100,6 +100,12 @@ void disabled() {}
  */
 void competition_initialize() {}
 
+void printPose() {
+    lemlib::Pose pose =
+        Robot::chassis->getPose();
+    printf("x: %f in\ny: %f in\nheading: %f deg\n", pose.x, pose.y, pose.theta);
+}
+
 /**
  * Runs the user autonomous code. This function will be started in its own task
  * with the default priority and stack size whenever the robot is enabled via
@@ -115,8 +121,7 @@ void autonomous() {
   auton::AutonSelector::disable();
   autonHasRun = true;
   // if (pros::competition::is_connected()) Robot::Actions::prepareIntake();
-  printf("auton start");
-  pros::competition::is_connected();
+  // printf("auton start");
 
   auton::AutonSelector::runAuton();
 }
