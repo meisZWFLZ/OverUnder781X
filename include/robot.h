@@ -56,8 +56,8 @@ class Robot {
         static const float horiEncDistance;
         static const float horiEncGearRatio;
 
-        static constexpr float drivetrainWidth = 13.5;
-        static constexpr float drivetrainLength = 15;
+        static constexpr float drivetrainWidth = 14.5;
+        static constexpr float drivetrainLength = 14;
     };
 
     class Actions {
