@@ -10,7 +10,7 @@ pros::Motor rightDriveA {10, pros::E_MOTOR_GEAR_600, /* true */};
 pros::Motor rightDriveB {16, pros::E_MOTOR_GEAR_600, /* true */};
 
 // intake
-pros::Motor intakeA {7, true};
+pros::Motor intakeA {7, false};
 
 // shooter
 pros::Motor elevatorA {11, pros::E_MOTOR_GEAR_RED, true};
