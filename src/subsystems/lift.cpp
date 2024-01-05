@@ -38,7 +38,7 @@ std::vector<double> LiftArmStateMachine::calcError() const {
   std::vector<double> errs {};
   for (const auto ang : this->getAngles())
     errs.push_back(this->target - ang);
-  printf("err: %4.2f,%4.2f\n", errs[0], errs[1]);
+  // printf("err: %4.2f,%4.2f\n", errs[0], errs[1]);
   return errs;
 }
 
