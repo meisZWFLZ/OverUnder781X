@@ -37,7 +37,7 @@ void AutonSelector::decrementListener() {
 void AutonSelector::clearDisplay() { pros::lcd::clear_line(0); }
 
 void AutonSelector::updateDisplay() {
-  printf("auto: %i\n", index);
+  // printf("auto: %i\n", index);
   pros::lcd::set_text(0, autons[index]->label);
 }
 
@@ -56,7 +56,7 @@ void AutonSelector::disable() {
 bool AutonSelector::isEnabled() { return AutonSelector::state; }
 
 void AutonSelector::runAuton() {
-  printf("auto: %i\n", index);
+  // printf("auto: %i\n", index);
   autons[index]->run();
 }
 
