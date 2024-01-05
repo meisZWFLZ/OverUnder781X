@@ -5,9 +5,9 @@
 
 using namespace fieldDimensions;
 
-ASSET(skills_right_side_txt);
-ASSET(skills_front_1_txt);
-ASSET(skills_front_2_txt);
+// ASSET(skills_right_side_txt);
+// ASSET(skills_front_1_txt);
+// ASSET(skills_front_2_txt);
 
 void delayForMatchLoading(int delay) {
   printf("delay: %i\n", delay);
@@ -44,7 +44,7 @@ void runSkills() {
 
   Robot::chassis->turnTo(0, MIN_Y + 12, 1000);
   Robot::chassis->waitUntilDone();
-  Robot::chassis->follow(skills_right_side_txt, 15, 4000);
+  // Robot::chassis->follow(skills_right_side_txt, 15, 4000);
 
   Robot::chassis->waitUntil(50);
   Robot::Actions::intake();
@@ -64,7 +64,7 @@ void runSkills() {
 
   Robot::chassis->turnTo(-10000, 0, 3000);
   Robot::chassis->waitUntilDone();
-  Robot::chassis->follow(skills_front_1_txt, 15, 3000);
+  // Robot::chassis->follow(skills_front_1_txt, 15, 3000);
   Robot::chassis->waitUntil(36);
   Robot::Actions::expandWings();
   Robot::Actions::outtake();
@@ -75,7 +75,7 @@ void runSkills() {
 
   Robot::chassis->turnTo(0, 10000, 3000);
   Robot::chassis->waitUntilDone();
-  Robot::chassis->follow(skills_front_2_txt, 15, 3000);
+  // Robot::chassis->follow(skills_front_2_txt, 15, 3000);
   // Robot::Actions::expandWings();
   Robot::Actions::outtake();
   Robot::chassis->waitUntilDone();

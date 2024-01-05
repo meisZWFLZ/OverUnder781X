@@ -4,8 +4,8 @@
 #include "robot.h"
 #include "fieldDimensions.h"
 
-ASSET(def_score_alliance_txt);
-ASSET(def_elevation_bar_txt);
+// ASSET(def_score_alliance_txt);
+// ASSET(def_elevation_bar_txt);
 
 using namespace fieldDimensions;
 
@@ -45,7 +45,7 @@ void runDefensive() {
   Robot::chassis->turnTo(0, 0, 500);
   Robot::chassis->waitUntilDone();
   // Curve around and score into large part of goal
-  Robot::chassis->follow(def_score_alliance_txt, 13, 2750);
+  // Robot::chassis->follow(def_score_alliance_txt, 13, 2750);
 
   // wait until 5 inches away from, then outtake
   while (Robot::chassis->getPose().distance(scoreAllyTarget) > 18)
@@ -72,7 +72,7 @@ void runDefensive() {
 
   Robot::chassis->turnTo(0, -1000000, 750);
   Robot::chassis->waitUntilDone();
-  Robot::chassis->follow(def_elevation_bar_txt, 12, 3000);
+  // Robot::chassis->follow(def_elevation_bar_txt, 12, 3000);
 
   Robot::chassis->turnTo(10000, 10000, 1000);
   Robot::chassis->waitUntilDone();
