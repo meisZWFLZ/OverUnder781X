@@ -24,7 +24,7 @@ void prepareForMatchloading();
 
 namespace autons {
   extern Auton defensive;
-  extern Auton offensive;
+  extern Auton sixBall;
   extern Auton skills;
 }
 } // namespace auton

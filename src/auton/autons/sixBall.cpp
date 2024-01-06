@@ -71,7 +71,7 @@ void waitUntilDistToPose(lemlib::Pose pose, float error, int time = 0,
   printf("time in wait: %i\n", pros::millis() - start);
 }
 
-void runOffensive() {
+void run6Ball() {
   Robot::chassis->setPose(
       {0 + TILE_LENGTH - Robot::Dimensions::drivetrainLength / 2,
        MIN_Y + TILE_RADIUS, LEFT},
@@ -216,5 +216,5 @@ void runOffensive() {
   printf("stop\n");
 }
 
-auton::Auton auton::autons::offensive = {(char*)("offensive / right"),
-                                         runOffensive};
+auton::Auton auton::autons::sixBall = {(char*)("6 ball / offensive / right"),
+                                         run6Ball};
