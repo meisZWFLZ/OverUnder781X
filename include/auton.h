@@ -1,16 +1,13 @@
 #pragma once
 #include "lemlib/api.hpp"
 #include "selector.h"
+
 namespace auton {
- /** 
-  * @returns -1 when robot starts on left side/defensive zone and +1 on right side/offensive zone   
-  */
-int leftOrRight(int ifLeft = -1, int ifRight = 1);
 
 namespace actions {
 void removeMatchLoad();
 /**
- * @brief pushes triball in match load zone to offensive zone 
+ * @brief pushes triball in match load zone to offensive zone
  * @zone DEFENSIVE ZONE
  * @order MUST BE FIRST ACTION
  */
@@ -22,9 +19,48 @@ void intakeTriball(lemlib::Pose pose);
 void prepareForMatchloading();
 } // namespace actions
 
+namespace utils {
+const float DEFAULT_SLEW = 5;
+
+/**
+ * @returns -1 when robot starts on left side/defensive zone and +1 on right
+ * side/offensive zone
+ */
+int leftOrRight(int ifLeft = -1, int ifRight = 1);
+
+/**
+ * @brief Tank drive with slew rate control
+ * Slew rate control is a method of limiting the rate of change of the voltage
+ * sent to the motors. This is useful for ensuring that the tracking wheels
+ * always contact the ground.
+ *
+ * @param left left side power
+ * @param right right side power
+ * @param ms time to run for
+ * @param slew slew rate
+ */
+void tank(float left, float right, int ms, float slew = DEFAULT_SLEW);
+
+/**
+ * @brief Stops sending voltage to the drivetrain motors
+ */
+void stop();
+
+/**
+ * @brief Wait until the robot is within a circle with a radius of error and
+ * centered at pose for time milliseconds.
+ *
+ * @param pose pose to find distance from robot to
+ * @param error
+ * @param time
+ */
+void waitUntilDistToPose(lemlib::Pose pose, float error, int time = 0,
+                         bool checkMotionRunning = false);
+} // namespace utils
+
 namespace autons {
-  extern Auton defensive;
-  extern Auton sixBall;
-  extern Auton skills;
-}
+extern Auton defensive;
+extern Auton sixBall;
+extern Auton skills;
+} // namespace autons
 } // namespace auton

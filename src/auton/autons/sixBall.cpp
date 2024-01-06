@@ -6,70 +6,10 @@
 #include "fieldDimensions.h"
 
 using namespace fieldDimensions;
+using namespace auton::utils;
 
 ASSET(ball6_matchload_sweep_txt);
 ASSET(ball6_center_plow_1_txt);
-
-const float DEFAULT_SLEW = 5;
-
-void tankUpdate(float left, float right, float slew) {
-  const int prevLeft = Robot::Motors::leftDrive.get_voltages()[0];
-  const int prevRight = Robot::Motors::rightDrive.get_voltages()[0];
-  const int leftLimited = lemlib::slew(left, prevLeft, slew);
-  const int rightLimited = lemlib::slew(right, prevRight, slew);
-  Robot::chassis->tank(leftLimited, rightLimited);
-}
-
-/**
- * @brief Tank drive with slew rate control
- * Slew rate control is a method of limiting the rate of change of the voltage
- * sent to the motors. This is useful for ensuring that the tracking wheels
- * always contact the ground.
- *
- * @param left left side power
- * @param right right side power
- * @param ms time to run for
- * @param slew slew rate
- */
-void tank(float left, float right, int ms, float slew = DEFAULT_SLEW) {
-  const int startTime = pros::millis();
-  do {
-    tankUpdate(left, right, slew);
-    pros::delay(10);
-  } while (pros::millis() - startTime < ms);
-}
-
-/**
- * @brief Stops sending voltage to the drivetrain motors
- */
-void stop() { Robot::chassis->tank(0, 0); }
-
-/**
- * @brief Wait until the robot is within a circle with a radius of error and
- * centered at pose for time milliseconds.
- *
- * @param pose pose to find distance from robot to
- * @param error
- * @param time
- */
-void waitUntilDistToPose(lemlib::Pose pose, float error, int time = 0,
-                         bool checkMotionRunning = false) {
-  printf("start wait\n");
-  const int start = pros::millis();
-  int inRangeStartTime = 0;
-  pros::delay(100);
-  do {
-    if (inRangeStartTime == 0) {
-      if (Robot::chassis->getPose().distance(pose) < error)
-        inRangeStartTime = pros::millis();
-    } else if (pros::millis() - inRangeStartTime > time) {
-      printf("breaking\n");
-      break;
-    }
-    pros::delay(10);
-  } while (!checkMotionRunning || Robot::chassis->isInMotion());
-  printf("time in wait: %i\n", pros::millis() - start);
-}
 
 void run6Ball() {
   Robot::chassis->setPose(
@@ -217,4 +157,4 @@ void run6Ball() {
 }
 
 auton::Auton auton::autons::sixBall = {(char*)("6 ball / offensive / right"),
-                                         run6Ball};
+                                       run6Ball};
