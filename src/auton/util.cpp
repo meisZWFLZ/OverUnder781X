@@ -2,12 +2,15 @@
 #include "robot.h"
 
 namespace auton::utils {
+float prevLeft = 0;
+float prevRight = 0;
+
 void tankUpdate(float left, float right, float slew) {
-  const int prevLeft = Robot::Motors::leftDrive.get_voltages()[0];
-  const int prevRight = Robot::Motors::rightDrive.get_voltages()[0];
-  const int leftLimited = lemlib::slew(left, prevLeft, slew);
-  const int rightLimited = lemlib::slew(right, prevRight, slew);
+  const float leftLimited = lemlib::slew(left, prevLeft, slew);
+  const float rightLimited = lemlib::slew(right, prevRight, slew);
   Robot::chassis->tank(leftLimited, rightLimited);
+  prevLeft = leftLimited;
+  prevRight = rightLimited;
 }
 
 void tank(float left, float right, int ms, float slew) {
@@ -31,7 +34,6 @@ void waitUntilDistToPose(lemlib::Pose pose, float error, int time,
       if (Robot::chassis->getPose().distance(pose) < error)
         inRangeStartTime = pros::millis();
     } else if (pros::millis() - inRangeStartTime > time) {
-      printf("breaking\n");
       break;
     }
     pros::delay(10);

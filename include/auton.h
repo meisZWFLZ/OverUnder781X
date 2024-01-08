@@ -20,7 +20,7 @@ void prepareForMatchloading();
 } // namespace actions
 
 namespace utils {
-const float DEFAULT_SLEW = 5;
+const float DEFAULT_SLEW = 15;
 
 /**
  * @returns -1 when robot starts on left side/defensive zone and +1 on right
