@@ -54,5 +54,5 @@ void runSixRush() {
   stop();
 }
 
-auton::Auton auton::autons::defensive = {(char*)("6 ball rush / offensive / right"),
+auton::Auton auton::autons::sixRush = {(char*)("6 ball rush / offensive / right"),
                                          runSixRush};
