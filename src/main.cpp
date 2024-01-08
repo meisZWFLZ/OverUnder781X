@@ -45,6 +45,8 @@ void screen() {
     Robot::control.set_text(1, 2, "c");
     Robot::control.set_text(2, 3, "d");
 
+    printf("theta: %f\n", pose.theta);
+
     pros::delay(200);
   }
 }
@@ -52,6 +54,7 @@ void screen() {
 pros::Task* screenTask;
 
 void addAutons() {
+  auton::AutonSelector::addAuton(&auton::autons::sixRush);
   auton::AutonSelector::addAuton(&auton::autons::sixBall);
   auton::AutonSelector::addAuton(&auton::autons::defensive);
   auton::AutonSelector::addAuton(&auton::autons::skills);

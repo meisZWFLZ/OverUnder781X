@@ -60,6 +60,7 @@ void waitUntilDistToPose(lemlib::Pose pose, float error, int time = 0,
 
 namespace autons {
 extern Auton defensive;
+extern Auton sixRush;
 extern Auton sixBall;
 extern Auton skills;
 } // namespace autons
