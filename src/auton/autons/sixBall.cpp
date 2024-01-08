@@ -11,16 +11,6 @@ using namespace auton::utils;
 ASSET(ball6_matchload_sweep_txt);
 ASSET(ball6_center_plow_1_txt);
 
-float roundDegrees(float ang) { return std::abs(std::remainder(ang, 360)); }
-
-float angDiff(float ang1, float ang2) {
-  return roundDegrees(roundDegrees(ang1) - roundDegrees(ang2));
-}
-
-float robotAngDiff(float ang) {
-  return std::abs(angDiff(Robot::chassis->getPose().theta, ang));
-}
-
 void run6Ball() {
   Robot::chassis->setPose(
       {0 + TILE_LENGTH - Robot::Dimensions::drivetrainLength / 2,
@@ -76,7 +66,7 @@ void run6Ball() {
   printf("outtake\n");
 
   while ((std::abs(Robot::chassis->getPose().x - (MAX_X - TILE_RADIUS)) > 10 ||
-          robotAngDiff(0) > 20) &&
+          robotAngDist(0) > 20) &&
          Robot::chassis->isInMotion() &&
          Robot::chassis->getPose().theta < 420) {
     pros::delay(10);

@@ -45,4 +45,9 @@ int leftOrRight(int ifLeft, int ifRight) {
   return Robot::chassis->getPose().x < 0 ? ifLeft : ifRight;
 }
 
+float robotAngDist(float target) {
+  return std::fabs(
+      lemlib::angleError(Robot::chassis->getPose().theta, target, false));
+}
+
 } // namespace auton::utils

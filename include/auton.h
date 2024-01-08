@@ -1,5 +1,6 @@
 #pragma once
 #include "lemlib/api.hpp"
+#include "lemlib/util.hpp"
 #include "selector.h"
 
 namespace auton {
@@ -56,6 +57,15 @@ void stop();
  */
 void waitUntilDistToPose(lemlib::Pose pose, float error, int time = 0,
                          bool checkMotionRunning = false);
+
+/**
+ * @brief Gets the distance between the robot's heading and a target heading
+ *
+ * @param ang target heading in degrees
+ * @return a positive float with range of [0,180] 
+ */
+float robotAngDist(float target);
+
 } // namespace utils
 
 namespace autons {
