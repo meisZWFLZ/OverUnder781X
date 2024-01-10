@@ -1,0 +1,16 @@
+# List of Needed Entries
+ - [ ] Driver control
+ - [ ] Odom
+ - [ ] PID
+ - [ ] Pure Pursuit
+ - [ ] Pros (maybe)
+ - [ ] LemLib (maybe)
+ - [x] Structure
+ - [ ] Catapult
+ - [ ] Lift
+ - [ ] Auton Selector
+ - [ ] Autos
+   - [ ] 5-ish ball
+   - [ ] 6 ball rush
+   - [ ] defensive
+   - [ ] skills?
