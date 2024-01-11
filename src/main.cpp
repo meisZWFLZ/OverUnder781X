@@ -41,10 +41,6 @@ void screen() {
     pros::lcd::print(3, "heading: %f deg",
                      pose.theta); // print the heading
 
-    Robot::control.set_text(0, 1, "b");
-    Robot::control.set_text(1, 2, "c");
-    Robot::control.set_text(2, 3, "d");
-
     printf("theta: %f\n", pose.theta);
 
     pros::delay(200);

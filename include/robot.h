@@ -6,6 +6,7 @@
 #include "okapi/impl/device/controller.hpp"
 #include "lemlib/chassis/chassis.hpp"
 #include "pros/rotation.hpp"
+#include "driverFeedback.h"
 
 class Robot {
   public:
@@ -38,7 +39,6 @@ class Robot {
         static pros::Imu imu;
         static pros::ADILineSensor cataTriball;
         static pros::Rotation cata;
-        static pros::ADIPotentiometer elevator;
     };
 
     class Dimensions {
@@ -88,6 +88,7 @@ class Robot {
       public:
         static CatapultStateMachine* catapult;
         static LiftArmStateMachine* lift;
+        static DriverFeedback* feedback;
 
         static pros::Task* task;
 
