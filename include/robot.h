@@ -7,6 +7,7 @@
 #include "lemlib/chassis/chassis.hpp"
 #include "pros/rotation.hpp"
 #include "driverFeedback.h"
+#include "controllerScreen.h"
 
 class Robot {
   public:
@@ -89,6 +90,7 @@ class Robot {
         static CatapultStateMachine* catapult;
         static LiftArmStateMachine* lift;
         static DriverFeedback* feedback;
+        static ControllerScreen* controller;
 
         static pros::Task* task;
 

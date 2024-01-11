@@ -7,6 +7,9 @@ constexpr int MIN_MILLIS_BETWEEN_UPDATES = 10;
 
 CatapultStateMachine* Robot::Subsystems::catapult = nullptr;
 LiftArmStateMachine* Robot::Subsystems::lift = nullptr;
+DriverFeedback* Robot::Subsystems::feedback = nullptr;
+ControllerScreen* Robot::Subsystems::controller = nullptr;
+
 pros::Task* Robot::Subsystems::task = nullptr;
 
 void Robot::Subsystems::initialize() {
@@ -15,6 +18,7 @@ void Robot::Subsystems::initialize() {
       &Robot::Sensors::cata);
   Robot::Subsystems::lift = new LiftArmStateMachine(&Robot::Motors::elevator);
   Robot::Subsystems::feedback = new DriverFeedback();
+  Robot::Subsystems::controller = new ControllerScreen(&Robot::control);
 
   Robot::Subsystems::task = new pros::Task([]() {
     while (true) {
@@ -29,4 +33,5 @@ void Robot::Subsystems::update() {
   Robot::Subsystems::feedback->update();
   Robot::Subsystems::catapult->update();
   Robot::Subsystems::lift->update();
+  Robot::Subsystems::controller->update();
 }

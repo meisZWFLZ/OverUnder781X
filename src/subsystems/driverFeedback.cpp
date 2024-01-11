@@ -67,7 +67,7 @@ void DriverFeedback::update() {
     if (!device.second->isConnected()) { disconnectedDevices[device.first]++; }
   }
   std::string msg = "";
-  static const char* DELIM = ",";
+  static const char* DELIM = "\n";
   bool disconnected = !disconnectedDevices.empty();
   if (disconnected) {
     msg += "!";
@@ -102,7 +102,7 @@ void DriverFeedback::update() {
 
   if (msg != prevMsg) {
     if (pros::millis() - lastScreenUpdate > MIN_TIME_BETWEEN_UPDATES) {
-      Robot::control.print(0, 0, msg.c_str());
+      Robot::Subsystems::controller->print(0, msg.c_str());
       prevMsg = msg.c_str();
       lastScreenUpdate = pros::millis();
     }
