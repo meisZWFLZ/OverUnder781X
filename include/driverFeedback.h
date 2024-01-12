@@ -27,11 +27,7 @@ class DriverFeedback {
   private:
     std::vector<std::pair<const char*, Device*>> devices;
     void initializeDevices();
-
+  
     void addMotorGroup(const char* name, pros::Motor_Group* group);
     void addDevice(const char* name, Device* device);
-
-    const char* prevMsg;
-
-    int lastScreenUpdate;
 };

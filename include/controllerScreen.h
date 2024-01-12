@@ -35,7 +35,7 @@ class ControllerScreen {
 
     pros::Controller* con;
 
-    char* vibrateRequested;
+    const char* vibrateRequested;
 
     int lastPrintTime;
     int lastVibrateTime;
