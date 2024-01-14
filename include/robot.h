@@ -40,7 +40,7 @@ class Robot {
         static pros::Imu imu;
         static pros::ADILineSensor cataTriball;
         static pros::Rotation cata;
-    };
+            };
 
     class Dimensions {
       public:
@@ -76,6 +76,8 @@ class Robot {
 
         static void expandBlocker();
         static void retractBlocker();
+
+        static void prepareRobot();
     };
 
     class Tunables {
