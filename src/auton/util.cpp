@@ -21,7 +21,7 @@ void tank(float left, float right, int ms, float slew) {
   } while (pros::millis() - startTime < ms);
 }
 
-void stop() { Robot::chassis->tank(0, 0); }
+void stop() { tank(0, 0, 0, 0); }
 
 void waitUntilDistToPose(lemlib::Pose pose, float error, int time,
                          bool checkMotionRunning) {
