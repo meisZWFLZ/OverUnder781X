@@ -1,5 +1,6 @@
 #include "driverFeedback.h"
 #include "robot.h"
+#include <functional>
 
 Device::Device(pros::Motor* motor)
   : isConnected([motor] {
@@ -26,6 +27,10 @@ Device::Device(pros::ADILineSensor* lineSensor)
       if (lineSensor->get_value() == PROS_ERR && errno == ENODEV) return false;
       return true;
     }) {};
+
+Device::Device(std::function<bool(void)> isConnected,
+               std::function<float(void)> getTemp)
+  : isConnected(isConnected), getTemp(getTemp) {};
 
 float Device::hasNoTemp() { return NAN; }
 
@@ -58,16 +63,22 @@ void DriverFeedback::initializeDevices() {
 unsigned int prevDisconnectedDeviceFlags = 9;
 
 struct ControllerMessageBuilderConfig {
-    unsigned int rows = 3;
-    unsigned int columns = 14;
+    const int rows = 3;
+    const int columns = 14;
     const char* delim = " ";
-    char filler = ' ';
+    const char filler = ' ';
 };
 
 class ControllerMessageBuilder {
   public:
-    ControllerMessageBuilder(const ControllerMessageBuilderConfig& config = {})
-      : config(config), msg(config.rows, ""), delim(config.delim) {};
+    ControllerMessageBuilder(
+        const ControllerMessageBuilderConfig& config = {.rows = 3,
+                                                        .columns = 14,
+                                                        .delim = " ",
+                                                        .filler = ' '})
+      : config(config), msg(config.rows, ""), delim(config.delim) {
+      printf("config rows: %i\n", this->config.rows);
+    };
 
     void setDelim(const char* delim) { this->delim = delim; };
 
@@ -98,8 +109,11 @@ class ControllerMessageBuilder {
 
     bool newLine() {
       row++;
+      printf("new lining \n");
       if (full()) return false;
+      printf(" row: %i \n", row);
       msg[row] = linePrefix;
+      printf(" we made it\n");
       return true;
     }
 
@@ -120,7 +134,14 @@ class ControllerMessageBuilder {
       return result;
     };
 
-    bool full() const { return row > config.rows; };
+    bool full() const {
+      printf("is full?\n");
+      printf(" row: %i\n", row);
+      printf(" numOfRows: %i\n", config.rows);
+      printf(" columns: %i\n", config.columns);
+      printf(" full?: %i\n", row >= config.rows);
+      return row >= config.rows;
+    };
   private:
     bool currLineHasCurrPrefix() const {
       return msg[row].substr(0, linePrefix.length()) == linePrefix;
@@ -137,6 +158,7 @@ void DriverFeedback::update() {
   std::unordered_map<const char*, int> disconnectedDevices = {};
   unsigned int disconnectedDeviceFlags = 0;
   bool newDisconnect = false;
+  printf("aaaa\n");
 
   for (int i = 0; i < this->devices.size(); i++) {
     if (!devices[i].second->isConnected()) {
@@ -146,12 +168,15 @@ void DriverFeedback::update() {
         newDisconnect = true;
     }
   }
+  printf("bbbb\n");
 
   ControllerMessageBuilder builder;
 
   bool disconnected = !disconnectedDevices.empty();
 
+  printf("dddd\n");
   if (disconnected) {
+    printf("eeee\n");
     builder.setPrefix("!");
     for (auto dev = disconnectedDevices.begin();
          dev != disconnectedDevices.end() && !builder.full(); dev++) {
@@ -163,6 +188,7 @@ void DriverFeedback::update() {
     builder.newLine();
   }
 
+  printf("ffff\n");
   std::unordered_map<const char*, float> deviceTempMap = {};
   for (auto device : this->devices) {
     const float temp = device.second->getTemp();
@@ -173,36 +199,54 @@ void DriverFeedback::update() {
       else deviceTempMap[device.first] = temp;
     }
   }
+  printf("gggg\n");
   std::vector<std::pair<const char*, float>> deviceTemps = {};
   for (auto device : deviceTempMap) { deviceTemps.push_back(device); }
+  printf("hhhh\n");
 
   std::vector<std::string> eStopMsgs = {};
 
+  printf("iiii\n");
   if (Robot::Subsystems::lift->getState() ==
       LiftArmStateMachine::EMERGENCY_STOPPED)
     eStopMsgs.push_back("E:LIFT");
+  printf("jjjj\n");
   if (Robot::Subsystems::catapult->getState() ==
       CatapultStateMachine::EMERGENCY_STOPPED)
     eStopMsgs.push_back("E:CATA");
 
+  printf("kkkk\n");
   std::sort(deviceTemps.begin(), deviceTemps.end(),
             [](auto a, auto b) { return a.second > b.second; });
 
-  for (int i = 0; i < deviceTempMap.size() && !builder.full(); i++) {
+  printf("llll size: %i\n", deviceTempMap.size());
+  for (int i = 0; i < deviceTemps.size() && !builder.full(); i++) {
+    printf("<build msg>\n%s\n</build msg>\n",
+           builder.buildWithNewlines().c_str());
+    printf("device name: %s\ndevice temp: %f\n", deviceTemps[i].first,
+           deviceTemps[i].second);
     std::string tempMsg = deviceTemps[i].first;
+    printf("laaa\n");
     tempMsg += ":";
+    printf("lbbb\n");
     tempMsg += std::to_string(int(floor(deviceTemps[i].second)));
+    printf("lccc\n");
     builder.add(tempMsg);
+    printf("lddd\n");
 
     if (i < eStopMsgs.size()) builder.rightAdd(eStopMsgs[i]);
+    printf("leee\n");
 
     builder.newLine();
+    printf("lFff\n");
   }
+  printf("mmmm\n");
 
   const auto msgs = builder.build();
   for (int i = 0; i < msgs.size(); i++) {
     Robot::Subsystems::controller->print(i, msgs[i].c_str());
   }
+  printf("nnnn\n");
 
   if (newDisconnect) {
     Robot::Subsystems::controller->vibrate(".");
