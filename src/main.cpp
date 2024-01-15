@@ -124,7 +124,7 @@ void printPose() {
 void autonomous() {
   auton::AutonSelector::disable();
   autonHasRun = true;
-  // if (pros::competition::is_connected()) Robot::Actions::prepareIntake();
+  if (pros::competition::is_connected()) Robot::Actions::prepareRobot();
   // printf("auton start");
 
   auton::AutonSelector::runAuton();
@@ -178,8 +178,8 @@ void opcontrol() {
   Robot::Subsystems::catapult->matchload();
   Robot::Subsystems::lift->tareAngle();
 
-  // if (pros::competition::is_connected() && !autonHasRun)
-  //   Robot::Actions::prepareIntake();
+  if (pros::competition::is_connected() && !autonHasRun)
+    Robot::Actions::prepareRobot();
 
   // bool skills = false;
   // if (!std::strcmp(auton::AutonSelector::getCurrentAuton(),
