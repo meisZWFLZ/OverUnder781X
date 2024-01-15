@@ -2,6 +2,7 @@
 #include "catapult.h"
 #include "lift.h"
 #include "pros/misc.h"
+#include "pros/rtos.hpp"
 #include "robot.h"
 #include "auton.h"
 #include <string>
@@ -13,9 +14,11 @@ bool autonHasRun = false;
 
 void screen() {
   // loop forever
-    Robot::control.clear_line(0);
-    Robot::control.clear_line(1);
-    Robot::control.clear_line(2);
+  Robot::control.clear_line(0);
+  Robot::control.clear_line(1);
+  Robot::control.clear_line(2);
+
+  float lastHeading = 0;
   while (true) {
     // pros::lcd::print(0, "kP: %f", Robot::Subsystems::lift->getKP());
     // pros::lcd::print(1, "kD: %f", Robot::Subsystems::lift->getKD());
@@ -25,10 +28,11 @@ void screen() {
     // auto angs = Robot::Motors::elevator.get_positions();
     // pros::lcd::print(3, "lift: %4.2f,%4.2f", angs[0], angs[1]);
     pros::lcd::print(4, "target: %4.2f", Robot::Subsystems::lift->getTarget());
-    pros::lcd::print(5, "current: %i,%i",
-                     Robot::Motors::elevator.at(0).get_current_draw(),
-                     Robot::Motors::elevator.at(1).get_current_draw());
-    auto currLim = Robot::Motors::elevator.are_over_current();
+    pros::lcd::print(4, "target: %4.2f", Robot::Subsystems::lift->getTarget());
+    pros::lcd::print(5, "current: %i",
+                     Robot::Motors::intake.at(0).get_current_draw()/* ,
+                     Robot::Motors::elevator.at(1).get_current_draw() */);
+    auto currLim = Robot::Motors::intake.are_over_current();
     pros::lcd::print(6, "curr lim: %i,%i", currLim[0], currLim[1]);
     lemlib::Pose pose =
         Robot::chassis->getPose(); // get the current position of the
@@ -43,7 +47,12 @@ void screen() {
 
     printf("theta: %f\n", pose.theta);
 
-    pros::delay(200);
+    Robot::chassis->setPose(
+        Robot::chassis->getPose().x, Robot::chassis->getPose().y,
+        lastHeading +
+            (Robot::chassis->getPose().theta - lastHeading) * 360 / 355);
+    lastHeading = Robot::chassis->getPose().theta;
+    pros::delay(20);
   }
 }
 
@@ -100,9 +109,8 @@ void disabled() {}
 void competition_initialize() {}
 
 void printPose() {
-    lemlib::Pose pose =
-        Robot::chassis->getPose();
-    printf("x: %f in\ny: %f in\nheading: %f deg\n", pose.x, pose.y, pose.theta);
+  lemlib::Pose pose = Robot::chassis->getPose();
+  printf("x: %f in\ny: %f in\nheading: %f deg\n", pose.x, pose.y, pose.theta);
 }
 
 /**
@@ -119,7 +127,7 @@ void printPose() {
 void autonomous() {
   auton::AutonSelector::disable();
   autonHasRun = true;
-  // if (pros::competition::is_connected()) Robot::Actions::prepareIntake();
+  if (pros::competition::is_connected()) Robot::Actions::prepareRobot();
   // printf("auton start");
 
   auton::AutonSelector::runAuton();
@@ -173,8 +181,15 @@ void opcontrol() {
   Robot::Subsystems::catapult->matchload();
   Robot::Subsystems::lift->tareAngle();
 
-  // if (pros::competition::is_connected() && !autonHasRun)
-  //   Robot::Actions::prepareIntake();
+  // int start = pros::millis();
+  // while (Robot::Subsystems::catapult->getTriballsFired() < 46) {
+  //   Robot::Subsystems::catapult->fire();
+  //   pros::delay(1000);
+  // }
+  // printf("time: %i\n", pros::millis() - start);
+
+  if (pros::competition::is_connected() && !autonHasRun)
+    Robot::Actions::prepareRobot();
 
   // bool skills = false;
   // if (!std::strcmp(auton::AutonSelector::getCurrentAuton(),
@@ -197,107 +212,126 @@ void opcontrol() {
    * true = expanded
    */
   bool wingsState = false;
-  bool wasUpPressed = false;
+  bool prevR1 = false;
 
   // blocker
   bool blockerState = false;
-  bool prevX = false;
+  bool prevR2 = false;
 
   bool prevCataEStopCombo = false;
   bool prevLiftEStopCombo = false;
 
-  bool prevR1 = false;
-  bool prevR2 = false;
+  bool prevUp = false;
+  bool prevDown = false;
 
   // timestamp of last R1 press
-  int lastR1Press = 0;
+  int lastUpPress = 0;
   // timestamp of last R2 press
-  int lastR2Press = 0;
+  int lastDownPress = 0;
 
   const int maxTimeBetweenDoublePress = 150;
 
-  bool prevA = 0;
+  bool prevRight = 0;
   while (true) {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // 								     Drive Code
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    // drivetrain
+    // takes each side's drive power in the range [-127, 127] and a curve gain
     Robot::chassis->tank(
+        // left drive power
         Robot::control.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y),
-        Robot::control.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y));
+        // right drive power
+        Robot::control.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y),
+        // drive curve gain to enable greater control of the robot.
+        15);
 
     // intake / outtake
+    // if pressing L1, then spin the intake inwards
     if (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_L1))
       Robot::Motors::intake.move(127);
+    // if pressing L2, then spin the intake outwards
     else if (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_L2))
       Robot::Motors::intake.move(-127);
+    // otherwise, dont power the intake
     else Robot::Motors::intake.move(0);
 
     // matchload toggle
-    const bool buttonA =
-        Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_A);
-    if (buttonA && !prevA) {
+    const bool buttonRight =
+        Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT);
+    if (buttonRight && !prevRight) {
       if (Robot::Subsystems::catapult->getIsMatchloading())
         Robot::Subsystems::catapult->stop();
       else Robot::Subsystems::catapult->matchload();
     }
-    prevA = buttonA;
+    prevRight = buttonRight;
 
     // blocker toggle
-    const bool buttonX =
-        Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_X);
-    if (buttonX && !prevX) {
+    // retrieve the value of the R2 button
+    const bool buttonR2 =
+        Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_R2);
+    // if on the rising edge of the button
+    if (buttonR2 && !prevR2) {
+      // flip the state of the blocker
       blockerState = !blockerState;
+      // apply the state of the blocker to the actual piston
       if (blockerState) Robot::Actions::expandBlocker();
       else Robot::Actions::retractBlocker();
     }
-    prevX = buttonX;
+    // update previous value of R2
+    prevR2 = buttonR2;
 
     // catapult manual fire
     if (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT))
       Robot::Subsystems::catapult->fire();
-    // else Robot::Subsystems::catapult->stop();
 
-    // catapult emergency stop
+    // get whether both emergency stop buttons are currently being pressed
     const bool cataEStopCombo =
-        Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN) &&
-        Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT);
+        Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_X) &&
+        Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_A);
+    // if both buttons have just become pressed (rising edge), then toggle the
+    // emergency stop of the catapult
     if (cataEStopCombo && !prevCataEStopCombo) {
+      // if the catapult is currently emergency stopped, then disable the
+      // emergency stop
       if (Robot::Subsystems::catapult->getState() ==
           CatapultStateMachine::STATE::EMERGENCY_STOPPED)
         Robot::Subsystems::catapult->cancelEmergencyStop();
+      // otherwise emergency stop the catapult
       else Robot::Subsystems::catapult->emergencyStop();
     }
+    // update the previous value of the emergency stop buttons
     prevCataEStopCombo = cataEStopCombo;
 
+    // Lift buttons
+    // retrieve the values of the up and down buttons
+    const bool up = Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_UP);
+    const bool down =
+        Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN);
+
     // lift granular control
-    Robot::Subsystems::lift->changeTarget(
-        liftIncrement *
-        (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_R1) -
-         Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_R2)));
+    // change the goal position of the lift by the liftIncrement
+    Robot::Subsystems::lift->changeTarget(liftIncrement * (up - down));
 
-    // Lift presets
-    const bool r1 = Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_R1);
-    const bool r2 = Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_R2);
-
-    // on rising edge of r1, if r1 was pressed in the last 50ms then set target
-    // to max angle
-    if (r1 && !prevR1 &&
-        pros::millis() - lastR1Press < maxTimeBetweenDoublePress)
+    // lift max/min angle
+    // on rising edge of up, if up was pressed recently,
+    // then set target to max angle
+    if (up && !prevUp &&
+        pros::millis() - lastUpPress < maxTimeBetweenDoublePress)
       Robot::Subsystems::lift->setTarget(LiftArmStateMachine::maxAngle);
-    // on rising edge of r2, if r2 was pressed in the last 50ms then set target
-    // to max angle
-    if (r2 && !prevR2 &&
-        pros::millis() - lastR2Press < maxTimeBetweenDoublePress)
+    // on the rising edge of down, if down was pressed recently,
+    // then set target to max angle
+    if (down && !prevDown &&
+        pros::millis() - lastDownPress < maxTimeBetweenDoublePress)
       Robot::Subsystems::lift->setTarget(LiftArmStateMachine::minAngle);
 
-    // on falling edge of r1 & r2, update the last press time
-    if (!r1 && prevR1) lastR1Press = pros::millis();
-    if (!r2 && prevR2) lastR2Press = pros::millis();
+    // on the falling edge of up & down, update the last press time
+    if (!up && prevUp) lastUpPress = pros::millis();
+    if (!down && prevDown) lastDownPress = pros::millis();
 
-    prevR1 = r1;
-    prevR2 = r2;
+    // update previous values of up and down
+    prevUp = up;
+    prevDown = down;
 
     // lift emergency stop
     const bool liftEStopCombo =
@@ -311,11 +345,19 @@ void opcontrol() {
     }
     prevLiftEStopCombo = liftEStopCombo;
 
-    // wing toggle
-    if (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) {
-      if (!wasUpPressed) Robot::Pistons::wings.set_value(wingsState ^= true);
-      wasUpPressed = true;
-    } else wasUpPressed = false;
+    // wings toggle
+    // retrieve the value of the R2 button
+    const bool r1 = Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_R1);
+    // if on the rising edge of the button
+    if (r1 && !prevR1) {
+      // flip the state of the wings
+      wingsState = !wingsState;
+      // apply the state of the wings to the actual pistons
+      if (wingsState) Robot::Actions::expandWings();
+      else Robot::Actions::retractWings();
+    }
+    // update the previous value of R1
+    prevR1 = r1;
 
     pros::delay(10);
   }

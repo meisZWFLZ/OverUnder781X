@@ -2,6 +2,7 @@
 #include "lemlib/api.hpp"
 #include "lemlib/util.hpp"
 #include "selector.h"
+#include <climits>
 
 namespace auton {
 
@@ -62,9 +63,15 @@ void waitUntilDistToPose(lemlib::Pose pose, float error, int time = 0,
  * @brief Gets the distance between the robot's heading and a target heading
  *
  * @param ang target heading in degrees
- * @return a positive float with range of [0,180] 
+ * @return a positive float with range of [0,180]
  */
 float robotAngDist(float target);
+
+bool isTriballInIntake();
+bool isMotionRunning();
+
+void waitUntil(bool (*condition)(), int timeConditionIsTrue = 0,
+               int timeout = INT_MAX, bool resetTrueStartTime = false);
 
 } // namespace utils
 

@@ -8,81 +8,39 @@
 // ASSET(def_elevation_bar_txt);
 
 using namespace fieldDimensions;
-
-// bool waitUntilMotionDone(int timeout = -1) {
-//   const int startTime = pros::millis();
-//   while (Robot::chassis->distTravelled != -1 &&
-//          (timeout == -1 || pros::millis() - startTime < timeout)) {
-//     printf("dist: %f\n", Robot::chassis->distTravelled);
-//     pros::delay(100);
-//   }
-// }
+using namespace auton::utils;
 
 void runDefensive() {
-  using namespace fieldDimensions;
-  using namespace auton::actions;
-
   Robot::chassis->setPose(
-      {0 - TILE_LENGTH * 2 - (1 - 1.0 / 8) / 2,
-       MIN_Y + TILE_LENGTH - Robot::Dimensions::drivetrainWidth / 2 - (5.0 / 8),
-       LEFT},
-      false);
+      {0 - TILE_LENGTH * 2, MIN_Y + TILE_LENGTH - 7.125, UP}, false);
 
-  const lemlib::Pose scoreAllyTarget = {-42.5, -12.75};
-  const lemlib::Pose intakeMiddleTarget = {
-      TILE_LENGTH, Robot::Dimensions::drivetrainLength / 2 - 5, UP};
-  const lemlib::Pose outtakeMiddleTarget = {
-      0 - Robot::Dimensions::drivetrainLength / 2, -TILE_LENGTH / 2.0, RIGHT};
-
-  // Robot::Actions::lowerIntake();
-  pros::delay(200);
-  Robot::chassis->tank(-127, 127);
-
-  while (Robot::chassis->getPose().theta > 90) pros::delay(10);
-
-  // Robot::Actions::raiseIntake();
-
-  Robot::chassis->turnTo(0, 0, 500);
+  Robot::chassis->turnTo(TILE_LENGTH * 2, 0, 1500, true, 40);
+  pros::delay(20);
+  Robot::Pistons::blocker.set_value(false);
   Robot::chassis->waitUntilDone();
-  // Curve around and score into large part of goal
-  // Robot::chassis->follow(def_score_alliance_txt, 13, 2750);
+  pros::delay(250);
 
-  // wait until 5 inches away from, then outtake
-  while (Robot::chassis->getPose().distance(scoreAllyTarget) > 18)
-    pros::delay(10);
-  Robot::Actions::outtake();
-  printf("time: %ims\n", pros::millis());
+  Robot::Subsystems::catapult->matchload(1000);
+  pros::delay(1000);
+  Robot::Actions::prepareRobot();
 
-  // wait until done with pure pursuit motion
-  Robot::chassis->waitUntilDone();
-
-  // // back up for ram
-  // Robot::chassis->tank(-127, -127);
-  // pros::delay(200);
-  // ram triball into goal
-  Robot::chassis->tank(127, 127);
-  pros::delay(100);
-
-  // get out of goal
-  Robot::chassis->tank(-127, -127);
-  pros::delay(200);
-  Robot::Actions::stopIntake();
-
-  printf("done with ally triball\n");
-
-  Robot::chassis->turnTo(0, -1000000, 750);
-  Robot::chassis->waitUntilDone();
-  // Robot::chassis->follow(def_elevation_bar_txt, 12, 3000);
-
-  Robot::chassis->turnTo(10000, 10000, 1000);
-  Robot::chassis->waitUntilDone();
-
-  Robot::chassis->tank(48, 48);
   Robot::Actions::expandWings();
-  pros::delay(500);
-  Robot::chassis->tank(0, 0);
-  pros::delay(2000);
+  tank(-127, 127, 750);
   Robot::Actions::retractWings();
+
+  const lemlib::Pose targetPose {0 - 10, MIN_Y + TILE_RADIUS + 2, RIGHT};
+
+  Robot::chassis->turnTo(targetPose.x, targetPose.y, 1500);
+  Robot::chassis->waitUntilDone();
+  Robot::chassis->moveToPose(targetPose.x + 20, targetPose.y, targetPose.theta,
+                             3500, {.maxSpeed = 64});
+  Robot::Actions::outtake();
+  waitUntilDistToPose({targetPose.x + 3, targetPose.y}, 3, 0, true);
+  Robot::chassis->cancelMotion();
+  tank(32, 32, 100);
+  stop();
+  pros::delay(500);
+  Robot::Actions::stopIntake();
 }
 
 auton::Auton auton::autons::defensive = {(char*)("defensive / left"),

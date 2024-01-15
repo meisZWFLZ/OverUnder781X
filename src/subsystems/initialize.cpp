@@ -1,5 +1,6 @@
 #include "driverFeedback.h"
 #include "lift.h"
+#include "pros/misc.hpp"
 #include "pros/rtos.hpp"
 #include "robot.h"
 
@@ -17,21 +18,28 @@ void Robot::Subsystems::initialize() {
       &Robot::Motors::catapult, &Robot::Sensors::cataTriball,
       &Robot::Sensors::cata);
   Robot::Subsystems::lift = new LiftArmStateMachine(&Robot::Motors::elevator);
-  Robot::Subsystems::feedback = new DriverFeedback();
+  // Robot::Subsystems::feedback = new DriverFeedback();
   Robot::Subsystems::controller = new ControllerScreen(&Robot::control);
 
   Robot::Subsystems::task = new pros::Task([]() {
     while (true) {
       const int start = pros::millis();
       Robot::Subsystems::update();
-      pros::delay(MIN_MILLIS_BETWEEN_UPDATES - (pros::millis() - start));
+      // const int a = pros::millis();
+      // printf("update took %i ms\n", a - start);
+      pros::delay(10);
+      // pros::delay(MIN_MILLIS_BETWEEN_UPDATES - (a - start));
     }
   });
 }
 
 void Robot::Subsystems::update() {
-  Robot::Subsystems::feedback->update();
+  // printf("updating feedback: %i\n", Robot::Subsystems::feedback == nullptr);
+  // Robot::Subsystems::feedback->update();
+  // printf("updating catapult\n");
   Robot::Subsystems::catapult->update();
+  // printf("updating lift\n");
   Robot::Subsystems::lift->update();
-  Robot::Subsystems::controller->update();
+  // printf("updating controller\n");
+  // Robot::Subsystems::controller->update();
 }

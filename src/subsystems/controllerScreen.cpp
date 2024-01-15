@@ -1,9 +1,19 @@
 #include "controllerScreen.h"
-#include <string>
-#include "pros/rtos.h"
-#include <string.h>
-#include <streambuf>
-#include <algorithm>
+#include "pros/rtos.hpp"
+#include <cstring>
+#include <sstream> 
+
+std::vector<const char *> splitLines (const char* s) {
+  std::vector<const char *> result;
+  std::stringstream ss {s};
+  std::string item;
+
+  while (getline (ss, item)) {
+    result.push_back (item.c_str());
+  }
+
+  return result;
+}
 
 const ControllerScreenConfig ControllerScreen::DEFAULT_CONFIG = {
     .lines = 3,
@@ -11,8 +21,8 @@ const ControllerScreenConfig ControllerScreen::DEFAULT_CONFIG = {
     .minTimeBetweenPrints = 50,
     .minTimeBetweenVibrates = 100};
 
-void ControllerScreen::setText(unsigned int line, unsigned int col,
-                               const char* cStr) {
+void ControllerScreen::setText(const unsigned int line, const unsigned int col,
+                               const char* const cStr) {
   if (line > config.lines) return;
   std::string curStr(this->queuedLines[line]);
   curStr.insert(col, cStr);
@@ -20,8 +30,11 @@ void ControllerScreen::setText(unsigned int line, unsigned int col,
   queuedLines[line] = curStr.substr(0, config.columns).c_str();
 }
 
-void ControllerScreen::print(unsigned int line, const char* cStr) {
-  this->setText(line, 0, cStr);
+void ControllerScreen::print(const unsigned int line, const char* const cStr) {
+  const auto lines = splitLines(cStr);
+  for(int i = 0; i < lines.size() && i + line < this->config.lines; i++) {
+    this->setText(line + i, 0, lines[i]);
+  }
 }
 
 const char* ControllerScreen::getLine(unsigned int line) const {
