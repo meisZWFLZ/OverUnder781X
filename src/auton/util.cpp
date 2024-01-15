@@ -50,4 +50,26 @@ float robotAngDist(float target) {
       lemlib::angleError(Robot::chassis->getPose().theta, target, false));
 }
 
+bool isTriballInIntake() {
+  return Robot::Motors::intake.at(0).is_over_current();
+}
+
+bool isMotionRunning() { return Robot::chassis->isInMotion(); }
+
+void waitUntil(bool (*condition)(), int timeConditionIsTrue, int timeout,
+               bool resetTrueStartTime) {
+  const int start = pros::millis();
+  int conditionTrueStartTime = 0;
+  while ((pros::millis() - start < timeout)) {
+    const bool condVal = condition();
+    if (!condVal && resetTrueStartTime) conditionTrueStartTime = 0;
+    if (conditionTrueStartTime == 0 && condVal)
+      conditionTrueStartTime = pros::millis();
+    if (conditionTrueStartTime != 0 &&
+        (pros::millis() - conditionTrueStartTime) > timeConditionIsTrue)
+      break;
+
+    pros::delay(10);
+  }
+}
 } // namespace auton::utils
