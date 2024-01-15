@@ -27,7 +27,7 @@ void Robot::Subsystems::initialize() {
       Robot::Subsystems::update();
       // const int a = pros::millis();
       // printf("update took %i ms\n", a - start);
-      pros::delay(1000);
+      pros::delay(10);
       // pros::delay(MIN_MILLIS_BETWEEN_UPDATES - (a - start));
     }
   });
