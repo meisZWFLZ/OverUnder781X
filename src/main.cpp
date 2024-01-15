@@ -43,7 +43,12 @@ void screen() {
 
     printf("theta: %f\n", pose.theta);
 
-    pros::delay(200);
+    Robot::chassis->setPose(
+        Robot::chassis->getPose().x, Robot::chassis->getPose().y,
+        lastHeading +
+            (Robot::chassis->getPose().theta - lastHeading) * 360 / 355);
+    lastHeading = Robot::chassis->getPose().theta;
+    pros::delay(20);
   }
 }
 
