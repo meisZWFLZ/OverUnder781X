@@ -20,8 +20,15 @@ PROS is an open source operating system for the v5 brain.
     - and many others
   > [!NOTE]
   > VEX does have an vexcode extension for vscode, but it is still in beta and it is not yet as sophisticated as PROS.
-- Enables the use of libraries
+- Enables the use of libraries like:
   - [LemLib](https://github.com/LemLib/LemLib) - an open source library with a focus on odometry and motion algorithms. 
     - Odometry: enables tracking the robot's location local to the field
     - Boomerang: efficient algorithm to a move robot to a point and a heading
     - Pure Pursuit: algorithm to follow a complex path
+    - Move to Point: algorithm to move the robot to a point
+- Hot / Cold linking:
+  Pros downloads two different binaries to the brain which are then linked on the brain.
+  - Cold package: Includes pros's builtin library and other libraries like LemLib that will be infrequently modified
+  - Hot package: contains frequently modified code like user code.
+  - 
+  By segmenting these binaries, it makes uploading an updated hot package code significantly quicker and saves valuable time when performing iterative testing. 
