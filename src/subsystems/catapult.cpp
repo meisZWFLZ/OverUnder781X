@@ -1,4 +1,5 @@
 #include "catapult.h"
+#include "pros/rtos.hpp"
 #include <cmath>
 #include <cstdio>
 
@@ -59,6 +60,11 @@ bool CatapultStateMachine::isCataNotLoadable() const {
   return std::remainder(this->rotation->get_position(), 36000) > 300;
 }
 
+bool hasFired = false;
+int timeWasted = 0;
+bool startReadying = false;
+int start = 0;
+
 void CatapultStateMachine::update() {
   if (this->matchloading &&
       (this->timer.isDone() || this->triballsLeftToBeFired == 0)) {
@@ -68,14 +74,22 @@ void CatapultStateMachine::update() {
   const STATE startState = this->state;
   switch (this->state) {
     case READY:
+
+      if (hasFired && !startReadying) start = pros::millis();
+      startReadying = true;
       if (this->isCataNotLoadable()) this->state = RETRACTING;
       // if(this->matchloading)printf("matchloading\n");
       if (this->matchloading && this->isTriballLoaded()) {
         printf("switch to firing\n");
         this->state = FIRING;
+        if (hasFired) timeWasted += pros::millis() - start;
+        printf("triballs fired: %i\n", this->triballsFired);
+        printf("time wasted: %i\n", timeWasted);
       }
       break;
     case FIRING:
+      hasFired = true;
+      startReadying = false;
       this->retractCataMotor();
       if (this->isCataNotLoadable()) {
         printf("switch to retracting\n");
@@ -87,7 +101,7 @@ void CatapultStateMachine::update() {
       this->retractCataMotor();
       if (this->isCataLoadable()) {
         {
-        printf("switch to ready\n");
+          printf("switch to ready\n");
           this->stopCataMotor();
           this->state = READY;
         }
@@ -95,7 +109,7 @@ void CatapultStateMachine::update() {
         case EMERGENCY_STOPPED: this->stopCataMotor(); break;
       }
   }
-  if(startState != this->state) this->update();
+  if (startState != this->state) this->update();
 }
 
 void CatapultStateMachine::indicateTriballFired() {
