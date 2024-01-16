@@ -133,4 +133,3 @@ now let's look at some code:
     // update the previous value of the emergency stop buttons
     prevCataEStopCombo = cataEStopCombo;
   ```
-- Fire
