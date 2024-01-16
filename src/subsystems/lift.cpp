@@ -36,10 +36,10 @@ void LiftArmStateMachine::tareAngle() { motors->tare_position(); }
 
 std::vector<double> LiftArmStateMachine::calcError() const {
   std::vector<double> errs {};
-  for (const auto ang : this->getAngles())
-    errs.push_back(this->target - ang);
+  for (const auto ang : this->getAngles()) errs.push_back(this->target - ang);
+  double avgError = avg(errs);
   // printf("err: %4.2f,%4.2f\n", errs[0], errs[1]);
-  return errs;
+  return std::vector<double>(this->motors->size(), avgError);
 }
 
 double LiftArmStateMachine::calcMaxError() const {
@@ -110,7 +110,7 @@ void LiftArmStateMachine::adjustMaxAngle() {
 
 void LiftArmStateMachine::moveWithPID() {
   const auto errs = this->calcError();
-  for (int i =0; i < this->motors->size(); i++) {
+  for (int i = 0; i < this->motors->size(); i++) {
     this->motors->at(i).move(this->pidController[i].update(errs[i]));
   }
 }

@@ -37,4 +37,4 @@ const float LiftArmStateMachine::acceptableErrorRange = 10;
 const float LiftArmStateMachine::BANG_BANG_POWER = 127;
 
 float LiftArmStateMachine::minAngle = 0;
-float LiftArmStateMachine::maxAngle = 295;
+float LiftArmStateMachine::maxAngle = 730;
