@@ -27,12 +27,13 @@ void screen() {
     //                      LiftArmStateMachine::STATE::STOPPED);
     // auto angs = Robot::Motors::elevator.get_positions();
     // pros::lcd::print(3, "lift: %4.2f,%4.2f", angs[0], angs[1]);
+    // pros::lcd::print(4, "target: %4.2f",
+    // Robot::Subsystems::lift->getTarget());
     pros::lcd::print(4, "target: %4.2f", Robot::Subsystems::lift->getTarget());
-    pros::lcd::print(4, "target: %4.2f", Robot::Subsystems::lift->getTarget());
-    pros::lcd::print(5, "current: %i",
-                     Robot::Motors::intake.at(0).get_current_draw()/* ,
-                     Robot::Motors::elevator.at(1).get_current_draw() */);
-    auto currLim = Robot::Motors::intake.are_over_current();
+    pros::lcd::print(5, "current: %i, %i",
+                     Robot::Motors::elevator.at(0).get_current_draw(),
+                     Robot::Motors::elevator.at(1).get_current_draw());
+    auto currLim = Robot::Motors::elevator.are_over_current();
     pros::lcd::print(6, "curr lim: %i,%i", currLim[0], currLim[1]);
     lemlib::Pose pose =
         Robot::chassis->getPose(); // get the current position of the
