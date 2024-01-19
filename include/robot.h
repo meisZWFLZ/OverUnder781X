@@ -27,6 +27,7 @@ class Robot {
         /** starts retracted */
         static pros::ADIDigitalOut blocker;
         static pros::ADIDigitalOut wings;
+        static pros::ADIDigitalOut liftLock;
     };
 
     class Sensors {

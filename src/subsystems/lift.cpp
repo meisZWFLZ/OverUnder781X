@@ -16,9 +16,10 @@ pros::motor_brake_mode_e_t LiftArmStateMachine::getProsStoppingMode() const {
   return pros::E_MOTOR_BRAKE_INVALID;
 }
 
-LiftArmStateMachine::LiftArmStateMachine(pros::Motor_Group* liftMotors)
-  : motors(liftMotors), target(0), state(STOPPED), stopMode(BRAKE),
-    controllerMode(PID), maxCurrentTimer(500) {
+LiftArmStateMachine::LiftArmStateMachine(pros::Motor_Group* liftMotors,
+                                         pros::ADIDigitalOut* lock)
+  : motors(liftMotors), lockPiston(lock), target(0), state(STOPPED),
+    stopMode(BRAKE), controllerMode(PID), maxCurrentTimer(500) {
   this->pidController = std::vector<lemlib::PID>(
       this->motors->size(),
       lemlib::PID(pidSettings.kP, pidSettings.kI, pidSettings.kD,
@@ -79,12 +80,16 @@ void LiftArmStateMachine::update() {
         }
       adjustMaxAngle();
       break;
+    case LOCKED: this->lockPiston->set_value(true);
     case EMERGENCY_STOPPED:
       this->motors->set_brake_modes(pros::E_MOTOR_BRAKE_BRAKE);
       this->motors->brake();
       break;
   }
+  if (this->state != LOCKED) this->lockPiston->set_value(false);
 }
+
+void LiftArmStateMachine::lock() { this->state = LOCKED; }
 
 void LiftArmStateMachine::adjustMaxAngle() {
   const auto isOverCurrent = this->motors->are_over_current();

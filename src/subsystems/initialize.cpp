@@ -17,7 +17,7 @@ void Robot::Subsystems::initialize() {
   Robot::Subsystems::catapult = new CatapultStateMachine(
       &Robot::Motors::catapult, &Robot::Sensors::cataTriball,
       &Robot::Sensors::cata);
-  Robot::Subsystems::lift = new LiftArmStateMachine(&Robot::Motors::elevator);
+  Robot::Subsystems::lift = new LiftArmStateMachine(&Robot::Motors::elevator, &Robot::Pistons::liftLock);
   // Robot::Subsystems::feedback = new DriverFeedback();
   Robot::Subsystems::controller = new ControllerScreen(&Robot::control);
 

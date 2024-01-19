@@ -2,7 +2,9 @@
 
 #include "lemlib/pid.hpp"
 #include "lemlib/timer.hpp"
+#include "pros/motors.h"
 #include "pros/motors.hpp"
+#include "pros/adi.hpp"
 #include <vector>
 
 struct PIDControllerSettings {
@@ -15,7 +17,7 @@ struct PIDControllerSettings {
 
 class LiftArmStateMachine {
   public:
-    enum STATE { EMERGENCY_STOPPED, STOPPED, MOVING };
+    enum STATE { EMERGENCY_STOPPED, STOPPED, MOVING, LOCKED };
 
     enum CONTROLLER_MODE {
       PID, // uses PID controller
@@ -30,7 +32,7 @@ class LiftArmStateMachine {
       COAST, // uses pros coast mode
     };
 
-    LiftArmStateMachine(pros::Motor_Group* liftMotors);
+    LiftArmStateMachine(pros::Motor_Group* liftMotors, pros::ADIDigitalOut* lock);
 
     STATE getState() const;
     STOP_MODE getStoppingMode() const;
@@ -45,6 +47,7 @@ class LiftArmStateMachine {
 
     void emergencyStop();
     void cancelEmergencyStop();
+    void lock();
 
     void update();
 
@@ -87,6 +90,7 @@ class LiftArmStateMachine {
     std::vector<lemlib::PID> pidController;
 
     pros::Motor_Group* motors;
+    pros::ADIDigitalOut* lockPiston;
 
     float target = 0;
     STATE state = STOPPED;
