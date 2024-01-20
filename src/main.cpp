@@ -46,7 +46,7 @@ void screen() {
     pros::lcd::print(3, "heading: %f deg",
                      pose.theta); // print the heading
 
-    printf("theta: %f\n", pose.theta);
+
 
     Robot::chassis->setPose(
         Robot::chassis->getPose().x, Robot::chassis->getPose().y,
