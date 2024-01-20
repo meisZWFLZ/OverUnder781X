@@ -1,5 +1,6 @@
 #include "auton.h"
 #include "robot.h"
+#include <functional>
 
 namespace auton::utils {
 float prevLeft = 0;
@@ -56,7 +57,7 @@ bool isTriballInIntake() {
 
 bool isMotionRunning() { return Robot::chassis->isInMotion(); }
 
-void waitUntil(bool (*condition)(), int timeConditionIsTrue, int timeout,
+void waitUntil(std::function<bool(void)> condition, int timeConditionIsTrue, int timeout,
                bool resetTrueStartTime) {
   const int start = pros::millis();
   int conditionTrueStartTime = 0;

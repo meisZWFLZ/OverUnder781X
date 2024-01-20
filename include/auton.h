@@ -70,7 +70,7 @@ float robotAngDist(float target);
 bool isTriballInIntake();
 bool isMotionRunning();
 
-void waitUntil(bool (*condition)(), int timeConditionIsTrue = 0,
+void waitUntil(std::function<bool(void)> condition, int timeConditionIsTrue = 0,
                int timeout = INT_MAX, bool resetTrueStartTime = false);
 
 } // namespace utils
