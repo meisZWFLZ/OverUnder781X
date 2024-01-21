@@ -48,7 +48,7 @@ int leftOrRight(int ifLeft, int ifRight) {
 
 float robotAngDist(float target) {
   return std::fabs(
-      lemlib::angleError(Robot::chassis->getPose().theta, target, false));
+      std::remainder(Robot::chassis->getPose().theta - target, 360));
 }
 
 bool isTriballInIntake() {
@@ -57,8 +57,8 @@ bool isTriballInIntake() {
 
 bool isMotionRunning() { return Robot::chassis->isInMotion(); }
 
-void waitUntil(std::function<bool(void)> condition, int timeConditionIsTrue, int timeout,
-               bool resetTrueStartTime) {
+void waitUntil(std::function<bool(void)> condition, int timeConditionIsTrue,
+               int timeout, bool resetTrueStartTime) {
   const int start = pros::millis();
   int conditionTrueStartTime = 0;
   while ((pros::millis() - start < timeout)) {
