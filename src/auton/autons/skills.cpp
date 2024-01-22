@@ -9,6 +9,10 @@ using namespace fieldDimensions;
 // ASSET(skills_front_1_txt);
 // ASSET(skills_front_2_txt);
 
+using namespace fieldDimensions;
+using namespace auton::utils;
+using namespace auton::actions;
+
 void delayForMatchLoading(int delay) {
   printf("delay: %i\n", delay);
   pros::delay(delay - 3000);
@@ -23,67 +27,97 @@ void delayForMatchLoading(int delay) {
 
 void runSkills() {
   printf("skills\n");
-  using namespace fieldDimensions;
-  using namespace auton::actions;
-  Robot::chassis->setPose(leftStartingPose, false);
+  Robot::chassis->setPose(
+      {-TILE_LENGTH * 2 + Robot::Dimensions::drivetrainLength / 2,
+       -TILE_LENGTH * 2 - Robot::Dimensions::drivetrainWidth / 2, RIGHT},
+      false);
   // @todo add skills auton
 
   prepareForMatchloading();
+  tank(0, -10, 0, 0);
+  Robot::Subsystems::catapult->matchload(35000, 2);
+  Robot::Subsystems::catapult->waitUntilDoneMatchloading();
+  stop();
 
-  // Robot::chassis->moveToPose(MIN_X + TILE_LENGTH - 8, MIN_Y + TILE_LENGTH - 2,
-  //                        LEFT - 22.5, 3000);
+  Robot::chassis->moveToPoint(-TILE_LENGTH, MIN_Y + 6, 5000, {.minSpeed = 127});
+  waitUntilDistToPose({-TILE_LENGTH, MIN_Y + TILE_RADIUS}, 12, 0, true);
+  Robot::chassis->cancelMotion();
 
-  // Robot::chassis->waitUntil(6);
-  // Robot::Actions::shoot();
-  // Robot::chassis->waitUntilDone();
-  // Robot::Actions::lowerIntake();
+  Robot::chassis->moveToPoint(0, MIN_Y + 6, 5000, {.minSpeed = 127});
+  waitUntilDistToPose({0, MIN_Y + TILE_RADIUS}, 12, 0, true);
+  Robot::chassis->cancelMotion();
 
-  delayForMatchLoading(35000);
-  // Robot::Actions::raiseIntake();
-  // Robot::Actions::stopShooter();
+  Robot::chassis->moveToPoint(MAX_X - TILE_LENGTH, MIN_Y + TILE_RADIUS + 6,
+                              5000, {.minSpeed = 127});
+  waitUntilDistToPose({MAX_X - TILE_LENGTH, MIN_Y + TILE_RADIUS}, 12, 0, true);
+  Robot::chassis->cancelMotion();
 
-  Robot::chassis->turnTo(0, MIN_Y + 12, 1000);
-  Robot::chassis->waitUntilDone();
-  // Robot::chassis->follow(skills_right_side_txt, 15, 4000);
+  Robot::chassis->moveToPoint(MAX_X - TILE_RADIUS, 0, 5000, {.minSpeed = 127});
+  waitUntilDistToPose({MAX_X - TILE_RADIUS, -TILE_LENGTH * 1.5}, 12, 0, true);
+  Robot::chassis->cancelMotion();
 
-  Robot::chassis->waitUntil(50);
-  Robot::Actions::intake();
-  Robot::chassis->waitUntil(112);
-  Robot::Actions::outtake();
-  Robot::chassis->waitUntilDone();
-  Robot::Actions::stopIntake();
+  tank(127, 127, 200, 0);
+  tank(-127, -127, 200, 0);
+  tank(127, 127, 400, 0);
+  tank(-127, -127, 250, 0);
 
-  Robot::chassis->tank(-127, -127);
-  pros::delay(400);
-  Robot::chassis->tank(127, 127);
-  pros::delay(600);
-  
-  Robot::chassis->tank(-127, -127);
-  pros::delay(300);
-  Robot::chassis->tank(0, 0);
+  Robot::chassis->moveToPoint(TILE_LENGTH, -TILE_LENGTH * 1.5, 5000,
+                              {.minSpeed = 127});
+  waitUntilDistToPose({TILE_LENGTH * 1.5, -TILE_LENGTH * 1.5}, 12, 0, true);
+  Robot::chassis->cancelMotion();
 
-  Robot::chassis->turnTo(-10000, 0, 3000);
-  Robot::chassis->waitUntilDone();
-  // Robot::chassis->follow(skills_front_1_txt, 15, 3000);
-  Robot::chassis->waitUntil(36);
+  Robot::chassis->moveToPose(TILE_LENGTH, -9, RIGHT, 5000,
+                             {.minSpeed = 127, .earlyExitRange = 8});
+  waitUntil(
+      [] { return robotAngDist(RIGHT) < 60 || !Robot::chassis->isInMotion(); });
   Robot::Actions::expandWings();
-  Robot::Actions::outtake();
-  Robot::chassis->waitUntilDone();
-  Robot::Actions::retractWings();
-  Robot::chassis->tank(-127, -127);
-  pros::delay(400);
 
-  Robot::chassis->turnTo(0, 10000, 3000);
-  Robot::chassis->waitUntilDone();
-  // Robot::chassis->follow(skills_front_2_txt, 15, 3000);
-  // Robot::Actions::expandWings();
-  Robot::Actions::outtake();
-  Robot::chassis->waitUntilDone();
+  waitUntilDistToPose({TILE_LENGTH, -9, RIGHT}, 4, 200, true);
+  Robot::chassis->cancelMotion();
+
+  Robot::chassis->moveToPoint(10000000, 0, 5000, {.minSpeed = 127});
+  waitUntil(
+      [] {
+        return fabs(Robot::chassis->getPose().x - TILE_LENGTH * 2) < 4 ||
+               !Robot::chassis->isInMotion();
+      },
+      300);
+  Robot::chassis->cancelMotion();
+
   Robot::Actions::retractWings();
-  Robot::Actions::stopIntake();
-  Robot::chassis->tank(-127, -96);
-  pros::delay(200);
-  Robot::chassis->tank(0, 0);
+  Robot::chassis->moveToPose(
+      TILE_LENGTH, 9, RIGHT, 5000,
+      {.forwards = true, .minSpeed = 127, .earlyExitRange = 8});
+
+  waitUntilDistToPose({TILE_LENGTH, 9, RIGHT}, 4, 200, true);
+  Robot::chassis->cancelMotion();
+
+  Robot::chassis->moveToPoint(10000000, 0, 5000, {.minSpeed = 127});
+  waitUntil(
+      [] {
+        return fabs(Robot::chassis->getPose().x - TILE_LENGTH * 2) < 4 ||
+               !Robot::chassis->isInMotion();
+      },
+      300);
+  tank(-127, -127, 250, 0);
+  Robot::Actions::retractWings();
+
+  Robot::chassis->moveToPose(TILE_LENGTH * 1.5, TILE_LENGTH * 2, DOWN, 5000,
+                             {
+                                 .forwards = false,
+                                 .minSpeed = 127,
+                                 .earlyExitRange = 8,
+                             });
+
+  Robot::chassis->moveToPoint(TILE_LENGTH * 2.5, 0, 5000,
+                              {
+                                  .minSpeed = 127,
+                                  .earlyExitRange = 8,
+                              });
+  waitUntilDistToPose({-TILE_LENGTH * 1.5, -TILE_LENGTH * 1.5}, 12, 0, true);
+  Robot::chassis->cancelMotion();
+
+  stop();
 }
 
 auton::Auton auton::autons::skills = {(char*)("skills"), runSkills};
