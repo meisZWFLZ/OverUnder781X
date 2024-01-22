@@ -219,6 +219,7 @@ void opcontrol() {
 
   bool prevCataEStopCombo = false;
   bool prevLiftEStopCombo = false;
+  bool prevLiftLockCombo = false;
 
   bool prevUp = false;
   bool prevDown = false;
@@ -343,6 +344,17 @@ void opcontrol() {
       else Robot::Subsystems::lift->emergencyStop();
     }
     prevLiftEStopCombo = liftEStopCombo;
+
+    const bool liftLockCombo =
+        Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_A) &&
+        Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_B);
+    if (liftLockCombo && !prevLiftLockCombo) {
+      if (Robot::Subsystems::lift->getState() ==
+          LiftArmStateMachine::STATE::LOCKED)
+        Robot::Subsystems::lift->cancelEmergencyStop();
+      else Robot::Subsystems::lift->lock();
+    }
+    prevLiftLockCombo = liftLockCombo;
 
     // wings toggle
     // retrieve the value of the R2 button
