@@ -46,8 +46,6 @@ void screen() {
     pros::lcd::print(3, "heading: %f deg",
                      pose.theta); // print the heading
 
-
-
     Robot::chassis->setPose(
         Robot::chassis->getPose().x, Robot::chassis->getPose().y,
         lastHeading +
@@ -80,6 +78,7 @@ void initialize() {
 
   pros::lcd::set_text(1, "Calibrating chassis...");
   Robot::Subsystems::initialize();
+  Robot::Subsystems::lift->tareAngle();
   pros::lcd::set_text(1, "Chassis Calibrated!");
   // Robot::chassis->setPose(0, 0, 0);
   // Robot::Actions::raiseIntake();
@@ -180,7 +179,6 @@ void opcontrol() {
   auton::AutonSelector::disable();
   Robot::Actions::retractWings();
   Robot::Subsystems::catapult->matchload();
-  Robot::Subsystems::lift->tareAngle();
 
   // int start = pros::millis();
   // while (Robot::Subsystems::catapult->getTriballsFired() < 46) {
