@@ -20,10 +20,8 @@ bool CatapultStateMachine::fire() {
 }
 
 bool CatapultStateMachine::matchload(int millis, int triballs) {
-  if (this->state == EMERGENCY_STOPPED) return false;
-  printf("matchload\n");
-  if (this->state != READY) return false;
   this->timer.set(millis);
+  this->timer.resume();
   this->triballsLeftToBeFired = triballs;
 
   this->matchloading = true;
@@ -69,6 +67,10 @@ void CatapultStateMachine::update() {
   if (this->matchloading &&
       (this->timer.isDone() || this->triballsLeftToBeFired == 0)) {
     printf("stop matchloading\n");
+    printf("timer: %i\n", this->timer.isDone());
+    printf("timerLeft: %i\n", this->timer.getTimeLeft());
+    printf("timerSet: %i\n", this->timer.getTimeSet());
+    printf("triballs: %i\n", this->triballsLeftToBeFired);
     this->matchloading = false;
   }
   const STATE startState = this->state;
