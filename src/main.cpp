@@ -61,6 +61,7 @@ void addAutons() {
   auton::AutonSelector::addAuton(&auton::autons::sixRush);
   auton::AutonSelector::addAuton(&auton::autons::sixBall);
   auton::AutonSelector::addAuton(&auton::autons::defensive);
+  auton::AutonSelector::addAuton(&auton::autons::disrupt);
   auton::AutonSelector::addAuton(&auton::autons::skills);
 }
 
@@ -190,16 +191,16 @@ void opcontrol() {
   if (pros::competition::is_connected() && !autonHasRun)
     Robot::Actions::prepareRobot();
 
-  // bool skills = false;
-  // if (!std::strcmp(auton::AutonSelector::getCurrentAuton(),
-  // (char*)("skills")))
-  //   skills = true;
+  bool skills = false;
+  if (!std::strcmp(auton::AutonSelector::getCurrentAuton(), (char*)("skills")))
+    skills = true;
 
-  // if (skills) {
-  //   Robot::chassis->setPose(fieldDimensions::leftStartingPose, false);
-
-  //   auton::actions::prepareForMatchloading();
-  // }
+  if (skills) {
+    Robot::chassis->setPose(fieldDimensions::leftStartingPose, false);
+    auton::actions::prepareForMatchloading();
+    Robot::Motors::leftDrive.set_brake_modes(pros::E_MOTOR_BRAKE_COAST);
+    Robot::Motors::rightDrive.set_brake_modes(pros::E_MOTOR_BRAKE_COAST);
+  }
 
   const float liftIncrement =
       (LiftArmStateMachine::maxAngle - LiftArmStateMachine::minAngle) /

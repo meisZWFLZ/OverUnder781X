@@ -1,8 +1,10 @@
 #pragma once
 #include "lemlib/api.hpp"
-#include "lemlib/util.hpp"
 #include "selector.h"
 #include <climits>
+#include <optional>
+#include <unordered_map>
+#include <vector>
 
 namespace auton {
 
@@ -80,5 +82,44 @@ extern Auton defensive;
 extern Auton sixRush;
 extern Auton sixBall;
 extern Auton skills;
+extern Auton disrupt;
 } // namespace autons
 } // namespace auton
+
+template <typename T> class Event {
+  public:
+    virtual std::optional<T> isTriggered() = 0;
+};
+
+class IntEvent : Event<int> {
+  public:
+    std::optional<int> isTriggered() override;
+};
+
+template <typename T> class EventListener {
+  public:
+    virtual void onEvent(T event) = 0;
+};
+
+class IntEventListener : EventListener<int> {
+  public:
+    void onEvent(int event) override;
+};
+
+/* template <typename EventKey, typename EventMessage> */ class EventHandler {
+  private:
+    // how can I bind the event key to the event type?
+    std::unordered_map<int, IntEvent> events;
+    std::unordered_map<int, std::vector<IntEventListener>> listeners;
+  public:
+    void update() { 
+      for (auto [key, event] : events) {
+        auto triggered = event.isTriggered();
+        if (triggered.has_value()) {
+          for (auto listener : listeners[key]) {
+            listener.onEvent(triggered.value());
+          }
+        }
+      }
+    }
+};
