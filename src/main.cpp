@@ -2,6 +2,7 @@
 #include "catapult.h"
 #include "lift.h"
 #include "pros/misc.h"
+#include "pros/misc.hpp"
 #include "pros/rtos.hpp"
 #include "robot.h"
 #include "auton.h"
@@ -45,11 +46,19 @@ void screen() {
     pros::lcd::clear_line(3);
     pros::lcd::print(3, "heading: %f deg",
                      pose.theta); // print the heading
+    const float deltaTheta = Robot::chassis->getPose().theta - lastHeading;
+    if (deltaTheta > 10) {
+      Robot::chassis->setPose(Robot::chassis->getPose().x,
+                              Robot::chassis->getPose().y, lastHeading);
+      Robot::control.print(1, 1, "imu threw");
+    } else
+      Robot::chassis->setPose(Robot::chassis->getPose().x,
+                              Robot::chassis->getPose().y,
+                              lastHeading + deltaTheta * 360 / 355);
+    if (pros::competition::is_autonomous() &&
+        pros::competition::is_disabled() && pros::millis() % 80 < 20)
+      printf("th:%i\t%4.2f\n", pros::millis(), Robot::chassis->getPose().theta);
 
-    Robot::chassis->setPose(
-        Robot::chassis->getPose().x, Robot::chassis->getPose().y,
-        lastHeading +
-            (Robot::chassis->getPose().theta - lastHeading) * 360 / 355);
     lastHeading = Robot::chassis->getPose().theta;
     pros::delay(20);
   }
