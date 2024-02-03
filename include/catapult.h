@@ -72,7 +72,7 @@ class CatapultStateMachine {
     /**
      * @brief Blocks current thread until match loading is finished.
      */
-    void waitUntilDoneMatchloading() const;
+    void waitUntilDoneMatchloading();
 
     void update();
   private:

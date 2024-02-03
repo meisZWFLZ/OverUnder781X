@@ -141,6 +141,7 @@ CatapultStateMachine::STATE CatapultStateMachine::getState() const {
   return this->state;
 }
 
-void CatapultStateMachine::waitUntilDoneMatchloading() const {
-  while (this->matchloading) pros::delay(10);
+void CatapultStateMachine::waitUntilDoneMatchloading() {
+  while (this->matchloading && !this->timer.isDone() && getTriballsLeft() != 0)
+    pros::delay(10);
 }
