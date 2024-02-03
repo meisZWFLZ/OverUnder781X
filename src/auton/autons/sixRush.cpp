@@ -34,7 +34,7 @@ void runSixRush() {
   using namespace fieldDimensions;
   using namespace auton::actions;
   // Robot::chassis->setPose(0, 0, 0);
-
+  const int startTime = pros::millis();
   pros::delay(500);
   Robot::chassis->setPose(
       {0 + TILE_LENGTH * 1.5 + 3, MIN_Y + TILE_LENGTH - 12.0 / 2 + 2 + 2, UP},
@@ -49,9 +49,10 @@ void runSixRush() {
   // return;
   // Robot::Actions::expandWings();
   // tank(64,127,5000,0);
-  Robot::chassis->follow(rush_6_intake_txt, 13, 2500);
+  Robot::chassis->moveToPose(0, 4, LEFT + 45, 5000, {.minSpeed = 127});
+  // Robot::chassis->follow(rush_6_intake_txt, 13, 2500);
   pros::delay(10);
-  if (robotAngDist(180) < 40)
+  if (robotAngDist(0) > 45)
     Robot::chassis->setPose(
         {Robot::chassis->getPose().x, Robot::chassis->getPose().y, UP}, false);
   pros::delay(300);
@@ -63,44 +64,88 @@ void runSixRush() {
   // waitUntilDistToPose({9, -6}, 3);
   waitUntil(
       [] {
-        return Robot::chassis->getPose().distance({9, 0}) < 6 ||
-               isTriballInIntake() || !Robot::chassis->isInMotion();
+        return /* Robot::chassis->getPose().distance({9, 0}) < 6 || */
+            isTriballInIntake() || !Robot::chassis->isInMotion();
       },
-      300);
+      300, 5000);
 
   Robot::chassis->cancelMotion();
   pros::delay(100);
-
-  tank(-64, -127, 70, 0);
-
-  Robot::chassis->turnTo(10000, 1000, 1000);
-  pros::delay(100);
-  while (Robot::chassis->isInMotion() && robotAngDist(RIGHT) > 10) {
-    pros::delay(10);
+  if (robotAngDist(UP - 45) > 45) {
+    Robot::control.print(1, 1, "imu->stop");
+    return;
   }
-  Robot::chassis->cancelMotion();
+  // Robot::chassis->turnTo(10000, 1000, 1000);
+  // pros::delay(100);
+  // while (Robot::chassis->isInMotion() && robotAngDist(RIGHT) > 10) {
+  //   pros::delay(10);
+  // }
+  // Robot::chassis->cancelMotion();
 
-  stop();
-  Robot::Actions::expandWings();
-  Robot::chassis->moveToPoint(96, 0, 1200, {.minSpeed = 127});
+  // stop();
+  // Robot::Actions::expandWings();
+  Robot::chassis->moveToPoint(96, 0, 1000,
+                              {.forwards=false,
+                                  .minSpeed = 127,
+                              });
   pros::delay(300);
-  Robot::Actions::outtake();
+  // Robot::Actions::outtake();
 
   Robot::chassis->waitUntilDone();
-  Robot::Actions::retractWings();
+  // Robot::Actions::retractWings();
   Robot::Actions::stopIntake();
 
-  stop();
-  printRobotPose();
-  Robot::chassis->setPose(Robot::chassis->getPose().x + 1,
-                          Robot::chassis->getPose().y - 3,
-                          Robot::chassis->getPose().theta);
-  printRobotPose();
+  tank(64, 127, 300);
+  Robot::chassis->turnTo(100000, 0, 700);
+  Robot::chassis->moveToPoint(10000, 0, 1000, {.minSpeed = 127});
+  Robot::Actions::outtake();
+  Robot::chassis->waitUntilDone();
+  // printRobotPose();
+  // Robot::chassis->setPose(Robot::chassis->getPose().x + 1,
+  //                         Robot::chassis->getPose().y - 3,
+  //                         Robot::chassis->getPose().theta);
+  // printRobotPose();
   // return;
 
   // const lemlib::Pose thirdTriball {2, -24, LEFT - 30};
   tank(-127, -127, 200, 0);
   tank(64, -127, 300, 0);
+  Robot::Actions::stopIntake();
+  Robot::chassis->moveToPose(0, -TILE_LENGTH, LEFT, 3000);
+  Robot::Actions::intake();
+  pros::delay(500);
+  waitUntil([] { return isTriballInIntake() || !isMotionRunning(); }, 0, 3000);
+  Robot::chassis->cancelMotion();
+  pros::delay(300);
+
+  if (isTriballInIntake()) {
+    tank(-127, -127, 300);
+    Robot::chassis->turnTo(100000, 0, 1000);
+    waitUntil([] { return robotAngDist(RIGHT) < 30 || !isMotionRunning(); }, 0,
+              1000);
+    Robot::chassis->cancelMotion();
+    Robot::chassis->moveToPose(TILE_LENGTH * 1.5, -TILE_LENGTH * 1.5, RIGHT,
+                               3000, {.minSpeed = 32, .earlyExitRange = 5});
+    Robot::chassis->waitUntil(18);
+    Robot::Actions::outtake();
+    Robot::chassis->waitUntilDone();
+
+    // Robot::chassis->moveToPoint(TILE_LENGTH * 3, 0, 3000, {.minSpeed = 127});
+    // pros::delay(500);
+    // lemlib::Pose lastPose = Robot::chassis->getPose();
+    // Robot::Actions::outtake();
+    // waitUntil(
+    //     [&lastPose] {
+    //       return Robot::chassis->getPose().distance(lastPose) < 5 ||
+    //              isMotionRunning();
+    //       lastPose = Robot::chassis->getPose();
+    //     },
+    //     300, 3000);
+    // Robot::chassis->cancelMotion();
+    // tank(-127, -64, 500, 0);
+    // stop();
+  }
+
   // waitUntil([&thirdTriball] {
   //   const lemlib::Pose pose = Robot::chassis->getPose();
   //   printf("theta: %f\n", pose.theta);
@@ -168,13 +213,10 @@ void runSixRush() {
   Robot::chassis->cancelMotion();
 
   // orient towards goal
-  Robot::chassis->moveToPose(TILE_LENGTH * 2.6, -TILE_LENGTH * 1.5, UP,
-                             3000, {.minSpeed = 40, .earlyExitRange = 6});
-  waitUntil([] {
-    return (
-            robotAngDist(UP) < 10) ||
-           !Robot::chassis->isInMotion();
-  });
+  Robot::chassis->moveToPose(TILE_LENGTH * 2.6, -TILE_LENGTH * 1.5, UP, 3000,
+                             {.minSpeed = 40, .earlyExitRange = 6});
+  waitUntil(
+      [] { return (robotAngDist(UP) < 10) || !Robot::chassis->isInMotion(); });
   printRobotPose();
   printf("inMotion: %i\n", Robot::chassis->isInMotion());
   Robot::chassis->cancelMotion();
@@ -269,6 +311,7 @@ void runSixRush() {
   Robot::Actions::outtake();
   // printf("outtake\n");
 
+  // Robot::chassis->moveToPose(0, -TILE_LENGTH, LEFT, 3000);
   // while ((std::abs(Robot::chassis->getPose().x - (MAX_X - TILE_RADIUS)) > 10
   // ||
   //         robotAngDist(0) > 20) &&
@@ -279,38 +322,42 @@ void runSixRush() {
   // // fully ram into goal
   // Robot::chassis->cancelMotion();
   Robot::chassis->moveToPoint(MAX_X + 6, 0, 1500,
-                              {.maxSpeed = 127, .minSpeed = 127});
-  waitUntil(
-      [] {
-        return Robot::chassis->getPose().distance(
-                   {MAX_X - TILE_RADIUS, -TILE_LENGTH}) < 10;
-      },
-      500, 1500);
-  Robot::chassis->cancelMotion();
-  pros::delay(100);
-  tank(-127, -127, 300, 0);
-  Robot::chassis->moveToPoint(MAX_X, 0, 800,
-                              {.maxSpeed = 127, .minSpeed = 127});
-  Robot::chassis->waitUntilDone();
 
-  tank(-127, 32, 0, 0);
-  printf("turn away goal\n");
-  waitUntil([] { return robotAngDist(LEFT) < 60; });
+                              {.maxSpeed = 127, .minSpeed = 127});
+  const int waitDur = (15000 - 1100) - (pros::millis() - startTime);
+  printf("wait: %i\n", waitDur);
+  pros::delay(waitDur);
+  Robot::chassis->cancelMotion();
+  tank(-127, -127, 200);
+  tank(127, 127, 600);
+  Robot::Actions::stopIntake();
+  tank(-127, -64
+  , 300);
+  stop();
+  // pros::delay(100);
+  // tank(-127, -127, 300, 0);
+  // Robot::chassis->moveToPoint(MAX_X, 0, 800,
+  //                             {.maxSpeed = 127, .minSpeed = 127});
+  // Robot::chassis->waitUntilDone();
+
+  // tank(-127, 32, 0, 0);
+  // printf("turn away goal\n");
+  // waitUntil([] { return robotAngDist(LEFT) < 60; });
 
   // Robot::chassis->moveToPoint(TILE_LENGTH * 1.5, -TILE_LENGTH * 1.5 + 6,
   // 3000,
   //                             {.minSpeed = 72});
   // waitUntilDistToPose({TILE_LENGTH * 1.5, -TILE_LENGTH * 1.5 + 6}, 5);
   // Robot::chassis->cancelMotion();
-  Robot::Actions::stopIntake();
-  Robot::chassis->moveToPose(TILE_RADIUS - 6, -TILE_LENGTH * 1.5 - 2,
-                             LEFT - 15, 2000, {.minSpeed = 48});
-  Robot::chassis->waitUntilDone();
 
-  Robot::Actions::expandWings();
-  tank(64, -64, 0, 0);
-  waitUntil([] { return robotAngDist(LEFT + 15) < 10; }, 0, 1000);
-  tank(32, 0, 0, 0);
+  // Robot::chassis->moveToPose(TILE_RADIUS - 6, -TILE_LENGTH * 1.5 - 2,
+  //                            LEFT - 15, 2000, {.minSpeed = 48});
+  // Robot::chassis->waitUntilDone();
+
+  // Robot::Actions::expandWings();
+  // tank(64, -64, 0, 0);
+  // waitUntil([] { return robotAngDist(LEFT + 15) < 10; }, 0, 1000);
+  // tank(32, 0, 0, 0);
 }
 
 auton::Auton auton::autons::sixRush = {
