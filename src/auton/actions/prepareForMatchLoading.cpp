@@ -8,12 +8,15 @@ using namespace auton::utils;
 
 void auton::actions::prepareForMatchloading() {
   tank(-64, -64, 0, 0);
-  // Robot::Motors::rightDrive.set_brake_modes(pros::E_MOTOR_BRAKE_BRAKE);
-  // Robot::Motors::rightDrive.brake();
+  Robot::Motors::leftDrive.set_brake_modes(pros::E_MOTOR_BRAKE_BRAKE);
+  Robot::Motors::rightDrive.set_brake_modes(pros::E_MOTOR_BRAKE_BRAKE);
+  Robot::Subsystems::lift->setTarget(Robot::Subsystems::lift->maxAngle * .2);
   waitUntil([] {
-    const float angDist = robotAngDist(40);
+    const float angDist = robotAngDist(10);
     printf("angDist: %f\n", angDist);
-    return angDist < 25;
-  });
+    return angDist < 5;
+  }, 0, 3000);
+  Robot::Motors::leftDrive.brake();
+  Robot::Motors::rightDrive.brake();
   // Robot::Actions::lowerIntake();
 }

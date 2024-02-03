@@ -1,4 +1,5 @@
 #include "auton.h"
+#include "pros/motors.h"
 #include "pros/rtos.hpp"
 #include "robot.h"
 #include "fieldDimensions.h"
@@ -34,9 +35,12 @@ void runSkills() {
   // @todo add skills auton
 
   prepareForMatchloading();
-  tank(0, -10, 0, 0);
-  Robot::Subsystems::catapult->matchload(35000, 2);
+//   tank(0, -10, 0, 0);
+  Robot::Subsystems::catapult->matchload(40000, 46);
   Robot::Subsystems::catapult->waitUntilDoneMatchloading();
+  Robot::Subsystems::lift->setTarget(0);
+  Robot::Motors::leftDrive.set_brake_modes(pros::E_MOTOR_BRAKE_COAST);
+  Robot::Motors::rightDrive.set_brake_modes(pros::E_MOTOR_BRAKE_COAST);
   stop();
 
   Robot::chassis->moveToPoint(-TILE_LENGTH, MIN_Y + 6, 5000, {.minSpeed = 127});
