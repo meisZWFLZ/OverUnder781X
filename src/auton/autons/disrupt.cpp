@@ -33,7 +33,7 @@ void runDisrupt() {
   // pros::delay(500);
   // Robot::Actions::outtake();
   // waitUntilDistToPose({0, 0}, 10, 500, true);
-
+  pros::delay(1000);
   Robot::chassis->follow(disrupt_sweep_txt, 10, 5000);
   pros::delay(100);
   if (robotAngDist(0) > 45)
@@ -44,6 +44,10 @@ void runDisrupt() {
   Robot::Actions::outtake();
   waitUntilDistToPose({-TILE_LENGTH, -8}, 10, 800, true);
   Robot::chassis->cancelMotion();
+  if (robotAngDist(180) < 45) {
+    Robot::control.print(1, 1, "imu->stop");
+    return;
+  }
 
   Robot::Actions::retractWings();
   Robot::chassis->moveToPose(
@@ -112,5 +116,4 @@ void runDisrupt() {
   // Robot::Actions::stopIntake();
 }
 
-auton::Auton auton::autons::disrupt = {(char*)("disrupt / left"),
-                                         runDisrupt};
+auton::Auton auton::autons::disrupt = {(char*)("disrupt / left"), runDisrupt};
