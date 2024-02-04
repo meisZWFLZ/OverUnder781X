@@ -1,4 +1,7 @@
 #include "catapult.h"
+#include "lemlib/timer.hpp"
+#include "pros/error.h"
+#include "robot.h"
 #include "pros/rtos.hpp"
 #include <cmath>
 #include <cstdio>
@@ -62,8 +65,20 @@ bool hasFired = false;
 int timeWasted = 0;
 bool startReadying = false;
 int start = 0;
+bool prevCataDisconnected = false;
 
 void CatapultStateMachine::update() {
+  const bool cataDisconnected = motors->set_reversed(true) == PROS_ERR;
+  if (cataDisconnected) {
+    if (!prevCataDisconnected) {
+      Robot::control.print(0, 0, "!cata disc");
+      printf("cata disc\n");
+    }
+  } else if (prevCataDisconnected) {
+    Robot::control.clear_line(0);
+  }
+
+  prevCataDisconnected = cataDisconnected;
   if (this->matchloading &&
       (this->timer.isDone() || this->triballsLeftToBeFired == 0)) {
     printf("stop matchloading\n");
@@ -76,11 +91,9 @@ void CatapultStateMachine::update() {
   const STATE startState = this->state;
   switch (this->state) {
     case READY:
-
       if (hasFired && !startReadying) start = pros::millis();
       startReadying = true;
       if (this->isCataNotLoadable()) this->state = RETRACTING;
-      // if(this->matchloading)printf("matchloading\n");
       if (this->matchloading && this->isTriballLoaded()) {
         printf("switch to firing\n");
         this->state = FIRING;
@@ -111,6 +124,79 @@ void CatapultStateMachine::update() {
         case EMERGENCY_STOPPED: this->stopCataMotor(); break;
       }
   }
+  // problem:
+  // If motor disconnects, and then reconnects, the motor no longer has 127
+  // power.
+  // But, we are still sending 127 power to the motor, right?
+  // Well no, we are telling the brain to send 127 power to the motor, but the
+  // brain doesn't like to listen.
+  // The brain attempts to minimize messages sent to the motor by only sending
+  // messages when the motor's state has changed.
+  // So, if we are constantly telling the brain to send 127 power, but instead
+  // of repeatedly sending a 127 power message to the motor, it only sends one
+  // message.
+  // So this means that the motor when it gets reconnected has no knowledge that
+  // it's supposed to be at 127 power.
+
+  // potential solutions:
+  // 1. So what if we send a different power to the motor every time (possibly
+  //    randomly) to force the brain to send a new message?
+  //    Well this does work, but the motor doesn't go at full power and
+  //    stutters, even if we go at 100% power for the first nine runs, and go at
+  //    99% power for the tenth run. :(
+  // 2. Detect disconnect using PROS_ERR and then deliver a different amount to
+  //    the motor once connected.
+  //    Well there's two problems with this solution:
+  //    a)  Sometimes you can get a very short disconnection that does not
+  //        register by using the pros methods but still breaks the motor.
+  //    b)  The motor will take some seemingly random amount of time to be
+  //        capable of receiving power.
+  //        So we have to somehow detect when the motor is capable of receiving
+  //        power, then send it, then continue normal operation of the catapult.
+  // 3. Detect whether motor is moving using current, if not, send a different
+  //    power to the motor.
+  //    And this seems to work fantastically!:
+
+  // Whether we are detecting the cata is not moving
+  static bool notMoving = false;
+  // is the cata supposed to be moving?
+  bool inMovingState = this->state == RETRACTING || this->state == FIRING;
+  // start time of cata supposed to be moving and at 0 current continuously
+  static int startZeroCurrent = 0;
+
+  // only let notMoving be true, if inMovingState is true
+  notMoving &= inMovingState;
+  if (inMovingState) {
+    // get the current draw of the motor
+    const double curr = this->motors->get_current_draws()[0];
+
+    // if current is PROS_ERR, then the motor is likely disconnected, and thus
+    // is likely not moving
+    notMoving |= curr == PROS_ERR;
+
+    // if the motor has zero current draw, then
+    if (this->motors->get_current_draws()[0] == 0) {
+      // if start time has not been set, then set it
+      if (startZeroCurrent == 0) startZeroCurrent = pros::millis();
+    }
+    // if the cata is not supposed to be moving, reset the start time
+    // or if the cata the current is not 0, reset the start time
+    else
+      startZeroCurrent = 0;
+
+    // if zero curent is currently being detected and has been detected for the
+    // last 50ms, report that the cata is not moving
+    if (startZeroCurrent != 0 && pros::millis() - startZeroCurrent > 50) {
+      printf("cata disconnected, time:%i\n", pros::millis() - startZeroCurrent);
+      notMoving = true;
+    } else notMoving = false;
+
+    // if the cata is not moving, then we shall randomize voltage in order to
+    // prevent the brain from optimizing messages sent to the motor
+    if (notMoving) { this->motors->move_voltage(12000 - 120 * (rand() % 3)); }
+  }
+
+  // if state changed, rerun update
   if (startState != this->state) this->update();
 }
 
@@ -120,7 +206,8 @@ void CatapultStateMachine::indicateTriballFired() {
 }
 
 void CatapultStateMachine::retractCataMotor() {
-  this->motors->move_voltage(12000);
+  static int run = 0;
+  this->motors->move_voltage(120 * (run++ % 10 != 0 ? 100 : 99));
 }
 
 void CatapultStateMachine::stopCataMotor() { this->motors->move_voltage(0); }
