@@ -20,13 +20,13 @@ LiftArmStateMachine::LiftArmStateMachine(pros::Motor_Group* liftMotors,
                                          pros::ADIDigitalOut* lock)
   : motors(liftMotors), lockPiston(lock), target(0), state(STOPPED),
     stopMode(BRAKE), controllerMode(PID), maxCurrentTimer(500) {
-  this->pidController = std::vector<lemlib::PID>(
-      this->motors->size(),
-      lemlib::PID(pidSettings.kP, pidSettings.kI, pidSettings.kD,
-                  pidSettings.windupRange, pidSettings.signFlipReset));
+  // this->pidController = std::vector<lemlib::PID>(
+  //     this->motors->size(),
+  //     lemlib::PID(pidSettings.kP, pidSettings.kI, pidSettings.kD,
+  //                 pidSettings.windupRange, pidSettings.signFlipReset));
 
-  this->motors->set_encoder_units(pros::E_MOTOR_ENCODER_DEGREES);
-  maxCurrentTimer.pause();
+  // this->motors->set_encoder_units(pros::E_MOTOR_ENCODER_DEGREES);
+  // maxCurrentTimer.pause();
 };
 
 std::vector<double> LiftArmStateMachine::getAngles() const {
