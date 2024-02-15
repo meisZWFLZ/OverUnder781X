@@ -17,83 +17,19 @@ struct PIDControllerSettings {
 
 class LiftArmStateMachine {
   public:
-    enum STATE { EMERGENCY_STOPPED, STOPPED, MOVING, LOCKED };
+    enum STATE { UNPOWERED, RETRACTING, EXTENDING };
 
-    enum CONTROLLER_MODE {
-      PID, // uses PID controller
-      BANG_BANG, // uses bang bang controller
-      INTERNAL_PID // uses internal PID controller
-    };
-
-    enum STOP_MODE {
-      NEVER, // will just use controllers to hold position
-      BRAKE, // uses pros brake mode
-      HOLD, // uses pros hold mode
-      COAST, // uses pros coast mode
-    };
-
-    LiftArmStateMachine(pros::Motor_Group* liftMotors, pros::ADIDigitalOut* lock);
+    LiftArmStateMachine(pros::ADIDigitalOut* retract,
+                        pros::ADIDigitalOut* extend);
 
     STATE getState() const;
-    STOP_MODE getStoppingMode() const;
-    CONTROLLER_MODE getControllerMode() const;
-
-    void setStoppingMode(STOP_MODE);
-    void setControllerMode(CONTROLLER_MODE);
-
-    float getTarget() const;
-    void setTarget(float newTarget);
-    void changeTarget(float targetChange);
-
-    void emergencyStop();
-    void cancelEmergencyStop();
-    void lock();
+    void retract();
+    void release();
+    void extend();
 
     void update();
-
-    void tareAngle();
-
-    void changeKP(float change);
-    void changeKD(float change);
-    float getKP() const;
-    float getKD() const;
-
-    static float minAngle;
-    static float maxAngle;
-
   private:
-    void stopMotors();
-    pros::motor_brake_mode_e_t getProsStoppingMode() const;
-
-    void moveWithBangBang();
-    void moveWithPID();
-    void moveWithInternalPID();
-
-    std::vector<double> getAngles() const;
-    std::vector<double> calcError() const;
-    double calcMaxError() const;
-    bool isErrorInRange() const;
-
-    /**
-     * @brief if a motor is at current limit, adjust the min/max angle to be
-     * that motor's current angle
-     */
-    void adjustMaxAngle();
-    
-    lemlib::Timer maxCurrentTimer;
-
-    static const PIDControllerSettings pidSettings;
-
-    static const float acceptableErrorRange;
-    static const float BANG_BANG_POWER;
-
-    std::vector<lemlib::PID> pidController;
-
-    pros::Motor_Group* motors;
-    pros::ADIDigitalOut* lockPiston;
-
-    float target = 0;
-    STATE state = STOPPED;
-    STOP_MODE stopMode = BRAKE;
-    CONTROLLER_MODE controllerMode = PID;
+    pros::ADIDigitalOut* retractPiston;
+    pros::ADIDigitalOut* extendPiston;
+    STATE state = UNPOWERED;
 };

@@ -47,7 +47,7 @@ void runSixRush() {
   //                             48 + Robot::chassis->getPose().y, 10000,
   //                             {.maxSpeed = 32});
   // return;
-  // Robot::Actions::expandWings();
+  // Robot::Actions::expandBothWings();
   // tank(64,127,5000,0);
   Robot::chassis->moveToPose(0, 4, LEFT + 45, 5000, {.minSpeed = 127});
   // Robot::chassis->follow(rush_6_intake_txt, 13, 2500);
@@ -83,7 +83,7 @@ void runSixRush() {
   // Robot::chassis->cancelMotion();
 
   // stop();
-  // Robot::Actions::expandWings();
+  // Robot::Actions::expandBothWings();
   Robot::chassis->moveToPoint(96, 0, 1000,
                               {.forwards=false,
                                   .minSpeed = 127,
@@ -92,7 +92,7 @@ void runSixRush() {
   // Robot::Actions::outtake();
 
   Robot::chassis->waitUntilDone();
-  // Robot::Actions::retractWings();
+  // Robot::Actions::retractBothWings();
   Robot::Actions::stopIntake();
 
   tank(64, 127, 300);
@@ -291,7 +291,7 @@ void runSixRush() {
   // 0.5},
   //                     6, 0, true);
   // Robot::chassis->cancelMotion();
-  // Robot::Actions::expandWings();
+  // Robot::Actions::expandBothWings();
   // printf("expand wings\n");
   // pros::delay(210);
   // Robot::chassis->cancelMotion();
@@ -354,7 +354,7 @@ void runSixRush() {
   //                            LEFT - 15, 2000, {.minSpeed = 48});
   // Robot::chassis->waitUntilDone();
 
-  // Robot::Actions::expandWings();
+  // Robot::Actions::expandBothWings();
   // tank(64, -64, 0, 0);
   // waitUntil([] { return robotAngDist(LEFT + 15) < 10; }, 0, 1000);
   // tank(32, 0, 0, 0);

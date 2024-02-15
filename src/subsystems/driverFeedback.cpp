@@ -207,9 +207,9 @@ void DriverFeedback::update() {
   std::vector<std::string> eStopMsgs = {};
 
   printf("iiii\n");
-  if (Robot::Subsystems::lift->getState() ==
-      LiftArmStateMachine::EMERGENCY_STOPPED)
-    eStopMsgs.push_back("E:LIFT");
+  // if (Robot::Subsystems::lift->getState() ==
+  //     LiftArmStateMachine::EMERGENCY_STOPPED)
+  //   eStopMsgs.push_back("E:LIFT");
   printf("jjjj\n");
   if (Robot::Subsystems::catapult->getState() ==
       CatapultStateMachine::EMERGENCY_STOPPED)

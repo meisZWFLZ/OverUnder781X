@@ -25,9 +25,10 @@ class Robot {
     class Pistons {
       public:
         /** starts retracted */
-        static pros::ADIDigitalOut blocker;
-        static pros::ADIDigitalOut wings;
-        static pros::ADIDigitalOut liftLock;
+        static pros::ADIDigitalOut leftWing;
+        static pros::ADIDigitalOut rightWing;
+        static pros::ADIDigitalOut extendLift;
+        static pros::ADIDigitalOut retractLift;
     };
 
     class Sensors {
@@ -41,7 +42,7 @@ class Robot {
         static pros::Imu imu;
         static pros::ADILineSensor cataTriball;
         static pros::Rotation cata;
-            };
+    };
 
     class Dimensions {
       public:
@@ -72,11 +73,17 @@ class Robot {
         static void matchload();
         static void stopShooter();
 
-        static void expandWings();
-        static void retractWings();
+        static void expandBothWings();
+        static void expandLeftWing();
+        static void expandRightWing();
+        
+        static void retractBothWings();
+        static void retractLeftWing();
+        static void retractRightWing();
 
-        static void expandBlocker();
-        static void retractBlocker();
+        static void toggleBothWings();
+        static void toggleLeftWing();
+        static void toggleRightWing();
 
         static void prepareRobot();
     };

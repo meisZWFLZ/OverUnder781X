@@ -18,7 +18,8 @@ void Robot::Subsystems::initialize() {
       &Robot::Motors::catapult, &Robot::Sensors::cataTriball,
       &Robot::Sensors::cata);
   // we no longer have a motorized lift, but just to fool driver code
-  Robot::Subsystems::lift = new LiftArmStateMachine(&Robot::Motors::elevator, &Robot::Pistons::liftLock);
+  Robot::Subsystems::lift = new LiftArmStateMachine(
+      &Robot::Pistons::retractLift, &Robot::Pistons::extendLift);
   // Robot::Subsystems::feedback = new DriverFeedback();
   Robot::Subsystems::controller = new ControllerScreen(&Robot::control);
 
@@ -41,7 +42,7 @@ void Robot::Subsystems::update() {
   Robot::Subsystems::catapult->update();
   // printf("updating lift\n");
   // we no longer have a motorized lift
-  // Robot::Subsystems::lift->update();
+  Robot::Subsystems::lift->update();
   // printf("updating controller\n");
   // Robot::Subsystems::controller->update();
 }

@@ -24,9 +24,9 @@ void runDefensive() {
   pros::delay(1000);
   // Robot::Actions::prepareRobot();
 
-  Robot::Actions::expandWings();
+  Robot::Actions::expandBothWings();
   tank(-127, 127, 1000);
-  Robot::Actions::retractWings();
+  Robot::Actions::retractBothWings();
 
   // const lemlib::Pose targetPose {0 - 10, MIN_Y + TILE_RADIUS + 2, RIGHT};
 

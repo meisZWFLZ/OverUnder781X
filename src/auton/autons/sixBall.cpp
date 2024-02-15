@@ -44,14 +44,14 @@ void run6Ball() {
   // wait until the robot is near the matchload zone to expand wings
   waitUntilDistToPose({MAX_X - TILE_LENGTH, MIN_Y + TILE_LENGTH - 3}, 6, 0,
                       true);
-  Robot::Actions::expandWings();
+  Robot::Actions::expandBothWings();
   printf("expand wings\n");
   pros::delay(200);
   Robot::chassis->cancelMotion();
 
   // retract wings soon after removing the triball from the matchload zone
   tank(24, 36, 200);
-  Robot::Actions::retractWings();
+  Robot::Actions::retractBothWings();
   printf("retract wings\n");
   tank(24, 36, 200);
 
@@ -123,7 +123,7 @@ void run6Ball() {
 
   // wait until near the second triball to expand wings
   waitUntilDistToPose({TILE_LENGTH, 0}, 10, 0);
-  Robot::Actions::expandWings();
+  Robot::Actions::expandBothWings();
 
   // wait until near the goal to outtake
   Robot::chassis->waitUntil(24);
@@ -133,7 +133,7 @@ void run6Ball() {
   Robot::chassis->waitUntilDone();
   tank(127, 127, 100, 0);
   Robot::Actions::stopIntake();
-  Robot::Actions::retractWings();
+  Robot::Actions::retractBothWings();
 
   // turn to face last triball
   tank(-64, -127, 200);
@@ -141,7 +141,7 @@ void run6Ball() {
   Robot::chassis->moveToPoint(TILE_RADIUS - 1.2, -TILE_LENGTH * 1.5 - 0.5, 2000);
   Robot::chassis->turnTo(-1 * pow(10, 6), .68 * pow(10, 6), 1000, true, 64);
   pros::delay(40);
-  Robot::Actions::expandWings();
+  Robot::Actions::expandBothWings();
   Robot::chassis->waitUntilDone();
   // outtake
   printf("stop\n");

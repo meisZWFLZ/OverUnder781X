@@ -30,7 +30,6 @@ void screen() {
     // pros::lcd::print(3, "lift: %4.2f,%4.2f", angs[0], angs[1]);
     // pros::lcd::print(4, "target: %4.2f",
     // Robot::Subsystems::lift->getTarget());
-    pros::lcd::print(4, "target: %4.2f", Robot::Subsystems::lift->getTarget());
     // pros::lcd::print(5, "current: %i, %i",
     //                  Robot::Motors::elevator.at(0).get_current_draw(),
     //                  Robot::Motors::elevator.at(1).get_current_draw());
@@ -88,7 +87,6 @@ void initialize() {
 
   pros::lcd::set_text(1, "Calibrating chassis...");
   Robot::Subsystems::initialize();
-  Robot::Subsystems::lift->tareAngle();
   pros::lcd::set_text(1, "Chassis Calibrated!");
   // Robot::chassis->setPose(0, 0, 0);
   // Robot::Actions::raiseIntake();
@@ -187,7 +185,7 @@ void autonomous() {
  */
 void opcontrol() {
   auton::AutonSelector::disable();
-  Robot::Actions::retractWings();
+  Robot::Actions::retractBothWings();
   Robot::Subsystems::catapult->matchload();
 
   // int start = pros::millis();
@@ -211,16 +209,7 @@ void opcontrol() {
     Robot::Motors::rightDrive.set_brake_modes(pros::E_MOTOR_BRAKE_COAST);
   }
 
-  const float liftIncrement =
-      (LiftArmStateMachine::maxAngle - LiftArmStateMachine::minAngle) /
-      ((float)75);
 
-  /**
-   * false = retracted
-   *
-   * true = expanded
-   */
-  bool wingsState = false;
   bool prevR1 = false;
 
   // blocker
@@ -280,14 +269,6 @@ void opcontrol() {
     // retrieve the value of the R2 button
     const bool buttonR2 =
         Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_R2);
-    // if on the rising edge of the button
-    if (buttonR2 && !prevR2) {
-      // flip the state of the blocker
-      blockerState = !blockerState;
-      // apply the state of the blocker to the actual piston
-      if (blockerState) Robot::Actions::expandBlocker();
-      else Robot::Actions::retractBlocker();
-    }
     // update previous value of R2
     prevR2 = buttonR2;
 
@@ -319,63 +300,41 @@ void opcontrol() {
     const bool down =
         Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN);
 
-    // lift granular control
-    // change the goal position of the lift by the liftIncrement
-    Robot::Subsystems::lift->changeTarget(liftIncrement * (up - down));
-
-    // lift max/min angle
-    // on rising edge of up, if up was pressed recently,
-    // then set target to max angle
-    if (up && !prevUp &&
-        pros::millis() - lastUpPress < maxTimeBetweenDoublePress)
-      Robot::Subsystems::lift->setTarget(LiftArmStateMachine::maxAngle);
-    // on the rising edge of down, if down was pressed recently,
-    // then set target to max angle
-    if (down && !prevDown &&
-        pros::millis() - lastDownPress < maxTimeBetweenDoublePress)
-      Robot::Subsystems::lift->setTarget(LiftArmStateMachine::minAngle);
-
     // on the falling edge of up & down, update the last press time
-    if (!up && prevUp) lastUpPress = pros::millis();
-    if (!down && prevDown) lastDownPress = pros::millis();
+    if (!up && prevUp) {
+      switch (Robot::Subsystems::lift->getState()) {
+        case LiftArmStateMachine::STATE::RETRACTING:
+          Robot::Subsystems::lift->release();
+          break;
+        case LiftArmStateMachine::STATE::UNPOWERED:
+          Robot::Subsystems::lift->extend();
+          printf("extend\n");
+          break;
+        case LiftArmStateMachine::STATE::EXTENDING: break;
+      }
+    }
+    if (!down && prevDown) {
+      switch (Robot::Subsystems::lift->getState()) {
+        case LiftArmStateMachine::STATE::RETRACTING: break;
+        case LiftArmStateMachine::STATE::UNPOWERED:
+          Robot::Subsystems::lift->retract();
+          break;
+        case LiftArmStateMachine::STATE::EXTENDING:
+          Robot::Subsystems::lift->release();
+          break;
+      }
+    }
 
     // update previous values of up and down
     prevUp = up;
     prevDown = down;
-
-    // lift emergency stop
-    const bool liftEStopCombo =
-        Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_Y) &&
-        Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_B);
-    if (liftEStopCombo && !prevLiftEStopCombo) {
-      if (Robot::Subsystems::lift->getState() ==
-          LiftArmStateMachine::STATE::EMERGENCY_STOPPED)
-        Robot::Subsystems::lift->cancelEmergencyStop();
-      else Robot::Subsystems::lift->emergencyStop();
-    }
-    prevLiftEStopCombo = liftEStopCombo;
-
-    const bool liftLockCombo =
-        Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_A) &&
-        Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_B);
-    if (liftLockCombo && !prevLiftLockCombo) {
-      if (Robot::Subsystems::lift->getState() ==
-          LiftArmStateMachine::STATE::LOCKED)
-        Robot::Subsystems::lift->cancelEmergencyStop();
-      else Robot::Subsystems::lift->lock();
-    }
-    prevLiftLockCombo = liftLockCombo;
 
     // wings toggle
     // retrieve the value of the R2 button
     const bool r1 = Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_R1);
     // if on the rising edge of the button
     if (r1 && !prevR1) {
-      // flip the state of the wings
-      wingsState = !wingsState;
-      // apply the state of the wings to the actual pistons
-      if (wingsState) Robot::Actions::expandWings();
-      else Robot::Actions::retractWings();
+      Robot::Actions::toggleBothWings(); // flip the state of the wings
     }
     // update the previous value of R1
     prevR1 = r1;

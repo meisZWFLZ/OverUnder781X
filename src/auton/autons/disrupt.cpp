@@ -26,7 +26,7 @@ void runDisrupt() {
   // waitUntil([] {
   //   return !isMotionRunning() || Robot::chassis->getPose().y > -TILE_LENGTH;
   // });
-  // Robot::Actions::expandWings();
+  // Robot::Actions::expandBothWings();
   // Robot::Actions::intake();
   // Robot::chassis->cancelMotion();
   // Robot::chassis->moveToPoint(72, 0, 2000, {.minSpeed = 127});
@@ -40,7 +40,7 @@ void runDisrupt() {
     Robot::chassis->setPose(Robot::chassis->getPose().x,
                             Robot::chassis->getPose().y, 0);
   Robot::chassis->waitUntil(30);
-  Robot::Actions::expandWings();
+  Robot::Actions::expandBothWings();
   Robot::Actions::outtake();
   waitUntilDistToPose({-TILE_LENGTH, -8}, 10, 800, true);
   Robot::chassis->cancelMotion();
@@ -49,18 +49,18 @@ void runDisrupt() {
     return;
   }
 
-  Robot::Actions::retractWings();
+  Robot::Actions::retractBothWings();
   Robot::chassis->moveToPose(
       0 - TILE_LENGTH * 2 + Robot::Dimensions::drivetrainWidth / 2,
       MIN_Y + TILE_LENGTH - Robot::Dimensions::drivetrainLength / 2 - 2.5, UP,
       3000, {.forwards = false});
   Robot::chassis->waitUntilDone();
-  Robot::Actions::expandWings();
+  Robot::Actions::expandBothWings();
   tank(-127, 127, 0, 0);
   printf("wait for ang\n");
   waitUntil([] { return robotAngDist(DOWN) < 60; });
   printf("retract wings + turn to bar\n");
-  Robot::Actions::retractWings();
+  Robot::Actions::retractBothWings();
   Robot::chassis->turnTo(100000, 0, 2000);
   Robot::chassis->waitUntilDone();
   printf("move to bar\n");
@@ -80,7 +80,7 @@ void runDisrupt() {
   printf("turn to bar\n");
   Robot::chassis->turnTo(bigNum * cos(angle), bigNum * sin(angle), 3000);
   Robot::chassis->waitUntil(70);
-  Robot::Actions::expandWings();
+  Robot::Actions::expandBothWings();
   Robot::Actions::stopIntake();
   Robot::chassis->waitUntilDone();
   tank(0, 24, 0, 0);
@@ -96,9 +96,9 @@ void runDisrupt() {
   // pros::delay(1000);
   // Robot::Actions::prepareRobot();
 
-  // Robot::Actions::expandWings();
+  // Robot::Actions::expandBothWings();
   // tank(-127, 127, 750);
-  // Robot::Actions::retractWings();
+  // Robot::Actions::retractBothWings();
 
   // const lemlib::Pose targetPose {0 - 10, MIN_Y + TILE_RADIUS + 2, RIGHT};
 

@@ -38,7 +38,6 @@ void runSkills() {
 //   tank(0, -10, 0, 0);
   Robot::Subsystems::catapult->matchload(40000, 46);
   Robot::Subsystems::catapult->waitUntilDoneMatchloading();
-  Robot::Subsystems::lift->setTarget(0);
   Robot::Motors::leftDrive.set_brake_modes(pros::E_MOTOR_BRAKE_COAST);
   Robot::Motors::rightDrive.set_brake_modes(pros::E_MOTOR_BRAKE_COAST);
   stop();
@@ -74,7 +73,7 @@ void runSkills() {
                              {.minSpeed = 127, .earlyExitRange = 8});
   waitUntil(
       [] { return robotAngDist(RIGHT) < 60 || !Robot::chassis->isInMotion(); });
-  Robot::Actions::expandWings();
+  Robot::Actions::expandBothWings();
 
   waitUntilDistToPose({TILE_LENGTH, -9, RIGHT}, 4, 200, true);
   Robot::chassis->cancelMotion();
@@ -88,7 +87,7 @@ void runSkills() {
       300);
   Robot::chassis->cancelMotion();
 
-  Robot::Actions::retractWings();
+  Robot::Actions::retractBothWings();
   Robot::chassis->moveToPose(
       TILE_LENGTH, 9, RIGHT, 5000,
       {.forwards = true, .minSpeed = 127, .earlyExitRange = 8});
@@ -104,7 +103,7 @@ void runSkills() {
       },
       300);
   tank(-127, -127, 250, 0);
-  Robot::Actions::retractWings();
+  Robot::Actions::retractBothWings();
 
   Robot::chassis->moveToPose(TILE_LENGTH * 1.5, TILE_LENGTH * 2, DOWN, 5000,
                              {
