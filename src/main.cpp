@@ -80,10 +80,10 @@ void addAutons() {
  * to keep execution time for this mode under a few seconds.
  */
 void initialize() {
+  pros::lcd::initialize();
   Robot::initializeOdometryConfig();
 
-  pros::lcd::initialize();
-  Robot::chassis->calibrate(); // calibrate the chassis
+  Robot::chassis->calibrate(false); // calibrate the chassis
 
   pros::lcd::set_text(1, "Calibrating chassis...");
   Robot::Subsystems::initialize();
@@ -208,7 +208,6 @@ void opcontrol() {
     Robot::Motors::leftDrive.set_brake_modes(pros::E_MOTOR_BRAKE_COAST);
     Robot::Motors::rightDrive.set_brake_modes(pros::E_MOTOR_BRAKE_COAST);
   }
-
 
   bool prevR1 = false;
 

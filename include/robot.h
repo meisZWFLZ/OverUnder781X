@@ -39,7 +39,9 @@ class Robot {
         // odometry sensors (dedicated odom wheels)
         static pros::Rotation vert;
         static pros::Rotation hori;
-        static pros::Imu imu;
+        static pros::Imu imuA;
+        static pros::Imu imuB;
+        static pros::Imu imuC;
         static pros::ADILineSensor cataTriball;
         static pros::Rotation cata;
     };

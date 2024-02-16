@@ -57,7 +57,7 @@ void DriverFeedback::initializeDevices() {
   addDevice("HPod", new Device(&Robot::Sensors::hori));
   addDevice("CRot", new Device(&Robot::Sensors::cata));
   addDevice("CLin", new Device(&Robot::Sensors::cataTriball));
-  addDevice("IMU", new Device(&Robot::Sensors::imu));
+  // addDevice("IMU", new Device(&Robot::Sensors::imu));
 }
 
 unsigned int prevDisconnectedDeviceFlags = 9;
