@@ -111,7 +111,8 @@ class MockIMU : public pros::IMU {
       std::vector<double> deltaHeadings;
       std::vector<double> newHeadings;
       std::stringstream printSS;
-
+      static const char* telemetryPrefix = "!:";
+      printSS << telemetryPrefix;
       for (int i = 0; i < sources.size(); i++) {
         char buffer[10];
         const float heading = sources[i]->getHeading();
