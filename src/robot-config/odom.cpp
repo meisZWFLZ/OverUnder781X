@@ -235,8 +235,8 @@ void Robot::initializeOdometry() {
       &Robot::Motors::rightDrive, Robot::Dimensions::driveWheelDiameter,
       Robot::Dimensions::trackWidth / 2, Robot::Dimensions::driveWheelRpm);
 
-  auto trackingWheelHeading = new TrackingWheelHeadingSource(
-      {leftDriveTracker, rightDriveTracker, leftVert});
+  auto trackingWheelHeading =
+      new TrackingWheelHeadingSource({leftDriveTracker, rightDriveTracker});
   auto goofyIMU = new MockIMU({new IMUHeadingSource(&Robot::Sensors::imuA),
                                new IMUHeadingSource(&Robot::Sensors::imuB),
                                new IMUHeadingSource(&Robot::Sensors::imuC),
