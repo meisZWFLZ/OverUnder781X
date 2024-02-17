@@ -81,7 +81,7 @@ void addAutons() {
  */
 void initialize() {
   pros::lcd::initialize();
-  Robot::initializeOdometryConfig();
+  Robot::initializeOdometry();
 
   Robot::chassis->calibrate(false); // calibrate the chassis
 

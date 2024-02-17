@@ -166,7 +166,7 @@ class MockIMU : public pros::IMU {
     std::vector<HeadingSource*> sources;
 };
 
-void Robot::initializeOdometryConfig() {
+void Robot::initializeOdometry() {
   lemlib::Drivetrain drivetrain {
       &Robot::Motors::leftDrive,        &Robot::Motors::rightDrive,
       Robot::Dimensions::trackWidth,    Robot::Dimensions::driveWheelDiameter,
