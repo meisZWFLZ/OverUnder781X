@@ -1,36 +1,38 @@
-#include "lemlib/chassis/chassis.hpp"
-#include "lemlib/chassis/trackingWheel.hpp"
-#include "lemlib/timer.hpp"
-#include "pros/adi.h"
-#include "pros/imu.hpp"
-#include "pros/rtos.hpp"
+#include "pros/error.h"
 #include "robot.h"
 #include <cmath>
-#include <cstdint>
-#include <vector>
+#include <sstream>
 
 lemlib::OdomSensors* Robot::odomSensors = nullptr;
 lemlib::Chassis* Robot::chassis = nullptr;
 
 class HeadingSource {
   public:
+    // returns the heading of the source
+    /** returns NaN if messed up */
     virtual double getHeading() const = 0;
-    virtual bool isMessedUp() const = 0;
-    virtual bool calibrate() const = 0;
+    virtual bool calibrate() = 0;
     virtual bool isDoneCalibrating() const = 0;
 };
 
 class IMUHeadingSource : public HeadingSource {
   public:
-    IMUHeadingSource(pros::IMU* imu) : imu(imu) {}
+    IMUHeadingSource(pros::IMU* imu, const float coefficient = 1)
+      : imu(imu), coefficient(coefficient) {}
 
-    double getHeading() const override { return imu->get_rotation(); }
+    double getHeading() const override {
+      if (imu->get_rotation() == PROS_ERR_F) return NAN;
+      return imu->get_rotation() * coefficient;
+    }
 
-    bool isMessedUp() const override { return imu->get_rotation() == PROS_ERR; }
-
-    bool calibrate() const override { return imu->reset(false); }
+    bool calibrate() override { return imu->reset(false); }
 
     bool isDoneCalibrating() const override { return !imu->is_calibrating(); }
+
+    /**
+     * @brief adjusts imu output to account for linear drift
+     */
+    float coefficient;
   private:
     pros::IMU* imu;
 };
@@ -38,7 +40,12 @@ class IMUHeadingSource : public HeadingSource {
 class TrackingWheelHeadingSource : public HeadingSource {
   public:
     TrackingWheelHeadingSource(std::vector<lemlib::TrackingWheel*> wheels)
-      : wheels(wheels), prevDistanceTraveled(wheels.size(), 0) {
+      : wheels(wheels) {
+      // sort the wheels such that unpowered wheels are before powered wheels
+      std::sort(wheels.begin(), wheels.end(),
+                [](lemlib::TrackingWheel* a, lemlib::TrackingWheel* b) {
+                  return a->getType() > b->getType();
+                });
       this->offsets = {};
       for (int i = 0; i < wheels.size(); i++) {
         this->offsets.push_back(wheels[i]->getOffset());
@@ -46,19 +53,49 @@ class TrackingWheelHeadingSource : public HeadingSource {
     }
 
     double getHeading() const override {
-      std::vector<float> deltaDistanceTraveled;
-      for (int i = 0; i < wheels.size(); i++) {
-        wheels[i]->getDistanceTraveled() - prevDistanceTraveled[i];
-      }
+      struct TrackingWheelData {
+          float deltaDist, offset;
+      };
 
-      return 1;
+      static std::vector<float> prevDistanceTraveled(wheels.size(), 0);
+      static float prevReturnedHeading(0);
+
+      std::vector<TrackingWheelData> deltaDistsAndOffsets;
+      std::vector<float> newDistanceTraveled;
+      for (int i = 0; i < wheels.size(); i++) {
+        const float dist = wheels[i]->getDistanceTraveled();
+        if (dist != PROS_ERR_F) {
+          deltaDistsAndOffsets.push_back(
+              {wheels[i]->getDistanceTraveled() - prevDistanceTraveled[i],
+               offsets[i]});
+          newDistanceTraveled.push_back(wheels[i]->getDistanceTraveled());
+        } else {
+          newDistanceTraveled.push_back(prevDistanceTraveled[i]);
+        }
+      }
+      float out = prevReturnedHeading;
+      if (deltaDistsAndOffsets.size() < 2) out = NAN;
+      else {
+        const auto first = deltaDistsAndOffsets[0];
+        const auto second = deltaDistsAndOffsets[1];
+
+        out -= (first.deltaDist - second.deltaDist) /
+               (first.offset - second.offset);
+      }
+      newDistanceTraveled.swap(prevDistanceTraveled);
+      if (out != NAN) prevReturnedHeading = out;
+      return out;
     }
 
-    bool isMessedUp() const override { return false; }
+    bool calibrate() override {
+      for (auto wheel : wheels) { wheel->reset(); }
+      return true;
+    }
+
+    bool isDoneCalibrating() const override { return true; }
   private:
     std::vector<float> offsets;
     std::vector<lemlib::TrackingWheel*> wheels;
-    std::vector<float> prevDistanceTraveled;
 };
 
 // only make one of these!!!
@@ -188,9 +225,20 @@ void Robot::initializeOdometry() {
                                       Robot::Dimensions::horiEncDistance,
                                       Robot::Dimensions::horiEncGearRatio)
           : nullptr;
+
+  lemlib::TrackingWheel* leftDriveTracker = new lemlib::TrackingWheel(
+      &Robot::Motors::leftDrive, Robot::Dimensions::driveWheelDiameter,
+      -Robot::Dimensions::trackWidth / 2, Robot::Dimensions::driveWheelRpm);
+  lemlib::TrackingWheel* rightDriveTracker = new lemlib::TrackingWheel(
+      &Robot::Motors::rightDrive, Robot::Dimensions::driveWheelDiameter,
+      Robot::Dimensions::trackWidth / 2, Robot::Dimensions::driveWheelRpm);
+
+  auto trackingWheelHeading = new TrackingWheelHeadingSource(
+      {leftDriveTracker, rightDriveTracker, leftVert});
   auto goofyIMU = new MockIMU({new IMUHeadingSource(&Robot::Sensors::imuA),
                                new IMUHeadingSource(&Robot::Sensors::imuB),
-                               new IMUHeadingSource(&Robot::Sensors::imuC)});
+                               new IMUHeadingSource(&Robot::Sensors::imuC),
+                               trackingWheelHeading});
   goofyIMU->calibrate();
   Robot::odomSensors = new lemlib::OdomSensors {
       leftVert, rightVert /* nullptr */, hori, nullptr, goofyIMU};
