@@ -52,7 +52,18 @@ class TrackingWheelHeadingSource : public HeadingSource {
         this->offsets.push_back(this->wheels[i]->getOffset());
       }
     }
+  protected:
+    static const int currentThreshold = 2000;
 
+    static bool isWheelMessedUp(lemlib::TrackingWheel* wheel) {
+      bool isMotorGroup = wheel->getType() == 1 && wheel->motors != nullptr;
+      if (isMotorGroup)
+        for (auto curr : wheel->motors->get_current_draws())
+          if (std::abs(curr) > currentThreshold) return true;
+
+      return wheel->getDistanceTraveled() == PROS_ERR_F;
+    }
+  public:
     double getHeading() const override {
       struct TrackingWheelData {
           float deltaDist, offset;
@@ -65,7 +76,7 @@ class TrackingWheelHeadingSource : public HeadingSource {
       std::vector<float> newDistanceTraveled;
       for (int i = 0; i < wheels.size(); i++) {
         const float dist = wheels[i]->getDistanceTraveled();
-        if (dist != PROS_ERR_F) {
+        if (!isWheelMessedUp(wheels[i])) {
           deltaDistsAndOffsets.push_back(
               {wheels[i]->getDistanceTraveled() - prevDistanceTraveled[i],
                offsets[i]});
@@ -81,7 +92,7 @@ class TrackingWheelHeadingSource : public HeadingSource {
         const auto second = deltaDistsAndOffsets[1];
 
         out -= lemlib::radToDeg((first.deltaDist - second.deltaDist) /
-               (first.offset - second.offset));
+                                (first.offset - second.offset));
       }
       newDistanceTraveled.swap(prevDistanceTraveled);
       if (out != NAN) prevReturnedHeading = out;

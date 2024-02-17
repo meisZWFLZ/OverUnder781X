@@ -87,7 +87,7 @@ class TrackingWheel {
          * @return int - 1 if motor group, 0 otherwise
          */
         int getType();
-    private:
+    public:
         float diameter;
         float distance;
         float rpm;
