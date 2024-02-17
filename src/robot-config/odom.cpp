@@ -40,16 +40,16 @@ class IMUHeadingSource : public HeadingSource {
 
 class TrackingWheelHeadingSource : public HeadingSource {
   public:
-    TrackingWheelHeadingSource(std::vector<lemlib::TrackingWheel*> wheels)
-      : wheels(wheels) {
+    TrackingWheelHeadingSource(std::vector<lemlib::TrackingWheel*> _wheels)
+      : wheels(_wheels) {
       // sort the wheels such that unpowered wheels are before powered wheels
-      std::sort(wheels.begin(), wheels.end(),
+      std::sort(this->wheels.begin(), this->wheels.end(),
                 [](lemlib::TrackingWheel* a, lemlib::TrackingWheel* b) {
-                  return a->getType() > b->getType();
+                  return a->getType() < b->getType();
                 });
       this->offsets = {};
-      for (int i = 0; i < wheels.size(); i++) {
-        this->offsets.push_back(wheels[i]->getOffset());
+      for (int i = 0; i < this->wheels.size(); i++) {
+        this->offsets.push_back(this->wheels[i]->getOffset());
       }
     }
 
