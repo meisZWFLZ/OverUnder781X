@@ -1,5 +1,7 @@
 #include "driverFeedback.h"
+#include "pros/error.h"
 #include "robot.h"
+#include <cmath>
 #include <functional>
 
 Device::Device(pros::Motor* motor)
