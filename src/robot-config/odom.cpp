@@ -73,25 +73,28 @@ class MockIMU : public pros::IMU {
       // return the average of the closest sources that are not messed up
       std::vector<double> deltaHeadings;
       std::vector<double> newHeadings;
+      std::stringstream printSS;
 
       for (int i = 0; i < sources.size(); i++) {
-        if (!sources[i]->isMessedUp()) {
-          newHeadings.push_back(sources[i]->getHeading());
-          deltaHeadings.push_back(sources[i]->getHeading() - prevHeadings[i]);
+        char buffer[10];
+        const float heading = sources[i]->getHeading();
+        if (heading != NAN) {
+          newHeadings.push_back(heading);
+          deltaHeadings.push_back(heading - prevHeadings[i]);
+          sprintf(buffer, "%0.4f", heading - prevHeadings[i]);
         } else {
           newHeadings.push_back(prevHeadings[i]);
+          sprintf(buffer, "NAN");
         }
+        printSS << buffer << ",";
       }
       double out = 0;
 
       if (deltaHeadings.size() == 0) {
-        if (pros::millis() % 100 < 10) printf("0\n");
         out = prevReturnedHeading;
       } else if (deltaHeadings.size() == 1) {
-        if (pros::millis() % 100 < 10) printf("1\n");
         out = prevReturnedHeading + deltaHeadings[0];
       } else if (deltaHeadings.size() == 2) {
-        if (pros::millis() % 100 < 10) printf("2\n");
         out = prevReturnedHeading + (deltaHeadings[0] + deltaHeadings[1]) / 2;
       } else {
         std::sort(deltaHeadings.begin(), deltaHeadings.end());
@@ -107,17 +110,14 @@ class MockIMU : public pros::IMU {
             smallestDiffIndex = i;
           }
         }
-        if (pros::millis() % 100 < 10)
-          printf("3,delta: %f\n", deltaHeadings[smallestDiffIndex]);
 
         out = prevReturnedHeading + (deltaHeadings[smallestDiffIndex] +
                                      deltaHeadings[smallestDiffIndex + 1]) /
-                                  
-                                  
-                                  
-                                  
                                         2;
       }
+      printSS << out << "\n";
+      printf("%s", printSS.str().c_str());
+
       newHeadings.swap(prevHeadings);
       prevReturnedHeading = out;
       return out;
