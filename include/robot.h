@@ -1,11 +1,7 @@
 #pragma once
 #include "catapult.h"
 #include "lift.h"
-#include "pros/motors.hpp"
-#include "pros/adi.hpp"
-#include "okapi/impl/device/controller.hpp"
 #include "lemlib/chassis/chassis.hpp"
-#include "pros/rotation.hpp"
 #include "driverFeedback.h"
 #include "controllerScreen.h"
 
