@@ -1,3 +1,4 @@
+#include "lemlib/util.hpp"
 #include "pros/error.h"
 #include "robot.h"
 #include <cmath>
@@ -79,8 +80,8 @@ class TrackingWheelHeadingSource : public HeadingSource {
         const auto first = deltaDistsAndOffsets[0];
         const auto second = deltaDistsAndOffsets[1];
 
-        out -= (first.deltaDist - second.deltaDist) /
-               (first.offset - second.offset);
+        out -= lemlib::radToDeg((first.deltaDist - second.deltaDist) /
+               (first.offset - second.offset));
       }
       newDistanceTraveled.swap(prevDistanceTraveled);
       if (out != NAN) prevReturnedHeading = out;
