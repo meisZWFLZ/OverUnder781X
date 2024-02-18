@@ -45,6 +45,8 @@ void screen() {
     pros::lcd::clear_line(3);
     pros::lcd::print(3, "heading: %f deg",
                      pose.theta); // print the heading
+    pros::lcd::print(4, "cata: %i deg",
+                     Robot::Sensors::cata.get_angle()); // print the heading
     const float deltaTheta = Robot::chassis->getPose().theta - lastHeading;
     if (deltaTheta > 10) {
       Robot::chassis->setPose(Robot::chassis->getPose().x,
@@ -186,7 +188,6 @@ void autonomous() {
 void opcontrol() {
   auton::AutonSelector::disable();
   Robot::Actions::retractBothWings();
-  Robot::Subsystems::catapult->matchload();
 
   // int start = pros::millis();
   // while (Robot::Subsystems::catapult->getTriballsFired() < 46) {
@@ -264,15 +265,8 @@ void opcontrol() {
     }
     prevRight = buttonRight;
 
-    // blocker toggle
-    // retrieve the value of the R2 button
-    const bool buttonR2 =
-        Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_R2);
-    // update previous value of R2
-    prevR2 = buttonR2;
-
     // catapult manual fire
-    if (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT))
+    if (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_R2))
       Robot::Subsystems::catapult->fire();
 
     // get whether both emergency stop buttons are currently being pressed

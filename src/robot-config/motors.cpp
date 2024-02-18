@@ -19,7 +19,7 @@ pros::Motor intakeA {21, true};
 // pros::Motor elevatorB {18, pros::E_MOTOR_GEAR_RED, false};
 
 // shooter
-pros::Motor catapultA {9, pros::E_MOTOR_GEAR_RED, true};
+pros::Motor catapultA {5, pros::E_MOTOR_GEAR_RED, true};
 
 // robot groups
 pros::Motor_Group Robot::Motors::leftDrive {leftDriveA, leftDriveB, leftDriveC};
