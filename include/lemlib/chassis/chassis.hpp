@@ -356,15 +356,17 @@ class Chassis {
 
         pros::Mutex mutex;
         float distTravelled = 0;
-
+        public:
         ControllerSettings lateralSettings;
         ControllerSettings angularSettings;
+    private:
         Drivetrain drivetrain;
         OdomSensors sensors;
         DriveCurveFunction_t driveCurve;
-
+        public:
         PID lateralPID;
         PID angularPID;
+        private:
         ExitCondition lateralLargeExit;
         ExitCondition lateralSmallExit;
         ExitCondition angularLargeExit;

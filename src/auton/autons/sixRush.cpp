@@ -30,10 +30,29 @@ void printRobotPose() {
   printf("pose: (%4.2f,%4.2f,%4.2f)\n", pose.x, pose.y, pose.theta);
 }
 
+void test() {
+  // // test imus
+  // Robot::chassis->setPose(0, 0, 0);
+  // Robot::chassis->moveToPoint(0, 24, 10000);
+  // Robot::chassis->waitUntilDone();
+  // tank(-127, 127, 0, 0);
+  // waitUntil([] { return std::abs(Robot::chassis->getPose().theta - -360 * 10) < 70; });
+  // Robot::chassis->turnTo(0, 100000000, 1000);
+  // Robot::chassis->waitUntilDone();
+  // stop();
+
+  // test pid
+  Robot::chassis->setPose(0, 0, 0);
+  Robot::chassis->turnTo(1000000, 0, 10000);
+}
+
 void runSixRush() {
   using namespace fieldDimensions;
   using namespace auton::actions;
   // Robot::chassis->setPose(0, 0, 0);
+  test();
+  return;
+
   const int startTime = pros::millis();
   pros::delay(500);
   Robot::chassis->setPose(
@@ -85,7 +104,8 @@ void runSixRush() {
   // stop();
   // Robot::Actions::expandBothWings();
   Robot::chassis->moveToPoint(96, 0, 1000,
-                              {.forwards=false,
+                              {
+                                  .forwards = false,
                                   .minSpeed = 127,
                               });
   pros::delay(300);
@@ -331,8 +351,7 @@ void runSixRush() {
   tank(-127, -127, 200);
   tank(127, 127, 600);
   Robot::Actions::stopIntake();
-  tank(-127, -64
-  , 300);
+  tank(-127, -64, 300);
   stop();
   // pros::delay(100);
   // tank(-127, -127, 300, 0);
