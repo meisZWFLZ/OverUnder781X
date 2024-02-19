@@ -87,7 +87,7 @@ void initialize() {
   pros::lcd::initialize();
   Robot::initializeOdometry();
 
-  Robot::chassis->calibrate(false); // calibrate the chassis
+  Robot::chassis->calibrate(true); // calibrate the chassis
 
   pros::lcd::set_text(1, "Calibrating chassis...");
   Robot::Subsystems::initialize();
@@ -305,7 +305,7 @@ void opcontrol() {
   Robot::Actions::retractBothWings();
   Robot::Actions::retractBackWing();
 
-  // int start = pros::millis();
+  // int start = pros::millis();/
   // while (Robot::Subsystems::catapult->getTriballsFired() < 46) {
   //   Robot::Subsystems::catapult->fire();
   //   pros::delay(1000);

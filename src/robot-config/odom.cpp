@@ -259,17 +259,20 @@ void Robot::initializeOdometry() {
 
   auto trackingWheelHeading =
       new TrackingWheelHeadingSource({leftDriveTracker, rightDriveTracker});
-  auto goofyIMU = new MockIMU(
-      {new IMUHeadingSource(&Robot::Sensors::imuA, Robot::Tunables::imuAGain),
-       new IMUHeadingSource(&Robot::Sensors::imuB, Robot::Tunables::imuBGain),
-       new IMUHeadingSource(&Robot::Sensors::imuC, Robot::Tunables::imuCGain),
-       trackingWheelHeading});
+  // auto goofyIMU = new MockIMU(
+  //     {new IMUHeadingSource(&Robot::Sensors::imuA,
+  //     Robot::Tunables::imuAGain),
+  //      new IMUHeadingSource(&Robot::Sensors::imuB,
+  //      Robot::Tunables::imuBGain), new
+  //      IMUHeadingSource(&Robot::Sensors::imuC, Robot::Tunables::imuCGain)/* ,
+  //      trackingWheelHeading */});
 
-  Robot::odomSensors = new lemlib::OdomSensors {
-      leftVert, rightVert /* nullptr */, hori, nullptr, goofyIMU};
+  Robot::odomSensors =
+      new lemlib::OdomSensors {leftVert, rightVert /* nullptr */, hori, nullptr,
+                               /* goofyIMU */ &Robot::Sensors::imuA};
 
   Robot::chassis =
       new lemlib::Chassis {drivetrain, Robot::Tunables::lateralController,
                            Robot::Tunables::angularController, *odomSensors};
-  goofyIMU->calibrate();
+  // goofyIMU->calibrate();
 }
