@@ -2,6 +2,7 @@
 
 bool leftWingState = false;
 bool rightWingState = false;
+bool backWingState = false;
 
 void setLeftWing(bool state) {
   leftWingState = state;
@@ -11,6 +12,11 @@ void setLeftWing(bool state) {
 void setRightWing(bool state) {
   rightWingState = state;
   Robot::Pistons::rightWing.set_value(rightWingState);
+}
+
+void setBackWing(bool state) {
+  backWingState = state;
+  Robot::Pistons::backWing.set_value(backWingState);
 }
 
 void Robot::Actions::expandBothWings() {
@@ -39,3 +45,9 @@ void Robot::Actions::toggleBothWings() {
 void Robot::Actions::toggleLeftWing() { setLeftWing(!leftWingState); }
 
 void Robot::Actions::toggleRightWing() { setRightWing(!rightWingState); }
+
+void Robot::Actions::retractBackWing() { setBackWing(false); }
+
+void Robot::Actions::expandBackWing() { setBackWing(true); }
+
+void Robot::Actions::toggleBackWing() { setBackWing(!backWingState); }

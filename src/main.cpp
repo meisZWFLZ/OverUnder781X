@@ -303,6 +303,7 @@ const bool tuneModeEnabled = true;
 void opcontrol() {
   auton::AutonSelector::disable();
   Robot::Actions::retractBothWings();
+  Robot::Actions::retractBackWing();
 
   // int start = pros::millis();
   // while (Robot::Subsystems::catapult->getTriballsFired() < 46) {
@@ -335,6 +336,7 @@ void opcontrol() {
   bool prevLiftEStopCombo = false;
   bool prevLiftLockCombo = false;
 
+  bool prevLeft = false;
   bool prevUp = false;
   bool prevDown = false;
 
@@ -447,6 +449,12 @@ void opcontrol() {
     }
     // update the previous value of R1
     prevR1 = r1;
+
+    // back wing toggle
+    const bool left =
+        Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT);
+    if (left && !prevLeft) { Robot::Actions::toggleBackWing(); }
+    prevLeft = left;
 
     if (tuneModeEnabled &&
         Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_Y) &&

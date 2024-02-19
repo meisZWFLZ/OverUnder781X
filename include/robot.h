@@ -25,6 +25,7 @@ class Robot {
         static pros::ADIDigitalOut rightWing;
         static pros::ADIDigitalOut extendLift;
         static pros::ADIDigitalOut retractLift;
+        static pros::ADIDigitalOut backWing;
     };
 
     class Sensors {
@@ -74,7 +75,7 @@ class Robot {
         static void expandBothWings();
         static void expandLeftWing();
         static void expandRightWing();
-        
+
         static void retractBothWings();
         static void retractLeftWing();
         static void retractRightWing();
@@ -82,6 +83,10 @@ class Robot {
         static void toggleBothWings();
         static void toggleLeftWing();
         static void toggleRightWing();
+
+        static void retractBackWing();
+        static void expandBackWing();
+        static void toggleBackWing();
 
         static void prepareRobot();
     };
