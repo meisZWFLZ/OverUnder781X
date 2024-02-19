@@ -8,9 +8,9 @@ lemlib::ControllerSettings Robot::Tunables::lateralController {
     64, // kD
     0, // windup range
     1, // smallErrorRange
-    100000, // smallErrorTimeout
+    100, // smallErrorTimeout
     3, // largeErrorRange
-    500000, // largeErrorTimeout
+    500, // largeErrorTimeout
     0 // slew rate
 };
 
@@ -21,9 +21,9 @@ lemlib::ControllerSettings Robot::Tunables::angularController {
     24.75, // kD
     0, // windup range
     1, // smallErrorRange
-    100000, // smallErrorTimeout
+    100, // smallErrorTimeout
     3.5, // largeErrorRange
-    350000, // largeErrorTimeout
+    350, // largeErrorTimeout
     0 // slew rate
 };
 
