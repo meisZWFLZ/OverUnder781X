@@ -18,22 +18,22 @@ class HeadingSource {
 
 class IMUHeadingSource : public HeadingSource {
   public:
-    IMUHeadingSource(pros::IMU* imu, const float coefficient = 1)
-      : imu(imu), coefficient(coefficient) {}
+    IMUHeadingSource(pros::IMU* imu, const float _gain = 1)
+      : imu(imu), gain(_gain) {}
 
     double getHeading() const override {
       if (imu->get_rotation() == PROS_ERR_F) return NAN;
-      return imu->get_rotation() * coefficient;
+      return imu->get_rotation() * gain;
     }
 
     bool calibrate() override { return imu->reset(false); }
 
     bool isDoneCalibrating() const override { return !imu->is_calibrating(); }
-
+  protected:
     /**
      * @brief adjusts imu output to account for linear drift
      */
-    float coefficient;
+    float gain;
   private:
     pros::IMU* imu;
 };
@@ -117,6 +117,7 @@ class MockIMU : public pros::IMU {
       : pros::IMU(0), sources(sources) {}
 
     double get_rotation() const override {
+      static int lastCall = pros::millis();
       static std::vector<double> prevHeadings(this->sources.size(), 0);
       static double prevReturnedHeading = 0;
       // return the average of the closest sources that are not messed up
@@ -125,6 +126,8 @@ class MockIMU : public pros::IMU {
       std::stringstream printSS;
       static const char* telemetryPrefix = "!:";
       printSS << telemetryPrefix;
+      printSS << pros::millis() - lastCall << ",";
+      lastCall = pros::millis();
       for (int i = 0; i < sources.size(); i++) {
         char buffer[10];
         const float heading = sources[i]->getHeading();
@@ -148,6 +151,14 @@ class MockIMU : public pros::IMU {
         out = prevReturnedHeading + (deltaHeadings[0] + deltaHeadings[1]) / 2;
       } else {
         std::sort(deltaHeadings.begin(), deltaHeadings.end());
+        // // take the median of the deltaHeadings
+        // auto size = deltaHeadings.size();
+        // if (size % 2 == 0)
+        //   out = prevReturnedHeading +
+        //         (deltaHeadings[size / 2 - 1] + deltaHeadings[size / 2]) / 2;
+        // else out = prevReturnedHeading + deltaHeadings[size / 2];
+
+        // take the average of the two closest values
         std::vector<double> headingDiffs;
         for (int i = 0; i < deltaHeadings.size() - 1; i++) {
           headingDiffs.push_back(deltaHeadings[i + 1] - deltaHeadings[i]);
@@ -166,7 +177,7 @@ class MockIMU : public pros::IMU {
                                         2;
       }
       printSS << out << "\n";
-      printf("%s", printSS.str().c_str());
+      // printf("%s", printSS.str().c_str());
 
       newHeadings.swap(prevHeadings);
       prevReturnedHeading = out;
@@ -248,15 +259,17 @@ void Robot::initializeOdometry() {
 
   auto trackingWheelHeading =
       new TrackingWheelHeadingSource({leftDriveTracker, rightDriveTracker});
-  auto goofyIMU = new MockIMU({new IMUHeadingSource(&Robot::Sensors::imuA),
-                               new IMUHeadingSource(&Robot::Sensors::imuB),
-                               new IMUHeadingSource(&Robot::Sensors::imuC),
-                               trackingWheelHeading});
-  goofyIMU->calibrate();
+  auto goofyIMU = new MockIMU(
+      {new IMUHeadingSource(&Robot::Sensors::imuA, Robot::Tunables::imuAGain),
+       new IMUHeadingSource(&Robot::Sensors::imuB, Robot::Tunables::imuBGain),
+       new IMUHeadingSource(&Robot::Sensors::imuC, Robot::Tunables::imuCGain),
+       trackingWheelHeading});
+
   Robot::odomSensors = new lemlib::OdomSensors {
       leftVert, rightVert /* nullptr */, hori, nullptr, goofyIMU};
 
   Robot::chassis =
       new lemlib::Chassis {drivetrain, Robot::Tunables::lateralController,
                            Robot::Tunables::angularController, *odomSensors};
+  goofyIMU->calibrate();
 }

@@ -91,6 +91,9 @@ class Robot {
         static lemlib::ControllerSettings lateralController;
         static lemlib::ControllerSettings angularController;
         static const float chasePower;
+        static const float imuAGain;
+        static const float imuBGain;
+        static const float imuCGain;
     };
 
     class Subsystems {
