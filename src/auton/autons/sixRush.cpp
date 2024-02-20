@@ -36,8 +36,8 @@ void test() {
   // Robot::chassis->moveToPoint(0, 24, 10000);
   // Robot::chassis->waitUntilDone();
   // tank(-127, 127, 0, 0);
-  // waitUntil([] { return std::abs(Robot::chassis->getPose().theta - -360 * 10) < 70; });
-  // Robot::chassis->turnTo(0, 100000000, 1000);
+  // waitUntil([] { return std::abs(Robot::chassis->getPose().theta - -360 * 10)
+  // < 70; }); Robot::chassis->turnTo(0, 100000000, 1000);
   // Robot::chassis->waitUntilDone();
   // stop();
 
@@ -49,15 +49,69 @@ void test() {
 void runSixRush() {
   using namespace fieldDimensions;
   using namespace auton::actions;
-  // Robot::chassis->setPose(0, 0, 0);
-  test();
-  return;
 
   const int startTime = pros::millis();
-  pros::delay(500);
+
+  // same set as disrupt
   Robot::chassis->setPose(
-      {0 + TILE_LENGTH * 1.5 + 3, MIN_Y + TILE_LENGTH - 12.0 / 2 + 2 + 2, UP},
+      {0 - (- TILE_LENGTH * 2 + Robot::Dimensions::drivetrainWidth / 2 + 6),
+       MIN_Y + TILE_LENGTH - Robot::Dimensions::drivetrainLength / 2, UP},
       false);
+
+  // intake center triball next to barrier
+  Robot::Actions::intake();
+  Robot::chassis->moveToPose(Robot::Dimensions::drivetrainLength / 2, 0, LEFT,
+                             3000, {.lead=0.2,.minSpeed = 127});
+  pros::delay(200);
+
+  // wait until triball in intake
+  waitUntil([] { return isTriballInIntake() || !isMotionRunning(); });
+  Robot::chassis->cancelMotion();
+
+  Robot::chassis->moveToPoint(72, 0, 3000, {.forwards=false,.minSpeed = 127});
+  pros::delay(500);
+
+  // wait until robot is stopped by goal
+  waitUntil([] {
+    static float lastX = 10000000;
+    pros::delay(30);
+    float diff = std::abs(lastX - Robot::chassis->getPose().x);
+    diff *= 20;
+    const bool out = diff < 0.5 ||
+                     !isMotionRunning();
+    printf("diff: %f\n", diff);
+    lastX = Robot::chassis->getPose().x;
+    
+    return out;
+  });
+  Robot::chassis->cancelMotion();
+
+  tank(127, 127, 200);
+  Robot::chassis->turnTo(1000000, 0, 1000);
+  Robot::chassis->waitUntilDone();
+  Robot::Actions::outtake();
+  Robot::chassis->moveToPoint(1000000, 0, 1000, {.minSpeed = 127});
+  pros::delay(750);
+
+  // wait until robot is stopped by goal
+  waitUntil([] {
+    static float lastX = 10000000;
+    const float diff = std::abs(lastX - Robot::chassis->getPose().x);
+    const bool out = diff < 0.002 ||
+                     !isMotionRunning();
+    printf("diff: %f\n", diff);
+    lastX = Robot::chassis->getPose().x;
+    return out;
+  });
+  Robot::chassis->cancelMotion();
+  stop();
+
+  return;
+
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  // Everything below is old code that is not used in the current auton
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
   // Robot::chassis->setPose(
   //     {0 + TILE_LENGTH * 2 -8, -TILE_LENGTH * 2 - 5.42, UP},
   //     false);
