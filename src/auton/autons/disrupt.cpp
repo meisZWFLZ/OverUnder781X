@@ -1,119 +1,87 @@
 #include "auton.h"
-#include "lemlib/asset.hpp"
-#include "pros/rtos.hpp"
-#include "robot.h"
 #include "fieldDimensions.h"
-#include <cmath>
-
-ASSET(disrupt_sweep_txt);
-// ASSET(def_elevation_bar_txt);
 
 using namespace fieldDimensions;
 using namespace auton::utils;
 
 void runDisrupt() {
+  // front of drivetrain should be aligned with closer edge of puzzle pattern
+  // x is where neil decided so 
   Robot::chassis->setPose(
-      {0 - TILE_LENGTH * 2 + Robot::Dimensions::drivetrainWidth / 2,
+      {0 - TILE_LENGTH * 2 + Robot::Dimensions::drivetrainWidth / 2 + 6,
        MIN_Y + TILE_LENGTH - Robot::Dimensions::drivetrainLength / 2, UP},
       false);
 
-  // Robot::chassis->moveToPoint(-TILE_LENGTH * 1.5, -TILE_LENGTH * 1.5, 5000,
-  //                             {.minSpeed = 127});
-  // waitUntilDistToPose({-TILE_LENGTH * 1.5, -TILE_LENGTH * 1.5}, 10, 500,
-  // true); Robot::chassis->cancelMotion();
-  // Robot::chassis->moveToPose(-TILE_LENGTH, -8, RIGHT, 5000,
-  //                            {.minSpeed = 127, .earlyExitRange = 6});
-  // waitUntil([] {
-  //   return !isMotionRunning() || Robot::chassis->getPose().y > -TILE_LENGTH;
-  // });
-  // Robot::Actions::expandBothWings();
-  // Robot::Actions::intake();
-  // Robot::chassis->cancelMotion();
-  // Robot::chassis->moveToPoint(72, 0, 2000, {.minSpeed = 127});
-  // pros::delay(500);
-  // Robot::Actions::outtake();
-  // waitUntilDistToPose({0, 0}, 10, 500, true);
-  pros::delay(1000);
-  Robot::chassis->follow(disrupt_sweep_txt, 10, 5000);
-  pros::delay(100);
-  if (robotAngDist(0) > 45)
-    Robot::chassis->setPose(Robot::chassis->getPose().x,
-                            Robot::chassis->getPose().y, 0);
-  Robot::chassis->waitUntil(30);
+  // position the robot to disrupt center triballs
+  Robot::chassis->moveToPose(-TILE_LENGTH - 3, -TILE_LENGTH + 6, RIGHT, 3000,
+                             {.lead = .3, .minSpeed = 64});
+  // wait until facing right to push triballs                             
+  waitUntil([] { return robotAngDist(RIGHT) < 20 || !isMotionRunning(); });
+  Robot::chassis->cancelMotion();
+
+  // prepare to push triballs
   Robot::Actions::expandBothWings();
   Robot::Actions::outtake();
-  waitUntilDistToPose({-TILE_LENGTH, -8}, 10, 800, true);
+
+  // full speed into the triballs
+  Robot::chassis->moveToPoint(10000000, 0, 3000, {.minSpeed = 127});
+
+  // wait until near barrier
+  waitUntil([] {
+    return Robot::chassis->getPose().x > -12.5 || !isMotionRunning();
+  });
   Robot::chassis->cancelMotion();
-  if (robotAngDist(180) < 45) {
-    Robot::control.print(1, 1, "imu->stop");
-    return;
+
+  // done disrupting
+  // position the robot to clear matchload zone
+  Robot::chassis->moveToPoint(-TILE_LENGTH * 2 - 3, -TILE_LENGTH * 2 - 6, 3000,
+                              {.forwards = false});
+
+  // retract wings
+  Robot::chassis->waitUntil(5);
+  Robot::Actions::retractBothWings();
+
+  Robot::chassis->waitUntilDone();
+
+  // turn to be parallel to the matchload pipe
+  Robot::chassis->turnTo(1000000, -1000000, 2000);
+  Robot::chassis->waitUntilDone();
+
+  // expand wing
+  Robot::Actions::expandBackWing();
+
+  // move in an arc to sweep ball out
+  tank(32, 127, 0, 0);
+  // wait until facing right or if we are far from the matchload zone
+  waitUntil(
+      [] {
+        return robotAngDist(RIGHT) < 10 ||
+               Robot::chassis->getPose().x > -TILE_LENGTH * 1.5;
+      },
+      0, 1000);
+  stop();
+
+  // ensure we don't bend back wing
+  Robot::Actions::retractBackWing();
+
+  // intake any straggler balls
+  Robot::Actions::intake();
+
+  // let matchload zone triball get ahead of us
+  pros::delay(1000);
+
+  // touch horizontal elevation bar
+  Robot::chassis->moveToPose(0 - Robot::Dimensions::drivetrainLength / 2 - 3.5,
+                             MIN_Y + TILE_RADIUS, RIGHT, 2000);
+
+  // if a triball enters the intake, outtake it
+  while (pros::competition::is_autonomous()) {
+    if (isTriballInIntake()) {
+      Robot::Actions::outtake();
+      pros::delay(500);
+    }
+    pros::delay(10);
   }
-
-  Robot::Actions::retractBothWings();
-  Robot::chassis->moveToPose(
-      0 - TILE_LENGTH * 2 + Robot::Dimensions::drivetrainWidth / 2,
-      MIN_Y + TILE_LENGTH - Robot::Dimensions::drivetrainLength / 2 - 2.5, UP,
-      3000, {.forwards = false});
-  Robot::chassis->waitUntilDone();
-  Robot::Actions::expandBothWings();
-  tank(-127, 127, 0, 0);
-  printf("wait for ang\n");
-  waitUntil([] { return robotAngDist(DOWN) < 60; });
-  printf("retract wings + turn to bar\n");
-  Robot::Actions::retractBothWings();
-  Robot::chassis->turnTo(100000, 0, 2000);
-  Robot::chassis->waitUntilDone();
-  printf("move to bar\n");
-  // Robot::chassis->moveToPoint(float x, float y, int timeout);
-  Robot::chassis->moveToPoint(0, MIN_Y, 3000, {.minSpeed = 64});
-  waitUntilDistToPose({-TILE_RADIUS, MIN_Y + TILE_RADIUS}, 12);
-  Robot::chassis->cancelMotion();
-
-  Robot::chassis->moveToPoint(-Robot::Dimensions::drivetrainLength / 2 - 4.6,
-                              -TILE_LENGTH * 2 -
-                                  Robot::Dimensions::drivetrainWidth / 2 - 4,
-                              3000, {.maxSpeed = 64});
-  Robot::chassis->waitUntilDone();
-
-  constexpr float angle = (RIGHT + 37.5) * M_PI / 180;
-  constexpr float bigNum = 100000000;
-  printf("turn to bar\n");
-  Robot::chassis->turnTo(bigNum * cos(angle), bigNum * sin(angle), 3000);
-  Robot::chassis->waitUntil(70);
-  Robot::Actions::expandBothWings();
-  Robot::Actions::stopIntake();
-  Robot::chassis->waitUntilDone();
-  tank(0, 24, 0, 0);
-  printf("done\n");
-
-  // Robot::chassis->turnTo(TILE_LENGTH * 2, 0, 1500, true, 40);
-  // pros::delay(20);
-  // Robot::Pistons::blocker.set_value(false);
-  // Robot::chassis->waitUntilDone();
-  // pros::delay(250);
-
-  // Robot::Subsystems::catapult->matchload(1000);
-  // pros::delay(1000);
-  // Robot::Actions::prepareRobot();
-
-  // Robot::Actions::expandBothWings();
-  // tank(-127, 127, 750);
-  // Robot::Actions::retractBothWings();
-
-  // const lemlib::Pose targetPose {0 - 10, MIN_Y + TILE_RADIUS + 2, RIGHT};
-
-  // Robot::chassis->turnTo(targetPose.x, targetPose.y, 1500);
-  // Robot::chassis->waitUntilDone();
-  // Robot::chassis->moveToPose(targetPose.x + 20, targetPose.y,
-  // targetPose.theta,
-  //                            3500, {.maxSpeed = 64});
-  // Robot::Actions::outtake();
-  // waitUntilDistToPose({targetPose.x + 3, targetPose.y}, 3, 0, true);
-  // Robot::chassis->cancelMotion();
-  // tank(32, 32, 100);
-  // stop();
-  // pros::delay(500);
-  // Robot::Actions::stopIntake();
 }
 
 auton::Auton auton::autons::disrupt = {(char*)("disrupt / left"), runDisrupt};
