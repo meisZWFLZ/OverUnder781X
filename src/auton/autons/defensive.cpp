@@ -11,6 +11,7 @@ using namespace fieldDimensions;
 using namespace auton::utils;
 
 void runDefensive() {
+  // front right corner of the drivetrain aligned with the inside of the puzzling facing right
   Robot::chassis->setPose(
       {MIN_X + TILE_LENGTH + Robot::Dimensions::drivetrainLength / 2,
        MIN_Y + TILE_LENGTH - Robot::Dimensions::drivetrainWidth / 2, RIGHT},
