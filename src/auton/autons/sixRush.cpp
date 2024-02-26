@@ -1,5 +1,6 @@
 #include "auton.h"
 #include "lemlib/asset.hpp"
+#include "lemlib/pose.hpp"
 #include "lemlib/util.hpp"
 #include "pros/motors.h"
 #include "pros/rtos.hpp"
@@ -54,22 +55,33 @@ void runSixRush() {
 
   // same set as disrupt
   Robot::chassis->setPose(
-      {0 - (- TILE_LENGTH * 2 + Robot::Dimensions::drivetrainWidth / 2 + 6),
+      {0 - (-TILE_LENGTH * 2 + Robot::Dimensions::drivetrainWidth / 2 + 6),
        MIN_Y + TILE_LENGTH - Robot::Dimensions::drivetrainLength / 2, UP},
       false);
 
   // intake center triball next to barrier
   Robot::Actions::intake();
-  Robot::chassis->moveToPose(Robot::Dimensions::drivetrainLength / 2, 0, LEFT,
-                             3000, {.lead=0.2,.minSpeed = 127});
+  lemlib::Pose firstMiddleBall {2, 1};
+  lemlib::Pose intakePose {0, 8.5}; // relative to robot center
+
+  lemlib::Pose firstBallTargetPose =
+      firstMiddleBall + (intakePose * -1).rotate(M_PI / 4);
+
+  firstBallTargetPose.theta = LEFT + 30;
+  Robot::chassis->moveToPose(firstBallTargetPose.x, firstBallTargetPose.y,
+                             firstBallTargetPose.theta, 3000,
+                             {.lead = 0.2, .minSpeed = 127});
+  printf("pose: (%4.2f,%4.2f,%4.2f)\n", firstBallTargetPose.x,
+         firstBallTargetPose.y, firstBallTargetPose.theta);
   pros::delay(200);
 
   // wait until triball in intake
-  waitUntil([] { return isTriballInIntake() || !isMotionRunning(); });
+  waitUntil([] { return isTriballInIntake() || !isMotionRunning(); }, 50);
   Robot::chassis->cancelMotion();
 
-  Robot::chassis->moveToPoint(72, 0, 3000, {.forwards=false,.minSpeed = 127});
-  pros::delay(500);
+  Robot::chassis->moveToPoint(72, 0, 3000,
+                              {.forwards = false, .minSpeed = 127});
+  pros::delay(200);
 
   // wait until robot is stopped by goal
   waitUntil([] {
@@ -77,40 +89,215 @@ void runSixRush() {
     pros::delay(30);
     float diff = std::abs(lastX - Robot::chassis->getPose().x);
     diff *= 20;
-    const bool out = diff < 0.5 ||
-                     !isMotionRunning();
+    const bool out = diff < 1 || !isMotionRunning();
     printf("diff: %f\n", diff);
     lastX = Robot::chassis->getPose().x;
-    
+
     return out;
   });
   Robot::chassis->cancelMotion();
 
-  tank(127, 127, 200);
+  // get out of goal
+  printf("out of goal\n");
+  tank(127, 127, 100, 0);
+  // turn at full speed
+  printf("speedy turn\n");
+  tank(127, -127, 10, 0);
+  // wait until near the target to switch to pid
+  waitUntil([] { return robotAngDist(RIGHT) < 60; });
+  printf("pid turn\n");
   Robot::chassis->turnTo(1000000, 0, 1000);
-  Robot::chassis->waitUntilDone();
+  // wait until angle is good enough
+  waitUntil([] { return robotAngDist(RIGHT) < 10; });
+  Robot::chassis->cancelMotion();
+
+  // ram triball into goal
   Robot::Actions::outtake();
   Robot::chassis->moveToPoint(1000000, 0, 1000, {.minSpeed = 127});
-  pros::delay(750);
+  printf("ram!!\n");
+  pros::delay(250);
 
   // wait until robot is stopped by goal
   waitUntil([] {
-    static float lastX = 10000000;
-    const float diff = std::abs(lastX - Robot::chassis->getPose().x);
-    const bool out = diff < 0.002 ||
-                     !isMotionRunning();
-    printf("diff: %f\n", diff);
-    lastX = Robot::chassis->getPose().x;
+    static float maxVel = 0;
+    static float lastFeetPerSec = 0;
+    static lemlib::Pose lastPose = Robot::chassis->getPose();
+    const float dist = lastPose.distance(Robot::chassis->getPose());
+    float rawInchesPerSec = dist * 100;
+    float smoothFeetPerSec = lemlib::ema(lastFeetPerSec, rawInchesPerSec, 0.7);
+
+    const bool out = smoothFeetPerSec < maxVel || !isMotionRunning();
+    printf("smooth: %4.4f\n", smoothFeetPerSec);
+    printf("raw: %4.4f\n", rawInchesPerSec);
+    printf("max: %4.4f\n", maxVel);
+
+    maxVel = std::max(maxVel, smoothFeetPerSec);
+    lastFeetPerSec = smoothFeetPerSec;
     return out;
   });
   Robot::chassis->cancelMotion();
+
+  // intake 3rd center ball
+  Robot::chassis->moveToPoint(4, -TILE_LENGTH, 2000, {.minSpeed = 127});
+  Robot::Actions::intake();
+  pros::delay(500);
+
+  // wait until triball is in intake
+  waitUntil([] { return isTriballInIntake() || !isMotionRunning(); });
+  Robot::chassis->cancelMotion();
+
+  lemlib::Pose thirdTriballGoalTarget {
+      TILE_LENGTH * 2 - Robot::Dimensions::drivetrainLength / 2 + 1,
+      -TILE_RADIUS * 1.175};
+
+  // get away from barrier and turn towards goal
+  tank(-64, -127, 0);
+  waitUntil([&] {
+    return robotAngDist(
+               Robot::chassis->getPose().angle(thirdTriballGoalTarget) * 180 /
+               M_PI) < 20;
+  });
+
+  // go towards goal
+  Robot::chassis->moveToPose(thirdTriballGoalTarget.x, thirdTriballGoalTarget.y,
+                             RIGHT, 3000, {.minSpeed = 127});
+
+  // wait until near goal to fully go into goal
+  waitUntil([] {
+    return (robotAngDist(RIGHT) < 10 &&
+            Robot::chassis->getPose().x > TILE_LENGTH) ||
+           !isMotionRunning();
+  });
+  Robot::chassis->cancelMotion();
+
+  // ram into goal
+  Robot::chassis->moveToPoint(1000000, 0, 1000, {.minSpeed = 127});
+  Robot::Actions::outtake();
+  pros::delay(500);
+  // wait until bot hits the goal
+  waitUntil(
+      [] {
+        static float maxVel = 0;
+        static float lastFeetPerSec = 0;
+        static lemlib::Pose lastPose = Robot::chassis->getPose();
+        const float dist = lastPose.distance(Robot::chassis->getPose());
+        float rawInchesPerSec = dist * 100;
+        float smoothFeetPerSec =
+            lemlib::ema(lastFeetPerSec, rawInchesPerSec, 0.7);
+
+        const bool out = smoothFeetPerSec < maxVel || !isMotionRunning();
+        printf("smooth: %4.4f\n", smoothFeetPerSec);
+        printf("raw: %4.4f\n", rawInchesPerSec);
+        printf("max: %4.4f\n", maxVel);
+
+        maxVel = std::max(maxVel, smoothFeetPerSec);
+        lastFeetPerSec = smoothFeetPerSec;
+        return out;
+      },
+      50, INT_MAX, true);
+  Robot::chassis->cancelMotion();
+
+  // get out of the goal
+  tank(-127, -127, 400);
+  Robot::Actions::stopIntake();
   stop();
 
-  return;
+  // intake alliance ball
+  Robot::chassis->moveToPoint(TILE_LENGTH * 2 - 2, -TILE_LENGTH * 2 - 5, 2000,
+                              {.minSpeed = 127});
+
+  // wait until triball is intook
+  waitUntil([] { return isTriballInIntake() || !isMotionRunning(); }, 50);
+  Robot::chassis->cancelMotion();
+
+  // put triball into goal
+  Robot::chassis->moveToPose(TILE_LENGTH * 2.6, -TILE_LENGTH, UP, 2000);
+
+  // wait a little bit before ramming into goal
+  waitUntil([] {
+    return (std::abs(Robot::chassis->getPose().x - TILE_LENGTH * 2.6) < 3 &&
+            robotAngDist(UP) < 10) &&
+           !isMotionRunning();
+  });
+  Robot::Actions::outtake();
+  Robot::chassis->cancelMotion();
+  // ram into goal
+  Robot::chassis->moveToPoint(0, 1000000, 1000, {.minSpeed = 127});
+  waitUntil(
+      [] {
+        static float maxVel = 0;
+        static float lastFeetPerSec = 0;
+        static lemlib::Pose lastPose = Robot::chassis->getPose();
+        const float dist = lastPose.distance(Robot::chassis->getPose());
+        float rawInchesPerSec = dist * 100;
+        float smoothFeetPerSec =
+            lemlib::ema(lastFeetPerSec, rawInchesPerSec, 0.7);
+
+        const bool out = smoothFeetPerSec < maxVel || !isMotionRunning();
+        printf("smooth: %4.4f\n", smoothFeetPerSec);
+        printf("raw: %4.4f\n", rawInchesPerSec);
+        printf("max: %4.4f\n", maxVel);
+
+        maxVel = std::max(maxVel, smoothFeetPerSec);
+        lastFeetPerSec = smoothFeetPerSec;
+        return out;
+      },
+      50, INT_MAX, true);
+  // back out of goal and turn
+  tank(-127, -64, 0, 0);
+  // wait until out of goal
+  waitUntil([] { return Robot::chassis->getPose().y < TILE_LENGTH * 1; });
+
+  // go to elevation bar
+  lemlib::Pose middleTargetToElevationPole {TILE_LENGTH * 1.5,
+                                            -TILE_LENGTH * 1.5};
+  Robot::chassis->moveToPoint(middleTargetToElevationPole.x,
+                              middleTargetToElevationPole.y, 2000,
+                              {.forwards = false, .minSpeed = 127});
+  waitUntilDistToPose(middleTargetToElevationPole, 3, 0, true);
+
+  Robot::chassis->moveToPose(TILE_RADIUS - 4, -TILE_LENGTH * 1.5 + 6, UP + 45, 2000,
+                             {.forwards = false});
+
+  // wait until fully out of the goal to stop intake
+  Robot::chassis->waitUntil(5);
+  Robot::Actions::stopIntake();
+  Robot::chassis->waitUntilDone();
+
+  // touch bar
+  Robot::Actions::expandBackWing();
+  tank(43, -32, 500, 0);
+  tank(0, -32, 0, 0);
+
+  // // get triball under elevation bar
+  // // position into elevation bar lane
+  // Robot::chassis->moveToPose(TILE_LENGTH, -TILE_LENGTH * 2.5, LEFT, 3000,
+  //                            {.minSpeed = 127});
+
+  // // once in the lane, go towards the triball
+  // waitUntil([] { return robotAngDist(RIGHT) < 20 || !isMotionRunning(); });
+  // Robot::chassis->cancelMotion();
+
+  // // intake triball
+  // Robot::Actions::intake();
+  // Robot::chassis->moveToPoint(0, MIN_Y + TILE_RADIUS, 1000, {.minSpeed =
+  // 127}); pros::delay(200);
+
+  // // wait until triball in intake
+  // waitUntil([] { return isTriballInIntake() || !isMotionRunning(); });
+  // Robot::chassis->cancelMotion();
+
+  // // get away from other side of the field
+  // tank(-127, -127, 300);
+
+  // // get out of the elevation bar lane
+  // Robot::chassis->moveToPoint(TILE_LENGTH * 1.5, MIN_Y + TILE_RADIUS, 3000,
+  //                             {.forwards = false, .minSpeed = 127});
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // Everything below is old code that is not used in the current auton
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  return;
 
   // Robot::chassis->setPose(
   //     {0 + TILE_LENGTH * 2 -8, -TILE_LENGTH * 2 - 5.42, UP},
