@@ -72,8 +72,8 @@ void CatapultStateMachine::update() {
   const bool cataDisconnected = motors->set_reversed(true) == PROS_ERR;
   if (cataDisconnected) {
     if (!prevCataDisconnected) {
-      Robot::control.print(0, 0, "!cata disc");
-      printf("cata disc\n");
+      // Robot::control.print(0, 0, "!cata disc");
+      // printf("cata disc\n");
     }
   } else if (prevCataDisconnected) {
     Robot::control.clear_line(0);
@@ -82,11 +82,11 @@ void CatapultStateMachine::update() {
   prevCataDisconnected = cataDisconnected;
   if (this->matchloading &&
       (this->timer.isDone() || this->triballsLeftToBeFired == 0)) {
-    printf("stop matchloading\n");
-    printf("timer: %i\n", this->timer.isDone());
-    printf("timerLeft: %i\n", this->timer.getTimeLeft());
-    printf("timerSet: %i\n", this->timer.getTimeSet());
-    printf("triballs: %i\n", this->triballsLeftToBeFired);
+    // printf("stop matchloading\n");
+    // printf("timer: %i\n", this->timer.isDone());
+    // printf("timerLeft: %i\n", this->timer.getTimeLeft());
+    // printf("timerSet: %i\n", this->timer.getTimeSet());
+    // printf("triballs: %i\n", this->triballsLeftToBeFired);
     this->matchloading = false;
   }
   const STATE startState = this->state;
@@ -96,11 +96,11 @@ void CatapultStateMachine::update() {
       startReadying = true;
       // if (this->isCataNotLoadable()) this->state = RETRACTING;
       if (this->matchloading || this->isElevationBarSensed()) {
-        printf("switch to firing\n");
+        // printf("switch to firing\n");
         this->state = FIRING;
         if (hasFired) timeWasted += pros::millis() - start;
-        printf("triballs fired: %i\n", this->triballsFired);
-        printf("time wasted: %i\n", timeWasted);
+        // printf("triballs fired: %i\n", this->triballsFired);
+        // printf("time wasted: %i\n", timeWasted);
       }
       break;
     case FIRING:
@@ -108,7 +108,7 @@ void CatapultStateMachine::update() {
       startReadying = false;
       this->retractCataMotor();
       if (this->isCataNotLoadable()) {
-        printf("switch to retracting\n");
+        // printf("switch to retracting\n");
         this->state = RETRACTING;
         this->indicateTriballFired();
       }
@@ -117,7 +117,7 @@ void CatapultStateMachine::update() {
       this->retractCataMotor();
       if (this->isCataLoadable()) {
         {
-          printf("switch to ready\n");
+          // printf("switch to ready\n");
           this->stopCataMotor();
           this->state = READY;
         }
@@ -188,7 +188,7 @@ void CatapultStateMachine::update() {
     // if zero curent is currently being detected and has been detected for the
     // last 50ms, report that the cata is not moving
     if (startZeroCurrent != 0 && pros::millis() - startZeroCurrent > 50) {
-      printf("cata disconnected, time:%i\n", pros::millis() - startZeroCurrent);
+      // printf("cata disconnected, time:%i\n", pros::millis() - startZeroCurrent);
       notMoving = true;
     } else notMoving = false;
 
