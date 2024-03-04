@@ -312,15 +312,15 @@ void opcontrol() {
   // }
   // printf("time: %i\n", pros::millis() - start);
 
-  if (pros::competition::is_connected() && !autonHasRun)
-    Robot::Actions::prepareRobot();
-
   bool skills = false;
-  if (!std::strcmp(auton::AutonSelector::getCurrentAuton(), (char*)("skills")))
-    skills = true;
+  if (pros::competition::is_connected() && !autonHasRun) {
+    if (!std::strcmp(auton::AutonSelector::getCurrentAuton(),
+                     (char*)("skills")))
+      skills = true;
+    else Robot::Actions::prepareRobot();
+  }
 
   if (skills) {
-    Robot::chassis->setPose(fieldDimensions::leftStartingPose, false);
     auton::actions::prepareForMatchloading();
     Robot::Motors::leftDrive.set_brake_modes(pros::E_MOTOR_BRAKE_COAST);
     Robot::Motors::rightDrive.set_brake_modes(pros::E_MOTOR_BRAKE_COAST);

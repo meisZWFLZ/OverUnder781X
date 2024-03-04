@@ -18,4 +18,5 @@ const inline lemlib::Pose leftStartingPose {
     MIN_Y + Robot::Dimensions::drivetrainLength / 2};
 const inline lemlib::Pose rightStartingPose = {-leftStartingPose.x,
                                                leftStartingPose.y};
+const inline lemlib::Pose skillsStartingPose = {-48.1757, -55.4117, -202.2711};
 } // namespace fieldDimensions
