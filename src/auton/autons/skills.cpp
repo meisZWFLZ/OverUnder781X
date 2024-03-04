@@ -26,7 +26,7 @@ void delayForMatchLoading(int delay) {
 
 void runSkills() {
   lemlib::Timer timer {60000};
-  prepareForMatchloading(false);
+  matchload(false);
 
   // set slew to 5 for skills
   Robot::chassis->lateralSettings.slew = 5;

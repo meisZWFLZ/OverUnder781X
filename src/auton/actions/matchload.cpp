@@ -56,7 +56,7 @@ void betterWaitUntilDone() {
   while (betterIsMotionRunning()) pros::delay(10);
 }
 
-void auton::actions::prepareForMatchloading(bool wait) {
+void auton::actions::matchload(bool wait) {
   // weird angled set (see discord)
   Robot::chassis->setPose(fieldDimensions::skillsStartingPose, false);
 

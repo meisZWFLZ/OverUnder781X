@@ -321,7 +321,7 @@ void opcontrol() {
   }
 
   if (skills) {
-    auton::actions::prepareForMatchloading();
+    auton::actions::matchload();
     Robot::Motors::leftDrive.set_brake_modes(pros::E_MOTOR_BRAKE_COAST);
     Robot::Motors::rightDrive.set_brake_modes(pros::E_MOTOR_BRAKE_COAST);
   }

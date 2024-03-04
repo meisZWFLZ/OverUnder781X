@@ -20,7 +20,7 @@ void scoreAllianceTriball();
 void touchElevationBar();
 void shootTriballIntoOffensiveZone();
 void intakeTriball(lemlib::Pose pose);
-void prepareForMatchloading(bool wait = true);
+void matchload(bool wait = true);
 } // namespace actions
 
 namespace utils {
