@@ -39,7 +39,7 @@ class Robot {
         static pros::Imu imuA;
         static pros::Imu imuB;
         static pros::Imu imuC;
-        static pros::ADILineSensor cataTriball;
+        static pros::ADILineSensor cataElevationBar;
         static pros::Rotation cata;
     };
 

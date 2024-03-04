@@ -15,7 +15,7 @@ pros::Task* Robot::Subsystems::task = nullptr;
 
 void Robot::Subsystems::initialize() {
   Robot::Subsystems::catapult = new CatapultStateMachine(
-      &Robot::Motors::catapult, &Robot::Sensors::cataTriball,
+      &Robot::Motors::catapult, &Robot::Sensors::cataElevationBar,
       &Robot::Sensors::cata);
   // we no longer have a motorized lift, but just to fool driver code
   Robot::Subsystems::lift = new LiftArmStateMachine(

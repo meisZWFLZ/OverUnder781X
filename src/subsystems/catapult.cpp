@@ -7,9 +7,9 @@
 #include <cstdio>
 
 CatapultStateMachine::CatapultStateMachine(pros::Motor_Group* cataMotors,
-                                           pros::ADILineSensor* triballSensor,
+                                           pros::ADILineSensor* elevationBarSensor,
                                            pros::Rotation* cataRotation)
-  : motors(cataMotors), triballSensor(triballSensor), rotation(cataRotation) {}
+  : motors(cataMotors), elevationBarSensor(elevationBarSensor), rotation(cataRotation) {}
 
 bool CatapultStateMachine::fire() {
   if (this->state == EMERGENCY_STOPPED) return false;
@@ -47,8 +47,9 @@ void CatapultStateMachine::emergencyStop() {
 
 void CatapultStateMachine::cancelEmergencyStop() { this->state = READY; }
 
-bool CatapultStateMachine::isTriballLoaded() const {
-  return this->triballSensor->get_value() < 1400;
+bool CatapultStateMachine::isElevationBarSensed() const {
+  const bool disconnected = this->elevationBarSensor->get_value() < 100;
+  return !disconnected && this->elevationBarSensor->get_value() < 1000;
 }
 
 bool CatapultStateMachine::isCataLoadable() const {
@@ -94,7 +95,7 @@ void CatapultStateMachine::update() {
       if (hasFired && !startReadying) start = pros::millis();
       startReadying = true;
       // if (this->isCataNotLoadable()) this->state = RETRACTING;
-      if (this->matchloading && this->isTriballLoaded()) {
+      if (this->matchloading || this->isElevationBarSensed()) {
         printf("switch to firing\n");
         this->state = FIRING;
         if (hasFired) timeWasted += pros::millis() - start;

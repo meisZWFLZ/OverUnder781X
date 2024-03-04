@@ -58,7 +58,7 @@ void DriverFeedback::initializeDevices() {
   addDevice("VPod", new Device(&Robot::Sensors::vert));
   addDevice("HPod", new Device(&Robot::Sensors::hori));
   addDevice("CRot", new Device(&Robot::Sensors::cata));
-  addDevice("CLin", new Device(&Robot::Sensors::cataTriball));
+  addDevice("CLin", new Device(&Robot::Sensors::cataElevationBar));
   // addDevice("IMU", new Device(&Robot::Sensors::imu));
 }
 

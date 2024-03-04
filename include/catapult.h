@@ -84,7 +84,7 @@ class CatapultStateMachine {
     void retractCataMotor();
     void stopCataMotor();
     
-    bool isTriballLoaded() const;
+    bool isElevationBarSensed() const;
 
     bool constantFiring = false;
 
@@ -94,7 +94,7 @@ class CatapultStateMachine {
     int triballsFired = 0;
 
     pros::Motor_Group* motors;
-    pros::ADILineSensor* triballSensor;
+    pros::ADILineSensor* elevationBarSensor;
     pros::Rotation* rotation;
 
     STATE state = READY;
