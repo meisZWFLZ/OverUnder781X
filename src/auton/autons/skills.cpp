@@ -31,8 +31,8 @@ void runSkills() {
   
   // set slew to 5 for skills
   Robot::chassis->lateralSettings.slew = 5;
-  
-   // intake matchload for jumping over bar
+
+  // intake matchload for jumping over bar
   Robot::Actions::intake();
 
   // go down elevation alley
@@ -73,8 +73,9 @@ void runSkills() {
   // wait until facing towards goal
   waitUntil([] { return robotAngDist(UP) < 15 || !isMotionRunning(); });
   // give a bit of time to ram
-  pros::delay(750);
   Robot::chassis->cancelMotion();
+  Robot::chassis->moveToPoint(TILE_LENGTH * 2.5, 0, 700, {.minSpeed = 127});
+  Robot::chassis->waitUntilDone();
   printf("ram!!!\n");
 
   // remove triball from intake
@@ -82,21 +83,31 @@ void runSkills() {
   // second ram
   // back out of goal
   tank(-127, -127, 300, 3);
+  tank(127,127,150,3);
   // ram into goal
-  Robot::chassis->moveToPoint(0, 100000000, 700, {.minSpeed = 127});
+  Robot::chassis->moveToPoint(0, 100000000, 600, {.minSpeed = 127});
   Robot::chassis->waitUntilDone();
+  // adjust y a bit: y = y + 4
+  Robot::chassis->setPose(Robot::chassis->getPose().x,
+                          Robot::chassis->getPose().y + 4,
+                          Robot::chassis->getPose().theta);
   // back out of goal
   tank(-127, -127, 400, 0);
 
   // go around center triballs
   lemlib::Pose aroundFrontTriballsTarget {TILE_LENGTH * .75,
-                                          -TILE_LENGTH * 1.5};
+                                          -TILE_LENGTH * 1.35};
   Robot::chassis->moveToPoint(aroundFrontTriballsTarget.x,
                               aroundFrontTriballsTarget.y, 5000,
                               {.minSpeed = 127});
   // wait until having gone around center triballs
-  waitUntilDistToPose(aroundFrontTriballsTarget, 9, 100, true);
+  waitUntilDistToPose(aroundFrontTriballsTarget, 12, 100, true);
   Robot::chassis->cancelMotion();
+
+  // prevent sudden jolt
+  tank(96,96,0,0);
+  tank(64,-64,600, 5);
+
   // face towards center triballs
   Robot::chassis->moveToPose(TILE_LENGTH * 1.75, -TILE_LENGTH * .75, RIGHT,
                              2000, {.minSpeed = 64});
@@ -108,6 +119,10 @@ void runSkills() {
   Robot::Actions::expandBothWings();
   Robot::chassis->moveToPoint(MAX_X, -TILE_RADIUS, 800, {.minSpeed = 127});
   Robot::chassis->waitUntilDone();
+
+  //adjust odom
+  Robot::chassis->setPose(Robot::chassis->getPose() + lemlib::Pose {-4, 2},
+                          false);
 
   // get out of goal
   Robot::Actions::retractBothWings();
@@ -146,7 +161,8 @@ void runSkills() {
   Robot::chassis->cancelMotion();
 
   // sweep triballs in barrier corner
-  lemlib::Pose barrierCornerSweepTarget {TILE_LENGTH * 1.6, TILE_LENGTH * 1.5 - 2};
+  lemlib::Pose barrierCornerSweepTarget {TILE_LENGTH * 1.6,
+                                         TILE_LENGTH * 1.5 - 2};
   Robot::chassis->moveToPose(barrierCornerSweepTarget.x,
                              barrierCornerSweepTarget.y, RIGHT, 2000,
                              {.minSpeed = 64});
@@ -155,7 +171,7 @@ void runSkills() {
   Robot::chassis->cancelMotion();
 
   // sweep triballs next to matchload zone
-  lemlib::Pose matchloadZoneSweepTarget {TILE_LENGTH * 2, TILE_LENGTH * 2.4};
+  lemlib::Pose matchloadZoneSweepTarget {TILE_LENGTH * 1.5, TILE_LENGTH * 2.7};
   Robot::chassis->moveToPoint(matchloadZoneSweepTarget.x,
                               matchloadZoneSweepTarget.y, 1500,
                               {.minSpeed = 64});
@@ -164,7 +180,7 @@ void runSkills() {
   Robot::chassis->cancelMotion();
 
   // ram into left side of goal
-  Robot::chassis->moveToPose(TILE_LENGTH * 2.5, TILE_LENGTH, DOWN, 2200,
+  Robot::chassis->moveToPose(TILE_LENGTH * 2.6, TILE_LENGTH, DOWN, 2200,
                              {.minSpeed = 64});
   Robot::chassis->waitUntilDone();
 
@@ -178,7 +194,7 @@ void runSkills() {
   tank(-127, -64, 400, 0);
 
   // elevation
-  Robot::chassis->moveToPose(0, TILE_LENGTH * 2.5, LEFT, 5000);
+  Robot::chassis->moveToPose(-TILE_LENGTH, TILE_LENGTH * 2.5, LEFT, 5000);
   Robot::chassis->waitUntil(12);
   Robot::Subsystems::lift->extend();
 
