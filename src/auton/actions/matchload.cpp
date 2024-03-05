@@ -56,7 +56,7 @@ void betterWaitUntilDone() {
   while (betterIsMotionRunning()) pros::delay(10);
 }
 
-void auton::actions::matchload(bool wait) {
+void auton::actions::matchload(int triballs, int until) {
   // weird angled set (see discord)
   Robot::chassis->setPose(fieldDimensions::skillsStartingPose, false);
 
@@ -110,7 +110,7 @@ void auton::actions::matchload(bool wait) {
   printf("staging done\n");
   Robot::chassis->cancelMotion();
 
-  Robot::Subsystems::catapult->matchload(35000, 46);
+  Robot::Subsystems::catapult->matchload(until - pros::millis(), triballs);
   // then move to matchload bar
   Robot::chassis->moveToPose(matchloadTarget.x, matchloadTarget.y,
                              matchloadTarget.theta, 750, {.forwards = false});

@@ -26,16 +26,14 @@ void delayForMatchLoading(int delay) {
 
 void runSkills() {
   lemlib::Timer timer {60000};
-  matchload(false);
-
+  matchload(2, INT_MAX);
+  // matchload();
+  
   // set slew to 5 for skills
   Robot::chassis->lateralSettings.slew = 5;
   
    // intake matchload for jumping over bar
   Robot::Actions::intake();
-  // temporary for testing
-  Robot::Subsystems::catapult->matchload(3000, 4);
-  Robot::Subsystems::catapult->waitUntilDoneMatchloading();
 
   // go down elevation alley
   // make sure we don't hit short barrier

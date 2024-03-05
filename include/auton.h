@@ -20,7 +20,12 @@ void scoreAllianceTriball();
 void touchElevationBar();
 void shootTriballIntoOffensiveZone();
 void intakeTriball(lemlib::Pose pose);
-void matchload(bool wait = true);
+/**
+ * @brief Matchloads triballs
+ * @param triballs number of triballs to shoot
+ * @param until timestamp to run until
+ */
+void matchload(int triballs= 46, int until = pros::millis() + 35000);
 } // namespace actions
 
 namespace utils {
