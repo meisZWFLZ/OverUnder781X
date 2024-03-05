@@ -69,7 +69,7 @@ void auton::actions::matchload(int triballs, int until) {
 
   // POSES
   // where the robot should be shooting to
-  const lemlib::Pose shootingTarget {MAX_X - TILE_LENGTH, -6};
+  const lemlib::Pose shootingTarget {MAX_X - TILE_LENGTH, 0};
 
   // where the robot should go to to matchload
   lemlib::Pose matchloadTarget = {MIN_X + TILE_LENGTH - 5.5,
@@ -128,14 +128,34 @@ void auton::actions::matchload(int triballs, int until) {
   });
 
   if (checkDriverExit()) return;
-  // adjust for any momentum
-  tank(12, -16, 100, 0);
-  // keep robot angled
-  
-  tank(0, -16, 0, 0);
   printf("matchload touch done\n");
   // switch to IMU further from cata
   Robot::Actions::switchToMatchloadingIMU();
+
+  // run turn pid until done matchloading or driver exits
+  lemlib::PID turnPID {Robot::Tunables::angularController.kP,
+                       Robot::Tunables::angularController.kI,
+                       Robot::Tunables::angularController.kD};
+  // prevent robot from turning for too fast
+  const float maxSpeed = 32;
+  while (Robot::Subsystems::catapult->getIsMatchloading() &&
+         !checkDriverExit()) {
+    const float targetTheta =
+        trigAngleToHeading(Robot::chassis->getPose().angle(shootingTarget));
+    const float error =
+        lemlib::angleError(targetTheta, Robot::chassis->getPose().theta, false);
+    float output = turnPID.update(error);
+    printf("target: %f\n", targetTheta);
+    printf("error: %f\n", error);
+    printf("output: %f\n", output);
+
+    // prevent the robot from turning too fast
+    output = std::clamp(output, -maxSpeed, maxSpeed);
+
+    tank(output, /*ensure that we are touching the matchload bar*/ -16, 0, 0);
+    pros::delay(10);
+  };
+  stop();
   printf("exit\n");
   // switch to IMU further from cata
   Robot::Actions::switchToNormalIMU();
