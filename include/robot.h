@@ -89,6 +89,9 @@ class Robot {
         static void toggleBackWing();
 
         static void prepareRobot();
+
+        static void switchToMatchloadingIMU();
+        static void switchToNormalIMU();
     };
 
     class Tunables {

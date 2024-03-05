@@ -134,14 +134,9 @@ void auton::actions::matchload(int triballs, int until) {
   
   tank(0, -16, 0, 0);
   printf("matchload touch done\n");
-
-  // wait until done matchloading or driver exits
-  if (wait)
-    waitUntil([] {
-      return !Robot::Subsystems::catapult->getIsMatchloading() ||
-             // takes the max of the absolute value of the left and right
-             // joystick and compares it to the input threshold
-             checkDriverExit();
-    });
+  // switch to IMU further from cata
+  Robot::Actions::switchToMatchloadingIMU();
   printf("exit\n");
+  // switch to IMU further from cata
+  Robot::Actions::switchToNormalIMU();
 }

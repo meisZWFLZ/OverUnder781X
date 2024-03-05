@@ -14,6 +14,14 @@ class HeadingSource {
     virtual double getHeading() const = 0;
     virtual bool calibrate() = 0;
     virtual bool isDoneCalibrating() const = 0;
+
+    void disable() { _isEnabled = false; }
+
+    void enable() { _isEnabled = true; }
+
+    bool isEnabled() { return _isEnabled; }
+  private:
+    bool _isEnabled = true;
 };
 
 class IMUHeadingSource : public HeadingSource {
@@ -130,8 +138,13 @@ class MockIMU : public pros::IMU {
       lastCall = pros::millis();
       for (int i = 0; i < sources.size(); i++) {
         char buffer[10];
-        const float heading = sources[i]->getHeading();
-        if (heading != NAN) {
+        float heading = sources[i]->getHeading();
+
+        if (!sources[i]->isEnabled() && !std::isnan(heading)) {
+          newHeadings.push_back(heading);
+          sprintf(buffer, "DIS");
+
+        } else if (!std::isnan(heading)) {
           newHeadings.push_back(heading);
           deltaHeadings.push_back(heading - prevHeadings[i]);
           sprintf(buffer, "%0.4f", heading - prevHeadings[i]);
@@ -176,6 +189,7 @@ class MockIMU : public pros::IMU {
                                      deltaHeadings[smallestDiffIndex + 1]) /
                                         2;
       }
+      if (std::isnan(out)) out = prevReturnedHeading;
       printSS << out << "\n";
       // printf("%s", printSS.str().c_str());
 
@@ -223,9 +237,25 @@ class MockIMU : public pros::IMU {
         return true;
       }
     }
-  private:
+
     std::vector<HeadingSource*> sources;
 };
+
+IMUHeadingSource* imuB = nullptr;
+IMUHeadingSource* imuA = nullptr;
+IMUHeadingSource* imuC = nullptr;
+
+void Robot::Actions::switchToMatchloadingIMU() {
+  imuA->disable();
+  imuB->enable();
+  imuC->disable();
+}
+
+void Robot::Actions::switchToNormalIMU() {
+  imuA->enable();
+  imuB->disable();
+  imuC->disable();
+}
 
 void Robot::initializeOdometry() {
   lemlib::Drivetrain drivetrain {
@@ -256,23 +286,21 @@ void Robot::initializeOdometry() {
   lemlib::TrackingWheel* rightDriveTracker = new lemlib::TrackingWheel(
       &Robot::Motors::rightDrive, Robot::Dimensions::driveWheelDiameter,
       Robot::Dimensions::trackWidth / 2, Robot::Dimensions::driveWheelRpm);
+  imuA = new IMUHeadingSource(&Robot::Sensors::imuA);
+  imuB = new IMUHeadingSource(&Robot::Sensors::imuB);
+  imuC = new IMUHeadingSource(&Robot::Sensors::imuC);
 
   auto trackingWheelHeading =
       new TrackingWheelHeadingSource({leftDriveTracker, rightDriveTracker});
-  // auto goofyIMU = new MockIMU(
-  //     {new IMUHeadingSource(&Robot::Sensors::imuA,
-  //     Robot::Tunables::imuAGain),
-  //      new IMUHeadingSource(&Robot::Sensors::imuB,
-  //      Robot::Tunables::imuBGain), new
-  //      IMUHeadingSource(&Robot::Sensors::imuC, Robot::Tunables::imuCGain)/* ,
-  //      trackingWheelHeading */});
+  auto goofyIMU = new MockIMU({imuA, imuB, imuC});
 
   Robot::odomSensors =
       new lemlib::OdomSensors {leftVert, rightVert /* nullptr */, hori, nullptr,
-                               /* goofyIMU */ &Robot::Sensors::imuA};
+                               goofyIMU /* &Robot::Sensors::imuA */};
 
   Robot::chassis =
       new lemlib::Chassis {drivetrain, Robot::Tunables::lateralController,
                            Robot::Tunables::angularController, *odomSensors};
-  // goofyIMU->calibrate();
+  goofyIMU->calibrate();
+  Robot::Actions::switchToNormalIMU();
 }
