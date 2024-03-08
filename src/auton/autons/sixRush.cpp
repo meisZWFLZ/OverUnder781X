@@ -102,7 +102,7 @@ void runSixRush() {
   Robot::chassis->lateralSettings.slew = normalSlew;
 
   // intake ball under elevation bar
-  Robot::chassis->moveToPoint(7, -TILE_LENGTH * 2.5, 3000, {.minSpeed = 70});
+  Robot::chassis->moveToPoint(0, -TILE_LENGTH * 2.5, 3000);
   // wait a bit before intaking
   Robot::chassis->waitUntil(12);
   Robot::Actions::intake();
@@ -123,6 +123,21 @@ void runSixRush() {
                               {.forwards = false, .minSpeed = 127});
   Robot::chassis->waitUntilDone();
   Robot::Actions::stopIntake();
+
+  Robot::chassis->moveToPose(TILE_LENGTH*2.5, -TILE_LENGTH, UP, 3000, {.minSpeed=64});
+  Robot::chassis->waitUntil(24);
+  Robot::Actions::outtake();
+  Robot::chassis->waitUntilDone();
+
+  tank(-127,127,300,0);
+  Robot::chassis->moveToPoint(0, 1000000, 700, {.minSpeed=127});
+  tank(-127,-127,300,0);
+
+  Robot::chassis->moveToPose(TILE_RADIUS, -TILE_LENGTH*2 + Robot::Dimensions::drivetrainWidth/2 + 2, RIGHT, 3000, {.forwards=false});
+  Robot::chassis->waitUntilDone();
+  Robot::Actions::expandBackWing();
+  tank(0,-32,1000, 0);
+  return;
 // turn around to face matchload bar
 Robot::chassis->turnTo(1000000, 200000, 1000);
 //drive forward into goal
