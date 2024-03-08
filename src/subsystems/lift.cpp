@@ -2,10 +2,6 @@
 #include "lemlib/util.hpp"
 #include <numeric>
 
-double avg(const std::vector<double> nums) {
-  return std::reduce(nums.begin(), nums.end(), 0) / double(nums.size());
-}
-
 LiftArmStateMachine::LiftArmStateMachine(pros::ADIDigitalOut* retract,
                                          pros::ADIDigitalOut* extend)
   : retractPiston(retract), extendPiston(extend) {
@@ -15,7 +11,8 @@ LiftArmStateMachine::LiftArmStateMachine(pros::ADIDigitalOut* retract,
 
 void LiftArmStateMachine::update() {
   switch (this->state) {
-    case UNPOWERED:
+    // when in the idle
+    case IDLE:
       this->retractPiston->set_value(false);
       this->extendPiston->set_value(false);
       break;
@@ -32,7 +29,7 @@ void LiftArmStateMachine::update() {
 
 void LiftArmStateMachine::extend() { this->state = EXTENDING; }
 void LiftArmStateMachine::retract() { this->state = RETRACTING; }
-void LiftArmStateMachine::release() { this->state = UNPOWERED; }
+void LiftArmStateMachine::release() { this->state = IDLE; }
 
 LiftArmStateMachine::STATE LiftArmStateMachine::getState() const {
   return this->state;

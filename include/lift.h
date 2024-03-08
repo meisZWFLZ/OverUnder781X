@@ -17,7 +17,7 @@ struct PIDControllerSettings {
 
 class LiftArmStateMachine {
   public:
-    enum STATE { UNPOWERED, RETRACTING, EXTENDING };
+    enum STATE { IDLE, RETRACTING, EXTENDING };
 
     LiftArmStateMachine(pros::ADIDigitalOut* retract,
                         pros::ADIDigitalOut* extend);
@@ -31,5 +31,5 @@ class LiftArmStateMachine {
   private:
     pros::ADIDigitalOut* retractPiston;
     pros::ADIDigitalOut* extendPiston;
-    STATE state = UNPOWERED;
+    STATE state = IDLE;
 };
