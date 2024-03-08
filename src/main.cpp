@@ -417,7 +417,7 @@ void opcontrol() {
         case LiftArmStateMachine::STATE::RETRACTING:
           Robot::Subsystems::lift->release();
           break;
-        case LiftArmStateMachine::STATE::UNPOWERED:
+        case LiftArmStateMachine::STATE::IDLE:
           Robot::Subsystems::lift->extend();
           printf("extend\n");
           break;
@@ -427,7 +427,7 @@ void opcontrol() {
     if (!down && prevDown) {
       switch (Robot::Subsystems::lift->getState()) {
         case LiftArmStateMachine::STATE::RETRACTING: break;
-        case LiftArmStateMachine::STATE::UNPOWERED:
+        case LiftArmStateMachine::STATE::IDLE:
           Robot::Subsystems::lift->retract();
           break;
         case LiftArmStateMachine::STATE::EXTENDING:
