@@ -8,16 +8,39 @@
 using namespace fieldDimensions;
 using namespace auton::utils;
 
+/**
+ * @brief 
+ * Lemlib uses heading, which is like a compass, whereas trig functions like sine and cosine use trig angles. 
+ * Therefore we must convert the trig angle to a heading. 
+ * 
+ * @param angle trig angle 
+ * @return heading angle 
+ */
 float trigAngleToHeading(float angle) { return -(angle * 180 / M_PI) + 90; }
 
+/**
+ * @brief whether the driver has pressed any buttons or moved the joysticks
+ */
 bool exitForDriver = false;
+/**
+ * @brief how much the driver must move the joysticks for the macro to exit
+ */
 const int inputThreshold = 24;
 
+/**
+ * @brief exits the macro because the driver has exited and ensure motion stops
+ */
 void exitBecauseDriver() {
   exitForDriver = true;
   Robot::chassis->cancelMotion();
 }
 
+/**
+ * @brief checks that the driver has not exited the macro by checking all the controller inputs
+ * 
+ * @return true if the driver has exited the macro
+ * @return false if the driver has not exited the macro
+ */
 bool checkDriverExit() {
   if (exitForDriver) {
     exitBecauseDriver();
@@ -49,9 +72,15 @@ bool checkDriverExit() {
   }
   return false;
 }
-
+/**
+ * @returns whether a motion currently is running and the driver has not exited the macro 
+ */
 bool betterIsMotionRunning() { return isMotionRunning() && !checkDriverExit(); }
 
+
+/**
+ * @brief waits until driver exits or motion is done
+ */
 void betterWaitUntilDone() {
   while (betterIsMotionRunning()) pros::delay(10);
 }
@@ -69,7 +98,7 @@ void auton::actions::matchload(int triballs, int until) {
 
   // POSES
   // where the robot should be shooting to
-  const lemlib::Pose shootingTarget {MAX_X - TILE_LENGTH, -2};
+  const lemlib::Pose shootingTarget {MAX_X - TILE_LENGTH, -4};
 
   // where the robot should go to to matchload
   lemlib::Pose matchloadTarget = {MIN_X + TILE_LENGTH - 5.5,
@@ -137,7 +166,7 @@ void auton::actions::matchload(int triballs, int until) {
                        Robot::Tunables::angularController.kI,
                        Robot::Tunables::angularController.kD};
   // prevent robot from turning for too fast
-  const float maxSpeed = 32;
+  const float maxSpeed = 48;
   while (Robot::Subsystems::catapult->getIsMatchloading() &&
          !checkDriverExit()) {
     const float targetTheta =
