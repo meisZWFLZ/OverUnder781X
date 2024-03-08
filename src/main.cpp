@@ -411,25 +411,31 @@ void opcontrol() {
     const bool down =
         Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN);
 
-    // on the falling edge of up & down, update the last press time
+    // if up is pressed
     if (!up && prevUp) {
       switch (Robot::Subsystems::lift->getState()) {
+        // if the current state is retracting, then stop retracting
         case LiftArmStateMachine::STATE::RETRACTING:
           Robot::Subsystems::lift->release();
           break;
+        // if the current state is idle, then extend the lift
         case LiftArmStateMachine::STATE::IDLE:
           Robot::Subsystems::lift->extend();
-          printf("extend\n");
           break;
+        // if the current state is extending the do nothing
         case LiftArmStateMachine::STATE::EXTENDING: break;
       }
     }
+    // if down is pressed
     if (!down && prevDown) {
       switch (Robot::Subsystems::lift->getState()) {
+        // if the current state is retracting, then do nothing
         case LiftArmStateMachine::STATE::RETRACTING: break;
+        // if the current state is idle, then retract the lift
         case LiftArmStateMachine::STATE::IDLE:
           Robot::Subsystems::lift->retract();
           break;
+        // if the current state is extending, then stop extending
         case LiftArmStateMachine::STATE::EXTENDING:
           Robot::Subsystems::lift->release();
           break;
