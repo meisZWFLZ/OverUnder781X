@@ -58,7 +58,71 @@ void runSixRush() {
       {0 - (-TILE_LENGTH * 2 + Robot::Dimensions::drivetrainWidth / 2 + 6),
        MIN_Y + TILE_LENGTH - Robot::Dimensions::drivetrainLength / 2, UP},
       false);
+  // quickly intake first triball
+  Robot::Actions::intake();
+  Robot::chassis->moveToPoint(TILE_LENGTH, 0, 2000, {.minSpeed = 127});
 
+  // wait until near triball to slow down
+  waitUntil([] {
+    return Robot::chassis->getPose().y > -TILE_LENGTH || !isMotionRunning();
+  });
+  // slow down to intake triball
+  Robot::chassis->moveToPoint(TILE_LENGTH, 0, 2000,
+                              {.maxSpeed = 64, .minSpeed = 32});
+  // give a bit of time for triball sensing to be accurate
+  pros::delay(300);
+  // wait until robot intakes triball or robot center passes neutral line
+  waitUntil(
+      [] {
+        return isTriballInIntake() || !isMotionRunning() ||
+               Robot::chassis->getPose().y > -3;
+      },
+      50);
+  Robot::chassis->cancelMotion();
+
+  const float normalSlew = Robot::chassis->lateralSettings.slew;
+  // get out of neutral zone
+  Robot::chassis->moveToPose(TILE_LENGTH, -TILE_LENGTH * 2.5, RIGHT, 3000,
+                             {.forwards = false, .minSpeed = 127});
+  Robot::chassis->lateralSettings.slew = 5;
+  // wait until facing right side of goal
+  waitUntil([] { return robotAngDist(RIGHT - 45) < 10 || !isMotionRunning(); });
+  // outtake triball
+  Robot::Actions::outtake();
+
+  // wait until past short bar
+  waitUntil([] {
+    return Robot::chassis->getPose().y <
+               -TILE_LENGTH * 2 - Robot::Dimensions::drivetrainLength / 2 - 1 ||
+           !isMotionRunning();
+  });
+  Robot::chassis->cancelMotion();
+  Robot::chassis->lateralSettings.slew = normalSlew;
+
+  // intake ball under elevation bar
+  Robot::chassis->moveToPoint(0, -TILE_LENGTH * 2.5, 3000, {.minSpeed = 127});
+  // wait a bit before intaking
+  Robot::chassis->waitUntil(12);
+  Robot::Actions::intake();
+  // give a bit of time for triball sensing to be accurate
+  pros::delay(300);
+  // wait until triball in intake or too close to other tiles (we do not want to
+  // risk a disqualification)
+  waitUntil(
+      [] {
+        return isTriballInIntake() || !isMotionRunning() ||
+               Robot::chassis->getPose().x <
+                   Robot::Dimensions::drivetrainLength / 2 + 1;
+      },
+      50);
+  Robot::chassis->cancelMotion();
+  // immediately back away from other offensive zone
+  Robot::chassis->moveToPoint(TILE_LENGTH, -TILE_LENGTH * 2.5, 3000,
+                              {.forwards = false, .minSpeed = 127});
+  Robot::chassis->waitUntilDone();
+  Robot::Actions::stopIntake();
+
+  return;
   // intake center triball next to barrier
   Robot::Actions::intake();
   lemlib::Pose firstMiddleBall {2, 1};
@@ -256,8 +320,8 @@ void runSixRush() {
                               {.forwards = false, .minSpeed = 127});
   waitUntilDistToPose(middleTargetToElevationPole, 3, 0, true);
 
-  Robot::chassis->moveToPose(TILE_RADIUS - 4, -TILE_LENGTH * 1.5 + 6, UP + 45, 2000,
-                             {.forwards = false});
+  Robot::chassis->moveToPose(TILE_RADIUS - 4, -TILE_LENGTH * 1.5 + 6, UP + 45,
+                             2000, {.forwards = false});
 
   // wait until fully out of the goal to stop intake
   Robot::chassis->waitUntil(5);
