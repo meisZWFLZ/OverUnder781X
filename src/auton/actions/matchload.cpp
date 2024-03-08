@@ -69,7 +69,7 @@ void auton::actions::matchload(int triballs, int until) {
 
   // POSES
   // where the robot should be shooting to
-  const lemlib::Pose shootingTarget {MAX_X - TILE_LENGTH, 0};
+  const lemlib::Pose shootingTarget {MAX_X - TILE_LENGTH, -2};
 
   // where the robot should go to to matchload
   lemlib::Pose matchloadTarget = {MIN_X + TILE_LENGTH - 5.5,
@@ -118,7 +118,7 @@ void auton::actions::matchload(int triballs, int until) {
   if (checkDriverExit()) return;
   printf("matchload boomerang touch done\n");
   // make sure the robot is touching the matchload bar
-  tank(-32, -32, 0, 0);
+  tank(-48, -48, 0, 0);
 
   const float startingTheta = Robot::chassis->getPose().theta;
 
