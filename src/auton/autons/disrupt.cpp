@@ -34,7 +34,7 @@ void runDisrupt() {
 
   // done disrupting
   // position the robot to clear matchload zone
-  Robot::chassis->moveToPoint(-TILE_LENGTH * 2 - 3, -TILE_LENGTH * 2 - 6, 3000,
+  Robot::chassis->moveToPoint(-TILE_LENGTH * 2 - 2, -TILE_LENGTH * 2 - 5, 3000,
                               {.forwards = false});
 
   // retract wings
@@ -72,7 +72,7 @@ void runDisrupt() {
 
   // touch horizontal elevation bar
   Robot::chassis->moveToPose(0 - Robot::Dimensions::drivetrainLength / 2 - 3.5,
-                             MIN_Y + TILE_RADIUS, RIGHT, 2000);
+                             MIN_Y + TILE_RADIUS, RIGHT, 2100);
 
   // if a triball enters the intake, outtake it
   while (pros::competition::is_autonomous()) {

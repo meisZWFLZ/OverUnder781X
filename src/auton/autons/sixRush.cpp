@@ -6,6 +6,7 @@
 #include "pros/rtos.hpp"
 #include "robot.h"
 #include "fieldDimensions.h"
+#include <chrono>
 #include <cmath>
 
 // ASSET(def_score_alliance_txt);
@@ -59,8 +60,9 @@ void runSixRush() {
        MIN_Y + TILE_LENGTH - Robot::Dimensions::drivetrainLength / 2, UP},
       false);
   // quickly intake first triball
+  Robot::chassis->lateralSettings.slew = 7;
   Robot::Actions::intake();
-  Robot::chassis->moveToPoint(TILE_LENGTH, 0, 2000, {.minSpeed = 127});
+  Robot::chassis->moveToPoint(TILE_LENGTH, 0, 1100);
 
   // wait until near triball to slow down
   waitUntil([] {
@@ -100,7 +102,7 @@ void runSixRush() {
   Robot::chassis->lateralSettings.slew = normalSlew;
 
   // intake ball under elevation bar
-  Robot::chassis->moveToPoint(0, -TILE_LENGTH * 2.5, 3000, {.minSpeed = 127});
+  Robot::chassis->moveToPoint(7, -TILE_LENGTH * 2.5, 3000, {.minSpeed = 70});
   // wait a bit before intaking
   Robot::chassis->waitUntil(12);
   Robot::Actions::intake();
@@ -121,6 +123,25 @@ void runSixRush() {
                               {.forwards = false, .minSpeed = 127});
   Robot::chassis->waitUntilDone();
   Robot::Actions::stopIntake();
+// turn around to face matchload bar
+Robot::chassis->turnTo(1000000, 200000, 1000);
+//drive forward into goal
+Robot::chassis->moveToPoint(52, -50, 3000,
+                              {.forwards = true, .minSpeed = 50});
+pros::delay(1500);
+Robot::chassis->cancelMotion();
+//turn to goal
+Robot::chassis->turnTo(1000000, 1000000, 1000); 
+Robot::chassis->cancelMotion();
+//RAM!!!!
+     Robot::chassis->moveToPoint(60, 56, 1000,
+                              {.forwards = true, .minSpeed = 127}); 
+    Robot::chassis->cancelMotion(); 
+    //back up
+  //RAM!!!!
+     Robot::chassis->moveToPoint(60, -38, 500,
+                              {.forwards = false, .minSpeed = 50}); 
+    Robot::chassis->cancelMotion(); 
 
   return;
   // intake center triball next to barrier
