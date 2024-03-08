@@ -374,14 +374,14 @@ void opcontrol() {
     else Robot::Motors::intake.move(0);
 
     // matchload toggle
-    const bool buttonRight =
-        Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT);
-    if (buttonRight && !prevRight) {
+    const bool buttonLeft =
+        Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT);
+    if (buttonLeft && !prevLeft) {
       if (Robot::Subsystems::catapult->getIsMatchloading())
         Robot::Subsystems::catapult->stop();
       else Robot::Subsystems::catapult->matchload();
     }
-    prevRight = buttonRight;
+    prevLeft = buttonLeft;
 
     // catapult manual fire
     if (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_R2))
@@ -457,10 +457,10 @@ void opcontrol() {
     prevR1 = r1;
 
     // back wing toggle
-    const bool left =
-        Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT);
-    if (left && !prevLeft) { Robot::Actions::toggleBackWing(); }
-    prevLeft = left;
+    const bool right =
+        Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT);
+    if (right && !prevRight) { Robot::Actions::toggleBackWing(); }
+    prevRight = right;
 
     if (tuneModeEnabled &&
         Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_Y) &&
