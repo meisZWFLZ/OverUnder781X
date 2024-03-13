@@ -88,6 +88,7 @@ extern Auton sixRush;
 extern Auton sixBall;
 extern Auton skills;
 extern Auton disrupt;
+extern Auton doNothing;
 } // namespace autons
 } // namespace auton
 

@@ -70,11 +70,12 @@ void screen() {
 pros::Task* screenTask;
 
 void addAutons() {
-  auton::AutonSelector::addAuton(&auton::autons::sixRush);
   auton::AutonSelector::addAuton(&auton::autons::disrupt);
-  auton::AutonSelector::addAuton(&auton::autons::skills);
   auton::AutonSelector::addAuton(&auton::autons::sixBall);
   auton::AutonSelector::addAuton(&auton::autons::defensive);
+  auton::AutonSelector::addAuton(&auton::autons::sixRush);
+  auton::AutonSelector::addAuton(&auton::autons::doNothing);
+  auton::AutonSelector::addAuton(&auton::autons::skills);
 }
 
 /**
