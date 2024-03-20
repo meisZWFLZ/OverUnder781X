@@ -1,8 +1,12 @@
-#include "pros/adi.hpp"
 #include "robot.h"
+const ADIPortConfig frontLeft('B');
+const ADIPortConfig frontRight('C');
+const ADIPortConfig backLeft('D');
+const ADIPortConfig backRight('E');
 
-pros::ADIDigitalOut Robot::Pistons::leftWing {'C'};
-pros::ADIDigitalOut Robot::Pistons::rightWing {'B'};
+const FourWingSubsystem::PortConfig& Robot::Pistons::wingConfig {
+    .front = {frontLeft, frontRight},
+    .back = {backLeft, backRight}};
+
 pros::ADIDigitalOut Robot::Pistons::retractLift {'G'};
 pros::ADIDigitalOut Robot::Pistons::extendLift {'A'};
-pros::ADIDigitalOut Robot::Pistons::backWing {'D'};

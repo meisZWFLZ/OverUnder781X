@@ -4,6 +4,8 @@
 #include "lemlib/chassis/chassis.hpp"
 #include "driverFeedback.h"
 #include "controllerScreen.h"
+#include "wings.h"
+#include <memory>
 
 class Robot {
   public:
@@ -21,11 +23,9 @@ class Robot {
     class Pistons {
       public:
         /** starts retracted */
-        static pros::ADIDigitalOut leftWing;
-        static pros::ADIDigitalOut rightWing;
+        static const FourWingSubsystem::PortConfig& wingConfig;
         static pros::ADIDigitalOut extendLift;
         static pros::ADIDigitalOut retractLift;
-        static pros::ADIDigitalOut backWing;
     };
 
     class Sensors {
@@ -59,7 +59,7 @@ class Robot {
         static const float horiEncGearRatio;
 
         static constexpr float drivetrainWidth = 14.5;
-        static constexpr float drivetrainLength = 25/2.0;
+        static constexpr float drivetrainLength = 25 / 2.0;
     };
 
     class Actions {
@@ -102,6 +102,7 @@ class Robot {
         static const float imuAGain;
         static const float imuBGain;
         static const float imuCGain;
+        static const float driverWingJoystickThreshold;
     };
 
     class Subsystems {
@@ -110,6 +111,7 @@ class Robot {
         static LiftArmStateMachine* lift;
         static DriverFeedback* feedback;
         static ControllerScreen* controller;
+        static FourWingSubsystem* wings;
 
         static pros::Task* task;
 

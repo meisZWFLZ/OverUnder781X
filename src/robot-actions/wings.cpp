@@ -5,18 +5,25 @@ bool rightWingState = false;
 bool backWingState = false;
 
 void setLeftWing(bool state) {
+  printf("wings front size: %d\n", Robot::Subsystems::wings->front->size());
+  printf("wings back size: %d\n", Robot::Subsystems::wings->back->size());
+  printf("robot actions: setting left wing to %i\n", state);
   leftWingState = state;
-  Robot::Pistons::leftWing.set_value(leftWingState);
+  Robot::Subsystems::wings->front->setIthState(int(WING_PAIR_INDEX::LEFT),
+                                              state);
 }
 
 void setRightWing(bool state) {
+  printf("robot actions: setting right wing to %i\n", state);
   rightWingState = state;
-  Robot::Pistons::rightWing.set_value(rightWingState);
+  Robot::Subsystems::wings->front->setIthState(int(WING_PAIR_INDEX::RIGHT),
+                                              state);
 }
 
 void setBackWing(bool state) {
+  printf("robot actions: setting back wing to %i\n", state);
   backWingState = state;
-  Robot::Pistons::backWing.set_value(backWingState);
+  Robot::Subsystems::wings->back->setAllSolenoids(state);
 }
 
 void Robot::Actions::expandBothWings() {
