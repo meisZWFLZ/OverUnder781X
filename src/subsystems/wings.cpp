@@ -1,12 +1,15 @@
 #include "wings.h"
 #include "robot.h"
+#include <memory>
+#include <vector>
 
 ADIPortConfig::ADIPortConfig(std::uint8_t adi_port) : adi_port(adi_port) {}
 
 ADIPortConfig::ADIPortConfig(pros::ext_adi_port_pair_t port_pair)
   : port_pair(port_pair) {}
 
-std::unique_ptr<pros::ADIDigitalOut> ADIPortConfig::makeDigitalOut(bool state) {
+std::unique_ptr<pros::ADIDigitalOut>
+ADIPortConfig::makeDigitalOut(bool state) const {
   if (this->adi_port.has_value())
     return std::make_unique<pros::ADIDigitalOut>(this->adi_port.value(), state);
   else
@@ -14,35 +17,32 @@ std::unique_ptr<pros::ADIDigitalOut> ADIPortConfig::makeDigitalOut(bool state) {
                                                  state);
 }
 
-std::unique_ptr<pros::ADIDigitalIn> ADIPortConfig::makeDigitalIn() {
+std::unique_ptr<pros::ADIDigitalIn> ADIPortConfig::makeDigitalIn() const {
   if (this->adi_port.has_value())
     return std::make_unique<pros::ADIDigitalIn>(this->adi_port.value());
-  else
-    return std::make_unique<pros::ADIDigitalIn>(this->port_pair.value());
+  else return std::make_unique<pros::ADIDigitalIn>(this->port_pair.value());
 }
 
-std::unique_ptr<pros::ADIAnalogOut> ADIPortConfig::makeAnalogOut() {
+std::unique_ptr<pros::ADIAnalogOut> ADIPortConfig::makeAnalogOut() const {
   if (this->adi_port.has_value())
     return std::make_unique<pros::ADIAnalogOut>(this->adi_port.value());
-  else
-    return std::make_unique<pros::ADIAnalogOut>(this->port_pair.value());
+  else return std::make_unique<pros::ADIAnalogOut>(this->port_pair.value());
 }
 
-std::unique_ptr<pros::ADIAnalogIn> ADIPortConfig::makeAnalogIn() {
+std::unique_ptr<pros::ADIAnalogIn> ADIPortConfig::makeAnalogIn() const {
   if (this->adi_port.has_value())
     return std::make_unique<pros::ADIAnalogIn>(this->adi_port.value());
-  else
-    return std::make_unique<pros::ADIAnalogIn>(this->port_pair.value());
+  else return std::make_unique<pros::ADIAnalogIn>(this->port_pair.value());
 }
 
-std::unique_ptr<ADIPortConfig> ADIPortConfig::makeUnique(std::uint8_t adi_port) {
+std::unique_ptr<ADIPortConfig>
+ADIPortConfig::makeUnique(std::uint8_t adi_port) {
   return std::make_unique<ADIPortConfig>(adi_port);
 }
 
-
-Solenoid::Solenoid(std::unique_ptr<ADIPortConfig> config, bool state)
-  : AbstractSolenoid(), digitalOut(config->makeDigitalOut(state)),
-    state(state) {}
+Solenoid::Solenoid(const ADIPortConfig& config, bool state)
+  : AbstractSolenoid(), digitalOut(config.makeDigitalOut(state)), state(state) {
+}
 
 void Solenoid::setState(bool newState) {
   this->state = newState;
@@ -57,12 +57,11 @@ bool Solenoid::getState() const { return this->state; }
 
 void Solenoid::toggle() { this->setState(!this->getState()); }
 
-SolenoidGroup::SolenoidGroup(std::vector<std::unique_ptr<ADIPortConfig>> ports,
+SolenoidGroup::SolenoidGroup(std::vector<ADIPortConfig> ports,
                              bool initialState)
   : AbstractSolenoid(), state(initialState) {
   for (auto& port : ports) {
-    this->solenoids.push_back(
-        std::make_unique<Solenoid>(std::move(port), initialState));
+    this->solenoids.push_back(std::make_unique<Solenoid>(port, initialState));
   }
 }
 
@@ -82,39 +81,46 @@ void SolenoidGroup::setState(bool newState) {
 
 bool SolenoidGroup::getState() const { return this->state; }
 
-FourWingSubsystem::FourWingSubsystem(std::unique_ptr<WingPair> front,
-                                     std::unique_ptr<WingPair> back,
+FourWingSubsystem::FourWingSubsystem(WingPair* front, WingPair* back,
                                      const int joystickThreshold)
-  : front(std::move(front)), back(std::move(back)),
-    joystickThreshold(joystickThreshold) {}
+  : front(front), back(back), joystickThreshold(joystickThreshold) {
+  printf("constructing four wing subsytem\n");
+  printf("front size: %d\n", front->size());
+  printf("back size: %d\n", back->size());
+  printf("constructing four wing subsytem\n");
+}
 
-std::unique_ptr<FourWingSubsystem>
-FourWingSubsystem::makeFromPortConfig(std::unique_ptr<PortConfig> portConfig,
+FourWingSubsystem*
+FourWingSubsystem::makeFromPortConfig(const PortConfig& portConfig,
                                       const int joystickThreshold) {
-  std::unique_ptr<AbstractSolenoid> frontLeftSolenoid =
-      std::make_unique<Solenoid>(std::move(portConfig->front.first));
-  std::unique_ptr<AbstractSolenoid> frontRightSolenoid =
-      std::make_unique<Solenoid>(std::move(portConfig->front.second));
-  std::unique_ptr<AbstractSolenoid> backLeftSolenoid =
-      std::make_unique<Solenoid>(std::move(portConfig->back.first));
-  std::unique_ptr<AbstractSolenoid> backRightSolenoid =
-      std::make_unique<Solenoid>(std::move(portConfig->back.second));
+  printf("making four wing subsystem\n");
+  AbstractSolenoid* frontLeftSolenoid = new Solenoid(portConfig.front.first);
+  AbstractSolenoid* frontRightSolenoid = new Solenoid(portConfig.front.second);
+  AbstractSolenoid* backLeftSolenoid = new Solenoid(portConfig.back.first);
+  AbstractSolenoid* backRightSolenoid = new Solenoid(portConfig.back.second);
 
-  auto front = std::make_unique<WingPair>(
-      std::array {std::move(frontLeftSolenoid), std::move(frontRightSolenoid)});
-  auto back = std::make_unique<WingPair>(
-      std::array {std::move(backLeftSolenoid), std::move(backRightSolenoid)});
+  std::vector<AbstractSolenoid*> frontVector {};
+  frontVector.push_back(frontLeftSolenoid);
+  frontVector.push_back(frontRightSolenoid);
+  std::vector<AbstractSolenoid*> backVector;
+  backVector.push_back(backLeftSolenoid);
+  backVector.push_back(backRightSolenoid);
 
-  return std::make_unique<FourWingSubsystem>(std::move(front), std::move(back),
-                                             joystickThreshold);
+  WingPair* front = new WingPair {frontVector};
+  WingPair* back = new WingPair(backVector);
+
+  return new FourWingSubsystem(front, back, joystickThreshold);
 }
 
 void FourWingSubsystem::retractAll() {
+  printf("retract all\n");
   this->front->disable();
   this->back->disable();
 }
 
 void FourWingSubsystem::driverUpdate() {
+  // printf("driver update\n");
+
   enum SELECTED_WING_PAIR {
     /** joystick is being pushed outward more than this->joystickThreshold */
     FRONT,
@@ -129,6 +135,7 @@ void FourWingSubsystem::driverUpdate() {
 
   // if on rising edge
   if (r1 && !prevR1) {
+    printf("driver rising edge\n");
     // get left and right joystick x values
     const float leftX =
         Robot::control.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X);
@@ -144,12 +151,17 @@ void FourWingSubsystem::driverUpdate() {
                                          : NONE;
     const bool anySelected = left != NONE || right != NONE;
     if (!anySelected) {
-      // if any back wing is expanded, retract them
-      if (this->back->summarizeStates() != WingPair::DISABLED)
-        this->back->disable();
+      printf("nothing selected\n");
+      // if any wing is expanded, then retract all
+      if (this->back->summarizeStates() != WingPair::DISABLED ||
+          this->front->summarizeStates() != WingPair::DISABLED) {
+        this->retractAll();
+      }
       // otherwise toggle the front wing
-      else this->front->toggleToSame();
+      else
+        this->front->toggleToSame();
     } else {
+      printf("something selected\n");
       if (left == FRONT)
         this->front->toggleIthSolenoid(int(WING_PAIR_INDEX::LEFT));
       else if (left == BACK)

@@ -1,8 +1,9 @@
 #pragma once
 
 #include "pros/adi.hpp"
+#include "pros/rtos.hpp"
+#include <cstdio>
 #include <memory>
-#include <optional>
 #include <vector>
 
 class ADIPortConfig {
@@ -10,10 +11,11 @@ class ADIPortConfig {
     ADIPortConfig(std::uint8_t adi_port);
     ADIPortConfig(pros::ext_adi_port_pair_t port_pair);
 
-    std::unique_ptr<pros::ADIDigitalOut> makeDigitalOut(bool state = false);
-    std::unique_ptr<pros::ADIDigitalIn> makeDigitalIn();
-    std::unique_ptr<pros::ADIAnalogOut> makeAnalogOut();
-    std::unique_ptr<pros::ADIAnalogIn> makeAnalogIn();
+    std::unique_ptr<pros::ADIDigitalOut>
+    makeDigitalOut(bool state = false) const;
+    std::unique_ptr<pros::ADIDigitalIn> makeDigitalIn() const;
+    std::unique_ptr<pros::ADIAnalogOut> makeAnalogOut() const;
+    std::unique_ptr<pros::ADIAnalogIn> makeAnalogIn() const;
 
     static std::unique_ptr<ADIPortConfig> makeUnique(std::uint8_t adi_port);
     static std::unique_ptr<ADIPortConfig>
@@ -34,7 +36,7 @@ class AbstractSolenoid {
 
 class Solenoid : public AbstractSolenoid {
   public:
-    Solenoid(std::unique_ptr<ADIPortConfig> config, bool initialState = false);
+    Solenoid(const ADIPortConfig& config, bool initialState = false);
 
     /**
      * @brief sets the state of the solenoid to true
@@ -67,8 +69,7 @@ class Solenoid : public AbstractSolenoid {
  */
 class SolenoidGroup : public AbstractSolenoid {
   public:
-    SolenoidGroup(std::vector<std::unique_ptr<ADIPortConfig>> ports,
-                  bool initialState = false);
+    SolenoidGroup(std::vector<ADIPortConfig> ports, bool initialState = false);
     void enable() override;
     void disable() override;
     void toggle() override;
@@ -79,26 +80,40 @@ class SolenoidGroup : public AbstractSolenoid {
     bool state = false;
 };
 
-template <size_t N> class SolenoidSet {
+/**
+ * @brief Groups N solenoids together, but allows for independent control
+ *
+ * @param N number of solenoids
+ */
+class SolenoidSet {
   public:
-    SolenoidSet(std::array<std::unique_ptr<AbstractSolenoid>, N> solenoids) {
+    SolenoidSet(std::vector<AbstractSolenoid*> solenoids) {
+      printf("constructing solenoid set\n");
+      printf("size: %d\n", solenoids.size());
       solenoids.swap(this->solenoids);
     };
 
     /**
      * @brief enables all solenoids
      */
-    void enable() { this->setAllSolenoids(true); };
+    void enable() {
+      printf("enabling\n");
+      this->setAllSolenoids(true);
+    };
 
     /**
      * @brief disables all solenoids
      */
-    void disable() { this->setAllSolenoids(false); };
+    void disable() {
+      printf("disabling\n");
+      this->setAllSolenoids(false);
+    };
 
     /**
      * @brief toggle each solenoid independently
      */
     void toggleEach() {
+      printf("toggle each -ing\n");
       for (auto& solenoid : this->solenoids) solenoid->toggle();
     }
 
@@ -110,6 +125,7 @@ template <size_t N> class SolenoidSet {
      * @return true if the solenoids were in different states, false otherwise
      */
     bool toggleToSame(bool ifDiffState = false) {
+      printf("toggle same -ing\n");
       // could be optimized, but this is the most readable
       switch (this->summarizeStates()) {
         case DIFFERENT: this->setAllSolenoids(ifDiffState); return true;
@@ -124,6 +140,7 @@ template <size_t N> class SolenoidSet {
      * @param newState the new state of the solenoids
      */
     void setAllSolenoids(bool newState) {
+      printf("setting all to %d\n", newState);
       for (auto& solenoid : this->solenoids) solenoid->setState(newState);
     };
 
@@ -134,6 +151,13 @@ template <size_t N> class SolenoidSet {
      * @param newState new state
      */
     void setIthState(size_t i, bool newState) {
+      printf("i: %d\n", i);
+      printf("setting to %d\n", newState);
+      printf("size: %d\n", this->solenoids.size());
+      printf("not null?: %d\n", (bool)this->solenoids.at(i));
+
+      pros::delay(200);
+
       this->solenoids.at(i)->setState(newState);
     };
 
@@ -150,6 +174,7 @@ template <size_t N> class SolenoidSet {
      * @brief summarize the states of the solenoids
      */
     STATE_SUMMARY summarizeStates() const {
+      printf("summarizing states\n");
       bool firstState = this->getIthState(0);
       for (auto state : this->getStates())
         if (state != firstState) return DIFFERENT;
@@ -161,10 +186,11 @@ template <size_t N> class SolenoidSet {
      * @brief get the states of the solenoids
      * @return an array of the states of the solenoids
      */
-    std::array<bool, N> getStates() const {
-      std::array<bool, N> states;
-      for (int i = 0; i < N; i++) states[i] = this->getIthState(i);
-
+    std::vector<bool> getStates() const {
+      printf("getting states\n");
+      std::vector<bool> states;
+      for (int i = 0; i < this->solenoids.size(); i++)
+        states.push_back(this->solenoids[i]->getState());
       return states;
     };
 
@@ -174,6 +200,7 @@ template <size_t N> class SolenoidSet {
      * @return the state of the ith solenoid
      */
     bool getIthState(size_t i) const {
+      printf("getting %dth solenoid state\n", i);
       return solenoids.at(i)->getState();
     }
 
@@ -181,9 +208,14 @@ template <size_t N> class SolenoidSet {
      * @brief toggle the ith solenoid
      * @param i the index of the solenoid
      */
-    void toggleIthSolenoid(size_t i) { solenoids.at(i)->toggle(); }
+    void toggleIthSolenoid(size_t i) {
+      printf("toggling %dth solenoid\n", i);
+      solenoids.at(i)->toggle();
+    }
+
+    size_t size() const { return this->solenoids.size(); }
   private:
-    std::array<std::unique_ptr<AbstractSolenoid>, N> solenoids;
+    std::vector<AbstractSolenoid*> solenoids;
 };
 
 enum class WING_PAIR_INDEX {
@@ -191,27 +223,22 @@ enum class WING_PAIR_INDEX {
   RIGHT = 1,
 };
 
-using WingPair = SolenoidSet<2>;
+using WingPair = SolenoidSet;
 
 class FourWingSubsystem {
   public:
-    FourWingSubsystem(std::unique_ptr<WingPair> front,
-                      std::unique_ptr<WingPair> back,
+    FourWingSubsystem(WingPair* front, WingPair* back,
                       const int joystickThreshold);
-    std::unique_ptr<WingPair> front;
-    std::unique_ptr<WingPair> back;
+    WingPair* front;
+    WingPair* back;
 
     struct PortConfig {
-        std::pair<std::unique_ptr<ADIPortConfig>,
-                  std::unique_ptr<ADIPortConfig>>
-            front;
-        std::pair<std::unique_ptr<ADIPortConfig>,
-                  std::unique_ptr<ADIPortConfig>>
-            back;
+        std::pair<const ADIPortConfig&, const ADIPortConfig&> front;
+        std::pair<const ADIPortConfig&, const ADIPortConfig&> back;
     };
 
-    static std::unique_ptr<FourWingSubsystem>
-    makeFromPortConfig(std::unique_ptr<PortConfig> portConfig,
+    static FourWingSubsystem*
+    makeFromPortConfig(const PortConfig& portConfig,
                        const int joystickThreshold);
 
     void retractAll();

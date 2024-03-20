@@ -5,6 +5,7 @@
 #include "driverFeedback.h"
 #include "controllerScreen.h"
 #include "wings.h"
+#include <memory>
 
 class Robot {
   public:
@@ -22,7 +23,7 @@ class Robot {
     class Pistons {
       public:
         /** starts retracted */
-        static std::unique_ptr<FourWingSubsystem::PortConfig> wingConfig;
+        static const FourWingSubsystem::PortConfig& wingConfig;
         static pros::ADIDigitalOut extendLift;
         static pros::ADIDigitalOut retractLift;
     };

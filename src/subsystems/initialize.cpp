@@ -20,9 +20,11 @@ void Robot::Subsystems::initialize() {
   // Robot::Subsystems::feedback = new DriverFeedback();
   Robot::Subsystems::controller = new ControllerScreen(&Robot::control);
   Robot::Subsystems::wings = FourWingSubsystem::makeFromPortConfig(
-                                 std::move(Robot::Pistons::wingConfig),
-                                 Robot::Tunables::driverWingJoystickThreshold)
-                                 .get();
+                                 Robot::Pistons::wingConfig,
+                                 Robot::Tunables::driverWingJoystickThreshold);
+  
+  printf("wings front size: %d\n", Robot::Subsystems::wings->front->size());
+  printf("wings back size: %d\n", Robot::Subsystems::wings->back->size());
 
   Robot::Subsystems::task = new pros::Task([]() {
     while (true) {
