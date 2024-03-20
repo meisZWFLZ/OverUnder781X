@@ -1,8 +1,11 @@
-#include "pros/adi.hpp"
 #include "robot.h"
 
-pros::ADIDigitalOut Robot::Pistons::leftWing {'C'};
-pros::ADIDigitalOut Robot::Pistons::rightWing {'B'};
+std::unique_ptr<FourWingSubsystem::PortConfig>
+    Robot::Pistons::wingConfig(new FourWingSubsystem::PortConfig {
+        .front = std::make_pair(std::make_unique<ADIPortConfig>('B'),
+                                std::make_unique<ADIPortConfig>('C')),
+        .back = std::make_pair(std::make_unique<ADIPortConfig>('D'),
+                               std::make_unique<ADIPortConfig>('E'))});
+
 pros::ADIDigitalOut Robot::Pistons::retractLift {'G'};
 pros::ADIDigitalOut Robot::Pistons::extendLift {'A'};
-pros::ADIDigitalOut Robot::Pistons::backWing {'D'};

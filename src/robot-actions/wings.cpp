@@ -6,17 +6,19 @@ bool backWingState = false;
 
 void setLeftWing(bool state) {
   leftWingState = state;
-  Robot::Pistons::leftWing.set_value(leftWingState);
+  Robot::Subsystems::wings->front->setIthState(int(WING_PAIR_INDEX::LEFT),
+                                                  state);
 }
 
 void setRightWing(bool state) {
   rightWingState = state;
-  Robot::Pistons::rightWing.set_value(rightWingState);
+  Robot::Subsystems::wings->front->setIthState(int(WING_PAIR_INDEX::RIGHT),
+                                                  state);
 }
 
 void setBackWing(bool state) {
   backWingState = state;
-  Robot::Pistons::backWing.set_value(backWingState);
+  Robot::Subsystems::wings->back->setAllSolenoids(state);
 }
 
 void Robot::Actions::expandBothWings() {

@@ -447,21 +447,8 @@ void opcontrol() {
     prevUp = up;
     prevDown = down;
 
-    // wings toggle
-    // retrieve the value of the R2 button
-    const bool r1 = Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_R1);
-    // if on the rising edge of the button
-    if (r1 && !prevR1) {
-      Robot::Actions::toggleBothWings(); // flip the state of the wings
-    }
-    // update the previous value of R1
-    prevR1 = r1;
-
-    // back wing toggle
-    const bool right =
-        Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT);
-    if (right && !prevRight) { Robot::Actions::toggleBackWing(); }
-    prevRight = right;
+    // wings
+    Robot::Subsystems::wings->driverUpdate();
 
     if (tuneModeEnabled &&
         Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_Y) &&
