@@ -364,13 +364,15 @@ void opcontrol() {
         // drive curve gain to enable greater control of the robot.
         15);
 
+    const bool l1 = Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_L1);
+    const bool l2 = Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_L2);
     // intake / outtake
-    // if pressing L1, then spin the intake inwards
-    if (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_L1))
-      Robot::Motors::intake.move(127);
-    // if pressing L2, then spin the intake outwards
-    else if (Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_L2))
-      Robot::Motors::intake.move(-127);
+    // if pressing L1 && L2, then spin the intake inwards slowly
+    if (l1 && l2) Robot::Motors::intake.move(127 * .25);
+    // if pressing only L1, then spin the intake inwards
+    else if (l1) Robot::Motors::intake.move(127);
+    // if pressing only L2, then spin the intake outwards
+    else if (l2) Robot::Motors::intake.move(-127);
     // otherwise, dont power the intake
     else Robot::Motors::intake.move(0);
 
