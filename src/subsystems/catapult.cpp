@@ -69,17 +69,6 @@ int start = 0;
 bool prevCataDisconnected = false;
 
 void CatapultStateMachine::update() {
-  const bool cataDisconnected = motors->set_reversed(true) == PROS_ERR;
-  if (cataDisconnected) {
-    if (!prevCataDisconnected) {
-      // Robot::control.print(0, 0, "!cata disc");
-      // printf("cata disc\n");
-    }
-  } else if (prevCataDisconnected) {
-    Robot::control.clear_line(0);
-  }
-
-  prevCataDisconnected = cataDisconnected;
   if (this->matchloading &&
       (this->timer.isDone() || this->triballsLeftToBeFired == 0)) {
     // printf("stop matchloading\n");
@@ -208,7 +197,7 @@ void CatapultStateMachine::indicateTriballFired() {
 
 void CatapultStateMachine::retractCataMotor() {
   static int run = 0;
-  this->motors->move_voltage(12000);
+  this->motors->move_voltage(9000);
 }
 
 void CatapultStateMachine::stopCataMotor() { this->motors->move_voltage(0); }
