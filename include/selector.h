@@ -1,4 +1,5 @@
 #pragma once
+#include "pros/rotation.hpp"
 #include <vector>
 #include <functional>
 
@@ -11,33 +12,47 @@ struct Auton {
 
 class AutonSelector {
   private:
-    static std::vector<Auton*> autons;
-    static int index;
+    std::vector<Auton*> autons;
     /** Whether the AutonSelector is enabled */
-    static bool state;
+    bool state = false;
 
-    static void incrementListener();
-    static void decrementListener();
+    const unsigned int gearTeeth;
 
-    static void clearDisplay();
-    static void updateDisplay();
+    void clearDisplay();
+    void updateDisplay();
 
     // remove once LVGL is done
-    static void attachListeners();
-    static void initScreen();
+    void initScreen();
 
-    AutonSelector() = delete;
+    pros::Rotation rotation;
+  protected:
+    float getDegreesPerAuton() const;
   public:
-    static void addAuton(Auton* auton);
-    static void runAuton();
+    AutonSelector(pros::Rotation rotation, unsigned int gearTeeth);
 
-    static void enable();
-    static void disable();
-    static bool isEnabled();
+    unsigned int getIndex();
+    void setIndex(unsigned int newIndex);
+    void changeIndex(int indexChange);
 
-    static char *getCurrentAuton();
+    /**
+     * @return true when auton is added
+     * @return false when auton failed to be added due to too many autons
+     */
+    bool addAuton(Auton* auton);
+    void runAuton();
 
-    static void init();
+    void enable();
+    void disable();
+    bool isEnabled();
+
+    char* getCurrentAuton();
+
+    void init();
+
+    /**
+     * @brief changes auton based on rotation sensor
+     */
+    void update();
 };
 
 } // namespace auton

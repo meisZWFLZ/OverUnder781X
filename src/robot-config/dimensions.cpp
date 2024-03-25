@@ -14,3 +14,5 @@ const float Robot::Dimensions::vertEncGearRatio = 1;
 const float Robot::Dimensions::horiEncDiameter = lemlib::Omniwheel::NEW_275;
 const float Robot::Dimensions::horiEncDistance = -5.274;
 const float Robot::Dimensions::horiEncGearRatio = 1;
+
+const int Robot::Dimensions::autonSelectorGearTeeth = 12;

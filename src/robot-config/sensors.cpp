@@ -9,3 +9,4 @@ pros::Imu Robot::Sensors::imuB {4};
 pros::Imu Robot::Sensors::imuC {16};
 pros::ADILineSensor Robot::Sensors::cataElevationBar {'B'};
 pros::Rotation Robot::Sensors::cata {5, true};
+pros::Rotation Robot::Sensors::autonSelector {11};
