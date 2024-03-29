@@ -24,6 +24,14 @@ class AutonSelector {
     // remove once LVGL is done
     void initScreen();
 
+    /**
+     * @brief Returns the rotation's angle in degrees in the range of [0, 360).
+     * Uses rotation.getPosition() to get the angle
+     *
+     * @return The rotation's angle in degrees in the range of [0, 360)
+     */
+    float getRotationAngle();
+
     pros::Rotation rotation;
   protected:
     float getDegreesPerAuton() const;
