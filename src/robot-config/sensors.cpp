@@ -7,5 +7,6 @@ pros::Rotation Robot::Sensors::hori {7, false};
 pros::Imu Robot::Sensors::imuA {4};
 pros::Imu Robot::Sensors::imuB {5};
 pros::Imu Robot::Sensors::imuC {16};
-pros::ADILineSensor Robot::Sensors::cataElevationBar {'B'};
+// not used
+pros::ADILineSensor Robot::Sensors::cataElevationBar {'E'};
 pros::Rotation Robot::Sensors::cata {9, true};
