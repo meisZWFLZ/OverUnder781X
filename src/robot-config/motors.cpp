@@ -13,7 +13,7 @@ pros::Motor rightDriveC {14, pros::E_MOTOR_GEAR_600, /* true */};
 
 // intake
 // 5.5w
-pros::Motor intakeA {21, pros::E_MOTOR_GEAR_GREEN, true};
+pros::Motor intakeA {21, pros::E_MOTOR_GEAR_GREEN, false};
 
 // elevator
 // pros::Motor elevatorA {11, pros::E_MOTOR_GEAR_RED, true};
