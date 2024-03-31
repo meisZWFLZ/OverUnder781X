@@ -138,6 +138,7 @@ void printPose() {
  * from where it left off.
  */
 void autonomous() {
+  Robot::Pistons::tankSplitter.set_value(true);
   auton::AutonSelector::disable();
   autonHasRun = true;
   if (pros::competition::is_connected()) Robot::Actions::prepareRobot();
@@ -303,6 +304,8 @@ const bool tuneModeEnabled = true;
  */
 void opcontrol() {
   auton::AutonSelector::disable();
+  Robot::Pistons::tankSplitter.set_value(true);
+
   Robot::Actions::retractBothWings();
   Robot::Actions::retractBackWing();
 

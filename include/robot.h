@@ -26,6 +26,8 @@ class Robot {
         static const FourWingSubsystem::PortConfig& wingConfig;
         static pros::ADIDigitalOut extendLift;
         static pros::ADIDigitalOut retractLift;
+        /** when set to true, it will disable air flow between tanks */
+        static pros::ADIDigitalOut tankSplitter;
     };
 
     class Sensors {

@@ -8,5 +8,5 @@ pros::Imu Robot::Sensors::imuA {4};
 pros::Imu Robot::Sensors::imuB {5};
 pros::Imu Robot::Sensors::imuC {16};
 // not used
-pros::ADILineSensor Robot::Sensors::cataElevationBar {'E'};
+pros::ADILineSensor Robot::Sensors::cataElevationBar {'D'};
 pros::Rotation Robot::Sensors::cata {9, true};

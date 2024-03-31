@@ -10,3 +10,5 @@ const FourWingSubsystem::PortConfig& Robot::Pistons::wingConfig {
 
 pros::ADIDigitalOut Robot::Pistons::retractLift {'B'};
 pros::ADIDigitalOut Robot::Pistons::extendLift {'F'};
+
+pros::ADIDigitalOut Robot::Pistons::tankSplitter {'E'};
