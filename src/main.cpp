@@ -416,7 +416,7 @@ const bool tuneModeEnabled = true;
  * the task, not resume it from where it left off.
  */
 void opcontrol() {
-  Robot::Subsystems::autonSelector->disable();
+  // Robot::Subsystems::autonSelector->disable();
   Robot::Actions::retractBothWings();
   Robot::Actions::retractBackWing();
 

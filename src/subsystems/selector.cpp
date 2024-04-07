@@ -1,11 +1,17 @@
 #include "selector.h"
 #include "pros/llemu.hpp"
-#include "pros/rtos.hpp"
+#include "pros/misc.hpp"
+#include "robot.h"
+#include <cfloat>
 #include <cmath>
 
 using namespace auton;
 
 const std::string ERR = "\x1b[31m[ERR]\x1b[0m";
+
+bool AutonSelector::isRotationConnected() {
+  return this->rotation.get_position() != PROS_ERR;
+}
 
 float AutonSelector::getDegreesPerAuton() const {
   const int teethPerAuton = floor(float(this->gearTeeth) / this->autons.size());
@@ -19,11 +25,45 @@ float AutonSelector::getDegreesPerAuton() const {
 }
 
 float AutonSelector::getRotationAngle() {
-  const float degrees = float(this->rotation.get_position()) / 100.0;
+  const float degrees =
+      this->isRotationConnected()
+          ? float(this->rotation.get_position()) / 100.0 + this->offsetDegrees
+          : this->offsetDegrees;
+
   /* has a range of (-180, 180) (not sure about inclusive/exclusive)*/
   const float possiblyNegativeAngle = std::fmod(degrees, 360.0);
   return possiblyNegativeAngle < 0 ? 360.0 + possiblyNegativeAngle
                                    : possiblyNegativeAngle;
+}
+
+float AutonSelector::setRotationPosition(float newPositionDegrees) {
+  const bool shouldSetSensor =
+      !pros::competition::is_disabled() && this->isRotationConnected();
+  const float oldOffsetDegrees = this->offsetDegrees;
+  const float oldPositionDegrees = this->getRotationAngle();
+  if (shouldSetSensor) {
+    this->offsetDegrees = 0;
+    this->rotation.set_position(newPositionDegrees * 100);
+    printf("AutonSelector::setRotationPosition(): setting position to: %4.2f\n",
+           newPositionDegrees * 100);
+  } else {
+    this->offsetDegrees += newPositionDegrees - getRotationAngle();
+  }
+
+  if (std::fabs(this->getRotationAngle() - newPositionDegrees) > 0.01) {
+    printf((ERR +
+            "AutonSelector::setRotationPosition(): failed to set position\n"
+            "\tnewPositionDegrees:\t%4.2f\n"
+            "\tgetRotationAngle():\t%4.2f\n"
+            "\tshouldSetSensor:\t%i\n"
+            "\toldOffsetDegrees:\t%4.2f\n"
+            "\toldPositionDegrees:\t%4.2f\n")
+               .c_str(),
+           newPositionDegrees, this->getRotationAngle(), shouldSetSensor,
+           oldOffsetDegrees, oldPositionDegrees);
+  }
+
+  return this->getRotationAngle();
 }
 
 unsigned int AutonSelector::getIndex() {
@@ -91,8 +131,8 @@ void AutonSelector::setIndex(unsigned int newIndex) {
 
   // Set the position of the rotation sensor
   // im not sure if set_position takes centidegrees
-  this->rotation.set_position(targetDegrees * 100);
-  if (fabs(this->getRotationAngle() - targetDegrees * 100) > 0.1) {
+  this->setRotationPosition(targetDegrees);
+  if (fabs(this->getRotationAngle() - targetDegrees) > 0.1) {
     // print some debug info
     printf((ERR +
             "AutonSelector::setIndex(): failed to correctly set position\n"
@@ -150,10 +190,22 @@ void AutonSelector::init() {
 void AutonSelector::clearDisplay() { pros::lcd::clear_line(0); }
 
 void AutonSelector::updateDisplay() {
+  Auton* auton = this->autons[this->getIndex()];
+  const std::string brainStr(auton->label);
+
   pros::lcd::clear_line(0);
-  pros::lcd::print(0,
-                   (std::string(this->getCurrentAuton()) + ": %d/%d").c_str(),
-                   this->getIndex() + 1, this->autons.size());
+  pros::lcd::print(0, (brainStr + ": %d/%d").c_str(), this->getIndex() + 1,
+                   this->autons.size());
+
+  std::string controllerStr(auton->labelForController.has_value()
+                                ? auton->labelForController.value()
+                                : brainStr);
+  // clear previous entry
+  while (controllerStr.length() < 20) controllerStr += " ";
+
+  printf("AutonSelector::updateDisplay(): controllerStr: %s$END$\n",
+         controllerStr.c_str());
+  Robot::control.print(2, 0, controllerStr.c_str());
 }
 
 bool AutonSelector::addAuton(Auton* auton) {
@@ -214,8 +266,27 @@ BUTTON getNewButtonPress(unsigned int prevState, unsigned int currState) {
 }
 
 void AutonSelector::update() {
+  static bool hasBeenEnabled = false;
   // if the auton selector is disabled, don't run
   if (!this->isEnabled()) return;
+
+  // if competition is enabled, update rotation's set position and maybe freeze
+  // the auton selector
+  if (!pros::competition::is_disabled()) {
+    if (!hasBeenEnabled)
+      printf("AutonSelector::update(): competition enabled\n");
+    hasBeenEnabled=true;
+    // if the rotation sensor is connected and the offset is not 0, set the new
+    // position (saves the auton selection)
+    if (this->isRotationConnected() && this->offsetDegrees != 0) {
+      printf("AutonSelector::update(): saving position\n");
+      this->setRotationPosition(this->getRotationAngle());
+    }
+
+    // if the auton selector should be frozen when competition is enabled, do
+    // not check for button presses
+    if (freezeAutonWhenCompEnabled) return;
+  }
 
   static unsigned int prevButtons = pros::lcd::read_buttons();
   static unsigned int prevIndex = 0;
