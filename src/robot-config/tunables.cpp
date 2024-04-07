@@ -16,14 +16,14 @@ lemlib::ControllerSettings Robot::Tunables::lateralController {
 
 // turning PID
 lemlib::ControllerSettings Robot::Tunables::angularController {
-    3.635, // kP
+    3.6875, // kP
     0, // kI
-    24.75, // kD
-    0, // windup range
-    1, // smallErrorRange
-    100, // smallErrorTimeout
-    3.5, // largeErrorRange
-    350, // largeErrorTimeout
+    32, // kD
+    10000, // windup range
+    0, // smallErrorRange
+    10000, // smallErrorTimeout
+    0, // largeErrorRange
+    10000, // largeErrorTimeout
     0 // slew rate
 };
 
