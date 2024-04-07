@@ -190,7 +190,7 @@ void runSkills() {
   waitUntilDistToPose(outOfTheGoalTarget2, 9, 100, true);
 
   // then face down
-  Robot::chassis->turnTo(0, -10000000, 1000);
+  Robot::chassis->turnToPoint(0, -10000000, 1000);
   // wait until facing down
   waitUntil([] { return robotAngDist(DOWN) < 30 || !isMotionRunning(); });
   Robot::chassis->cancelMotion();

@@ -19,7 +19,7 @@ void auton::actions::touchElevationBar() {
   //   pros::delay(20);
   
   // pros::delay(500);
-  // // Robot::chassis->turnTo(-leftOrRight()*100000, 100000, 5000, false, false, 56);
+  // // Robot::chassis->turnToPoint(-leftOrRight()*100000, 100000, 5000, false, false, 56);
   // // while(pros::competition::is_autonomous()) {
   // //   pros::delay(10);
   // // }
