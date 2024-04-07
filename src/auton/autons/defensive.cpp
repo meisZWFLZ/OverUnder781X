@@ -28,7 +28,8 @@ void runDefensive() {
   Robot::chassis->waitUntilDone();
 
   // turn to be parallel with matchload barrier
-  Robot::chassis->turnTo(1000000, -1000000, 2000, true, 48);
+  Robot::chassis->turnToPoint(1000000, -1000000, 2000,
+                              {.forwards = true, .maxSpeed = 48});
   Robot::chassis->waitUntilDone();
 
   // let wing expand
@@ -36,7 +37,7 @@ void runDefensive() {
   pros::delay(500);
   
   // remove the matchload zone triball
-  Robot::chassis->turnTo(1000000, 0, 2000);
+  Robot::chassis->turnToPoint(1000000, 0, 2000);
   Robot::chassis->waitUntilDone();
   
   // let ball roll away

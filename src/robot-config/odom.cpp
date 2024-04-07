@@ -124,6 +124,14 @@ class MockIMU : public pros::IMU {
     MockIMU(std::vector<HeadingSource*> sources)
       : pros::IMU(0), sources(sources) {}
 
+    // used by lemlib to check that the IMU is working
+    double get_heading() const override {
+      const float possiblyNegativeHeading =
+          std::remainder(this->get_rotation(), 360);
+      if (possiblyNegativeHeading < 0) return 360 + possiblyNegativeHeading;
+      else return possiblyNegativeHeading;
+    }
+
     double get_rotation() const override {
       static int lastCall = pros::millis();
       static std::vector<double> prevHeadings(this->sources.size(), 0);
@@ -236,6 +244,12 @@ class MockIMU : public pros::IMU {
         sources.swap(calibratedSources);
         return true;
       }
+    }
+
+    bool is_calibrating() const override {
+      for (auto source : sources)
+        if (!source->isDoneCalibrating()) return true;
+      return false;
     }
 
     std::vector<HeadingSource*> sources;

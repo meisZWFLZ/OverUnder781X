@@ -39,13 +39,13 @@ void test() {
   // Robot::chassis->waitUntilDone();
   // tank(-127, 127, 0, 0);
   // waitUntil([] { return std::abs(Robot::chassis->getPose().theta - -360 * 10)
-  // < 70; }); Robot::chassis->turnTo(0, 100000000, 1000);
+  // < 70; }); Robot::chassis->turnToPoint(0, 100000000, 1000);
   // Robot::chassis->waitUntilDone();
   // stop();
 
   // test pid
   Robot::chassis->setPose(0, 0, 0);
-  Robot::chassis->turnTo(1000000, 0, 10000);
+  Robot::chassis->turnToPoint(1000000, 0, 10000);
 }
 
 void runSixRush() {
@@ -124,14 +124,14 @@ void runSixRush() {
   Robot::chassis->waitUntilDone();
   Robot::Actions::stopIntake();
 // turn around to face matchload bar
-Robot::chassis->turnTo(1000000, 200000, 1000);
+Robot::chassis->turnToPoint(1000000, 200000, 1000);
 //drive forward into goal
 Robot::chassis->moveToPoint(52, -50, 3000,
                               {.forwards = true, .minSpeed = 50});
 pros::delay(1500);
 Robot::chassis->cancelMotion();
 //turn to goal
-Robot::chassis->turnTo(1000000, 1000000, 1000); 
+Robot::chassis->turnToPoint(1000000, 1000000, 1000); 
 Robot::chassis->cancelMotion();
 //RAM!!!!
      Robot::chassis->moveToPoint(60, 56, 1000,
@@ -191,7 +191,7 @@ Robot::chassis->cancelMotion();
   // wait until near the target to switch to pid
   waitUntil([] { return robotAngDist(RIGHT) < 60; });
   printf("pid turn\n");
-  Robot::chassis->turnTo(1000000, 0, 1000);
+  Robot::chassis->turnToPoint(1000000, 0, 1000);
   // wait until angle is good enough
   waitUntil([] { return robotAngDist(RIGHT) < 10; });
   Robot::chassis->cancelMotion();
@@ -420,7 +420,7 @@ Robot::chassis->cancelMotion();
     Robot::control.print(1, 1, "imu->stop");
     return;
   }
-  // Robot::chassis->turnTo(10000, 1000, 1000);
+  // Robot::chassis->turnToPoint(10000, 1000, 1000);
   // pros::delay(100);
   // while (Robot::chassis->isInMotion() && robotAngDist(RIGHT) > 10) {
   //   pros::delay(10);
@@ -442,7 +442,7 @@ Robot::chassis->cancelMotion();
   Robot::Actions::stopIntake();
 
   tank(64, 127, 300);
-  Robot::chassis->turnTo(100000, 0, 700);
+  Robot::chassis->turnToPoint(100000, 0, 700);
   Robot::chassis->moveToPoint(10000, 0, 1000, {.minSpeed = 127});
   Robot::Actions::outtake();
   Robot::chassis->waitUntilDone();
@@ -466,7 +466,7 @@ Robot::chassis->cancelMotion();
 
   if (isTriballInIntake()) {
     tank(-127, -127, 300);
-    Robot::chassis->turnTo(100000, 0, 1000);
+    Robot::chassis->turnToPoint(100000, 0, 1000);
     waitUntil([] { return robotAngDist(RIGHT) < 30 || !isMotionRunning(); }, 0,
               1000);
     Robot::chassis->cancelMotion();
@@ -643,7 +643,7 @@ Robot::chassis->cancelMotion();
   // Robot::chassis->cancelMotion();
 
   // // retract wings soon after removing the triball from the matchload
-  // zone Robot::chassis->turnTo(MAX_X, 0, 1000); pros::delay(200);
+  // zone Robot::chassis->turnToPoint(MAX_X, 0, 1000); pros::delay(200);
   // printf("retract wings\n");
   // pros::delay(200);
 

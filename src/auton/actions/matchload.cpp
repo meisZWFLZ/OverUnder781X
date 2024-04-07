@@ -9,12 +9,13 @@ using namespace fieldDimensions;
 using namespace auton::utils;
 
 /**
- * @brief 
- * Lemlib uses heading, which is like a compass, whereas trig functions like sine and cosine use trig angles. 
- * Therefore we must convert the trig angle to a heading. 
- * 
- * @param angle trig angle 
- * @return heading angle 
+ * @brief
+ * Lemlib uses heading, which is like a compass, whereas trig functions like
+ * sine and cosine use trig angles. Therefore we must convert the trig angle to
+ * a heading.
+ *
+ * @param angle trig angle
+ * @return heading angle
  */
 float trigAngleToHeading(float angle) { return -(angle * 180 / M_PI) + 90; }
 
@@ -36,8 +37,9 @@ void exitBecauseDriver() {
 }
 
 /**
- * @brief checks that the driver has not exited the macro by checking all the controller inputs
- * 
+ * @brief checks that the driver has not exited the macro by checking all the
+ * controller inputs
+ *
  * @return true if the driver has exited the macro
  * @return false if the driver has not exited the macro
  */
@@ -72,11 +74,12 @@ bool checkDriverExit() {
   }
   return false;
 }
+
 /**
- * @returns whether a motion currently is running and the driver has not exited the macro 
+ * @returns whether a motion currently is running and the driver has not exited
+ * the macro
  */
 bool betterIsMotionRunning() { return isMotionRunning() && !checkDriverExit(); }
-
 
 /**
  * @brief waits until driver exits or motion is done
@@ -111,8 +114,9 @@ void auton::actions::matchload(int triballs, int until) {
   const float stagingTargetDistance = 12;
   lemlib::Pose stagingTarget =
       matchloadTarget +
-      lemlib::Pose {cos(trigMatchloadTargetTheta) * stagingTargetDistance,
-                    sin(trigMatchloadTargetTheta) * stagingTargetDistance};
+      lemlib::Pose {
+          float(cos(trigMatchloadTargetTheta) * stagingTargetDistance),
+          float(sin(trigMatchloadTargetTheta) * stagingTargetDistance)};
   stagingTarget.theta = matchloadTarget.theta;
 
   // calculate the angle to the shooting target

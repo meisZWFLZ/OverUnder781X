@@ -43,7 +43,7 @@ void runDisrupt() {
   Robot::chassis->waitUntilDone();
 
   // turn to be parallel to the matchload pipe
-  Robot::chassis->turnTo(1000000, -1000000, 2000);
+  Robot::chassis->turnToPoint(1000000, -1000000, 2000);
   Robot::chassis->waitUntilDone();
 
   // expand wing

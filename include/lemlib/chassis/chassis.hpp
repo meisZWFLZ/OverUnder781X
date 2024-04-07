@@ -1,17 +1,5 @@
-/**
- * @file include/lemlib/chassis/chassis.hpp
- * @author LemLib Team
- * @brief Chassis class declarations
- * @version 0.4.5
- * @date 2023-01-23
- *
- * @copyright Copyright (c) 2023
- *
- */
-
 #pragma once
 
-#include <functional>
 #include "pros/rtos.hpp"
 #include "pros/motors.hpp"
 #include "pros/imu.hpp"
@@ -20,8 +8,10 @@
 #include "lemlib/pose.hpp"
 #include "lemlib/pid.hpp"
 #include "lemlib/exitcondition.hpp"
+#include "lemlib/driveCurve.hpp"
 
 namespace lemlib {
+
 /**
  * @brief Struct containing all the sensors used for odometry
  *
@@ -116,6 +106,127 @@ struct Drivetrain {
 };
 
 /**
+ * @brief AngularDirection
+ *
+ * When turning, the user may want to specify the direction the robot should turn in.
+ * This enum class has 3 values: CW_CLOCKWISE, CCW_COUNTERCLOCKWISE, and AUTO
+ * AUTO will make the robot turn in the shortest direction, and will be the most used value
+ */
+enum class AngularDirection { CW_CLOCKWISE, CCW_COUNTERCLOCKWISE, AUTO };
+
+/**
+ * @brief Parameters for Chassis::turnToPoint
+ *
+ * We use a struct to simplify customization. Chassis::turnToPoint has many
+ * parameters and specifying them all just to set one optional param ruins
+ * readability. By passing a struct to the function, we can have named
+ * parameters, overcoming the c/c++ limitation
+ *
+ * @param forwards whether the robot should turn to face the point with the front of the robot.
+ * True by default
+ * @param direction the direction the robot should turn in. AUTO by default
+ * @param maxSpeed the maximum speed the robot can turn at. Value between 0-127.
+ *  127 by default
+ * @param minSpeed the minimum speed the robot can turn at. If set to a non-zero value,
+ *  the `it conditions will switch to less accurate but smoother ones. Value between 0-127.
+ *  0 by default
+ * @param earlyExitRange angle between the robot and target point where the movement will
+ *  exit. Only has an effect if minSpeed is non-zero.
+ */
+struct TurnToPointParams {
+        bool forwards = true;
+        AngularDirection direction = AngularDirection::AUTO;
+        int maxSpeed = 127;
+        int minSpeed = 0;
+        float earlyExitRange = 0;
+};
+
+/**
+ * @brief Parameters for Chassis::turnToHeading
+ *
+ * We use a struct to simplify customization. Chassis::turnToHeading has many
+ * parameters and specifying them all just to set one optional param ruins
+ * readability. By passing a struct to the function, we can have named
+ * parameters, overcoming the c/c++ limitation
+ *
+ * @param direction the direction the robot should turn in. AUTO by default
+ * @param maxSpeed the maximum speed the robot can turn at. Value between 0-127.
+ *  127 by default
+ * @param minSpeed the minimum speed the robot can turn at. If set to a non-zero value,
+ *  the `it conditions will switch to less accurate but smoother ones. Value between 0-127.
+ *  0 by default
+ * @param earlyExitRange angle between the robot and target point where the movement will
+ *  exit. Only has an effect if minSpeed is non-zero.
+ */
+struct TurnToHeadingParams {
+        AngularDirection direction = AngularDirection::AUTO;
+        int maxSpeed = 127;
+        int minSpeed = 0;
+        float earlyExitRange = 0;
+};
+
+/**
+ * @brief Enum class DriveSide
+ *
+ * When using swing turns, the user needs to specify what side of the drivetrain should be locked
+ * we could just use an integer or boolean for this, but using an enum class improves readability
+ *
+ * This enum class only has 2 values, LEFT and RIGHT
+ */
+enum class DriveSide { LEFT, RIGHT };
+
+/**
+ * @brief Parameters for Chassis::swingToPoint
+ *
+ * We use a struct to simplify customization. Chassis::swingToHeading has many
+ * parameters and specifying them all just to set one optional param harms
+ * readability. By passing a struct to the function, we can have named
+ * parameters, overcoming the c/c++ limitation
+ *
+ * @param forwards whether the robot should turn to face the point with the front of the robot.
+ * True by default
+ * @param direction the direction the robot should turn in. AUTO by default
+ * @param maxSpeed the maximum speed the robot can turn at. Value between 0-127.
+ *  127 by default
+ * @param minSpeed the minimum speed the robot can turn at. If set to a non-zero value,
+ *  the exit conditions will switch to less accurate but smoother ones. Value between 0-127.
+ *  0 by default
+ * @param earlyExitRange angle between the robot and target heading where the movement will
+ *  exit. Only has an effect if minSpeed is non-zero.
+ */
+struct SwingToPointParams {
+        bool forwards = true;
+        AngularDirection direction = AngularDirection::AUTO;
+        float maxSpeed = 127;
+        float minSpeed = 0;
+        float earlyExitRange = 0;
+};
+
+/**
+ * @brief Parameters for Chassis::swingToHeading
+ *
+ * We use a struct to simplify customization. Chassis::swingToHeading has many
+ * parameters and specifying them all just to set one optional param harms
+ * readability. By passing a struct to the function, we can have named
+ * parameters, overcoming the c/c++ limitation
+ *
+ * @param direction the direction the robot should turn in. AUTO by default
+ * @param maxSpeed the maximum speed the robot can turn at. Value between 0-127.
+ *  127 by default
+ * @param minSpeed the minimum speed the robot can turn at. If set to a non-zero value,
+ *  the exit conditions will switch to less accurate but smoother ones. Value between 0-127.
+ *  0 by default
+ * @param earlyExitRange angle between the robot and target heading where the movement will
+ *  exit. Only has an effect if minSpeed is non-zero.
+ */
+struct SwingToHeadingParams {
+        AngularDirection direction = AngularDirection::AUTO;
+        float maxSpeed = 127;
+        float minSpeed = 0;
+        float earlyExitRange = 0;
+};
+
+/**
  * @brief Parameters for Chassis::moveToPose
  *
  * We use a struct to simplify customization. Chassis::moveToPose has many
@@ -169,24 +280,8 @@ struct MoveToPointParams {
         float earlyExitRange = 0;
 };
 
-/**
- * @brief Function pointer type for drive curve functions.
- * @param input The control input in the range [-127, 127].
- * @param scale The scaling factor, which can be optionally ignored.
- * @return The new value to be used.
- */
-typedef std::function<float(float, float)> DriveCurveFunction_t;
-
-/**
- * @brief  Default drive curve. Modifies  the input with an exponential curve. If the input is 127, the function
- * will always output 127, no matter the value of scale, likewise for -127. This curve was inspired by team
- * 5225, the Pilons. A Desmos graph of this curve can be found here:
- * https://www.desmos.com/calculator/rcfjjg83zx
- * @param input value from -127 to 127
- * @param scale how steep the curve should be.
- * @return The new value to be used.
- */
-float defaultDriveCurve(float input, float scale);
+// default drive curve
+extern ExpoDriveCurve defaultDriveCurve;
 
 /**
  * @brief Chassis class
@@ -201,10 +296,12 @@ class Chassis {
          * @param lateralSettings settings for the lateral controller
          * @param angularSettings settings for the angular controller
          * @param sensors sensors to be used for odometry
-         * @param driveCurve drive curve to be used. defaults to `defaultDriveCurve`
+         * @param throttleCurve curve applied to throttle input during driver control
+         * @param turnCurve curve applied to steer input during driver control
          */
         Chassis(Drivetrain drivetrain, ControllerSettings linearSettings, ControllerSettings angularSettings,
-                OdomSensors sensors, DriveCurveFunction_t driveCurve = &defaultDriveCurve);
+                OdomSensors sensors, DriveCurve* throttleCurve = &defaultDriveCurve,
+                DriveCurve* steerCurve = &defaultDriveCurve);
         /**
          * @brief Calibrate the chassis sensors
          *
@@ -248,19 +345,53 @@ class Chassis {
          */
         void waitUntilDone();
         /**
-         * @brief Turn the chassis so it is facing the target point
+         * @brief Sets the brake mode of the drivetrain motors
          *
-         * The PID logging id is "angularPID"
+         * @param mode Mode to set the drivetrain motors to
+         */
+        void setBrakeMode(pros::motor_brake_mode_e mode);
+        /**
+         * @brief Turn the chassis so it is facing the target point
          *
          * @param x x location
          * @param y y location
          * @param timeout longest time the robot can spend moving
-         * @param forwards whether the robot should turn to face the point with the front of the robot. true by
-         * default
-         * @param maxSpeed the maximum speed the robot can turn at. Default is 127
+         * @param params struct to simulate named parameters
          * @param async whether the function should be run asynchronously. true by default
          */
-        void turnTo(float x, float y, int timeout, bool forwards = true, float maxSpeed = 127, bool async = true);
+        void turnToPoint(float x, float y, int timeout, TurnToPointParams params = {}, bool async = true);
+        /**
+         * @brief Turn the chassis so it is facing the target heading
+         *
+         * @param theta heading location
+         * @param timeout longest time the robot can spend moving
+         * @param params struct to simulate named parameters
+         * @param async whether the function should be run asynchronously. true by default
+         */
+        void turnToHeading(float theta, int timeout, TurnToHeadingParams params = {}, bool async = true);
+        /**
+         * @brief Turn the chassis so it is facing the target heading, but only by moving one half of the drivetrain
+         *
+         * @param theta heading location
+         * @param lockedSide side of the drivetrain that is locked
+         * @param timeout longest time the robot can spend moving
+         * @param params struct to simulate named parameters
+         * @param async whether the function should be run asynchronously. true by default
+         */
+        void swingToHeading(float theta, DriveSide lockedSide, int timeout, SwingToHeadingParams params = {},
+                            bool async = true);
+        /**
+         * @brief Turn the chassis so it is facing the target point, but only by moving one half of the drivetrain
+         *
+         * @param x x location
+         * @param y y location
+         * @param lockedSide side of the drivetrain that is locked
+         * @param timeout longest time the robot can spend moving
+         * @param params struct to simulate named parameters
+         * @param async whether the function should be run asynchronously. true by default
+         */
+        void swingToPoint(float x, float y, DriveSide lockedSide, int timeout, SwingToPointParams params = {},
+                          bool async = true);
         /**
          * @brief Move the chassis towards the target pose
          *
@@ -296,37 +427,39 @@ class Chassis {
          */
         void follow(const asset& path, float lookahead, int timeout, bool forwards = true, bool async = true);
         /**
-         * @brief Control the robot during the driver control period using the tank drive control scheme. In
-         * this control scheme one joystick axis controls one half of the robot, and another joystick axis
-         * controls another.
-         * @param left speed of the left side of the drivetrain. Takes an input from -127 to 127.
-         * @param right speed of the right side of the drivetrain. Takes an input from -127 to 127.
-         * @param curveGain control how steep the drive curve is. The larger the number, the steeper the curve.
-         * A value of 0 disables the curve entirely.
-         */
-        void tank(int left, int right, float curveGain = 0.0);
-        /**
-         * @brief Control the robot during the driver using the arcade drive control scheme. In this control
-         * scheme one joystick axis controls the forwards and backwards movement of the robot, while the other
-         * joystick axis controls  the robot's turning
+         * @brief Control the robot during the driver using the arcade drive control scheme. In this control scheme one
+         * joystick axis controls the forwards and backwards movement of the robot, while the other joystick axis
+
+         * controls  the robot's turning
          * @param throttle speed to move forward or backward. Takes an input from -127 to 127.
          * @param turn speed to turn. Takes an input from -127 to 127.
-         * @param curveGain the scale inputted into the drive curve function. If you are using the default drive
-         * curve, refer to the `defaultDriveCurve` documentation.
+         * @param disableDriveCurve whether to disable the drive curve or not. If disabled, uses a linear curve with no
+         * deadzone or minimum power
          */
-        void arcade(int throttle, int turn, float curveGain = 0.0);
+        void tank(int left, int right, bool disableDriveCurve = false);
         /**
-         * @brief Control the robot during the driver using the curvature drive control scheme. This control
-         * scheme is very similar to arcade drive, except the second joystick axis controls the radius of the
-         * curve that the drivetrain makes, rather than the speed. This means that the driver can accelerate in
-         * a turn without changing the radius of that turn. This control scheme defaults to arcade when forward
-         * is zero.
+         * @brief Control the robot during the driver using the arcade drive control scheme. In this control scheme one
+         * joystick axis controls the forwards and backwards movement of the robot, while the other joystick axis
+         * controls the robot's turning
+         *
          * @param throttle speed to move forward or backward. Takes an input from -127 to 127.
          * @param turn speed to turn. Takes an input from -127 to 127.
-         * @param curveGain the scale inputted into the drive curve function. If you are using the default drive
-         * curve, refer to the `defaultDriveCurve` documentation.
+         * @param disableDriveCurve whether to disable the drive curve or not. If disabled, uses a linear curve with no
+         * deadzone or minimum power
          */
-        void curvature(int throttle, int turn, float cureGain = 0.0);
+        void arcade(int throttle, int turn, bool disableDriveCurve = false);
+        /**
+         * @brief Control the robot during the driver using the curvature drive control scheme. This control scheme is
+         * very similar to arcade drive, except the second joystick axis controls the radius of the curve that the
+         * drivetrain makes, rather than the speed. This means that the driver can accelerate in a turn without changing
+         * the radius of that turn. This control scheme defaults to arcade when forward is zero.
+         *
+         * @param throttle speed to move forward or backward. Takes an input from -127 to 127.
+         * @param turn speed to turn. Takes an input from -127 to 127.
+         * @param disableDriveCurve whether to disable the drive curve or not. If disabled, uses a linear curve with no
+         * deadzone or minimum power
+         */
+        void curvature(int throttle, int turn, bool disableDriveCurve = false);
         /**
          * @brief Cancels the currently running motion.
          * If there is a queued motion, then that queued motion will run.
@@ -341,6 +474,11 @@ class Chassis {
          * @return whether a motion is currently running
          */
         bool isInMotion() const;
+        /**
+         * @brief Resets the x and y position of the robot
+         * without interfering with the heading.
+         */
+        void resetLocalPosition();
     protected:
         /**
          * @brief Indicates that this motion is queued and blocks current task until this motion reaches front of queue
@@ -350,26 +488,28 @@ class Chassis {
          * @brief Dequeues this motion and permits queued task to run
          */
         void endMotion();
-    private:
+        
         bool motionRunning = false;
         bool motionQueued = false;
 
-        pros::Mutex mutex;
-        float distTravelled = 0;
+        float distTraveled = 0;
         public:
         ControllerSettings lateralSettings;
         ControllerSettings angularSettings;
-    private:
+    protected:
         Drivetrain drivetrain;
         OdomSensors sensors;
-        DriveCurveFunction_t driveCurve;
-        public:
+        DriveCurve* throttleCurve;
+        DriveCurve* steerCurve;
+public:
         PID lateralPID;
         PID angularPID;
-        private:
+        protected:
         ExitCondition lateralLargeExit;
         ExitCondition lateralSmallExit;
         ExitCondition angularLargeExit;
         ExitCondition angularSmallExit;
+    private:
+        pros::Mutex mutex;
 };
 } // namespace lemlib
