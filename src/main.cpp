@@ -1,11 +1,15 @@
 #include "main.h"
 #include "catapult.h"
+#include "lemlib/chassis/chassis.hpp"
+#include "lemlib/util.hpp"
 #include "lift.h"
 #include "pros/misc.h"
 #include "pros/misc.hpp"
 #include "pros/rtos.hpp"
 #include "robot.h"
 #include "auton.h"
+#include <cmath>
+#include <iostream>
 #include <sstream>
 #include <string>
 #include "neil_pid.h"
@@ -194,11 +198,42 @@ void makeLowerCase(std::string& str) {
   ;
 }
 
-void print() { printf("y: %fdeg\n", Robot::chassis->getPose().y); }
+enum TUNING_MODE { LATERAL, ANGULAR };
+
+float getValue(const TUNING_MODE mode) {
+  if (mode == LATERAL) return Robot::chassis->getPose().y;
+  return Robot::chassis->getPose().theta;
+}
+
+void print(const TUNING_MODE mode, bool key = true) {
+  if (mode == LATERAL) printf("%s%fin\n", key ? "y: " : "", getValue(mode));
+  else printf("%s%fdeg\n", key ? "theta: " : "", getValue(mode));
+  printf("battery: %i\n", int(pros::battery::get_capacity()));
+
+  // print average drive motor temperature
+  auto temps = Robot::Motors::leftDrive.get_temperatures();
+  auto rightTemps = Robot::Motors::rightDrive.get_temperatures();
+  // concat right motor temps to temps
+  temps.insert(temps.end(), rightTemps.begin(), rightTemps.end());
+  // sum temps
+  float sum = 0;
+  for (const auto& temp : temps) sum += temp;
+  float average = sum / temps.size();
+  printf("motor temp: %f\n", average);
+}
 
 void tuningCLI() {
-  auto& pid = Robot::chassis->lateralPID;
-  auto& settings = Robot::chassis->lateralSettings;
+  static TUNING_MODE mode = ANGULAR;
+  lemlib::PID* pid = &(mode == LATERAL ? Robot::chassis->lateralPID
+                                       : Robot::chassis->angularPID);
+  lemlib::ControllerSettings* settings =
+      &(mode == LATERAL ? Robot::chassis->lateralSettings
+                        : Robot::chassis->angularSettings);
+
+  const float defaultAngularDist = 90;
+  const float defaultLateralDist = 24;
+  float angularDist = defaultAngularDist;
+  float lateralDist = defaultLateralDist;
   while (1) {
     try {
       std::cout << "pid tuner> ";
@@ -218,13 +253,13 @@ void tuningCLI() {
         float gainValue = std::stof(gainValueStr);
 
         if (gainType.find("p") != std::string::npos) {
-          pid.kP = gainValue;
+          pid->kP = gainValue;
         } else if (gainType.find("d") != std::string::npos) {
-          pid.kD = gainValue;
+          pid->kD = gainValue;
         } else if (gainType.find("i") != std::string::npos) {
-          pid.kI = gainValue;
+          pid->kI = gainValue;
         } else if (gainType.find("s") != std::string::npos) {
-          settings.slew = gainValue;
+          settings->slew = gainValue;
         } else {
           std::cout << "invalid gain type" << std::endl;
         }
@@ -234,22 +269,26 @@ void tuningCLI() {
           continue;
         }
         std::string gainType = params.at(1);
-        if (gainType.find("p") != std::string::npos) {
-          std::cout << "kP: " << pid.kP << std::endl;
+        if (gainType == "mode") {
+          std::cout << "mode: " << (mode == LATERAL ? "lateral" : "angular")
+                    << std::endl;
+        } else if (gainType == "dist") {
+          std::cout << "dist: " << (mode == LATERAL ? lateralDist : angularDist)
+                    << std::endl;
+        } else if (gainType.find("p") != std::string::npos) {
+          std::cout << "kP: " << pid->kP << std::endl;
         } else if (gainType.find("d") != std::string::npos) {
-          std::cout << "kD: " << pid.kD << std::endl;
+          std::cout << "kD: " << pid->kD << std::endl;
         } else if (gainType.find("i") != std::string::npos) {
-          std::cout << "kI: " << pid.kI << std::endl;
+          std::cout << "kI: " << pid->kI << std::endl;
         } else if (gainType.find("s") != std::string::npos) {
-          std::cout << "slew: " << settings.slew << std::endl;
+          std::cout << "slew: " << settings->slew << std::endl;
         } else {
           std::cout << "invalid gain type" << std::endl;
         }
       } else if (command == "run" || command == "x" || command == "rr") {
         Robot::chassis->cancelMotion();
         Robot::chassis->setPose(0, 0, 0);
-        float x = 0;
-        float y = (command == "rr" ? -1 : 1) * 24;
         float timeout = 2000;
         bool wait = true;
         if (params.size() > 1) {
@@ -264,17 +303,93 @@ void tuningCLI() {
             timeout = std::stof(*timeoutIt);
           }
         }
-        Robot::chassis->moveToPoint(x, y, timeout, {.forwards = y > 0});
+        const bool reversed = command == "rr";
+        const int multiplier = reversed ? -1 : 1;
+        const int startTime = pros::millis();
+        switch (mode) {
+          case LATERAL:
+            Robot::chassis->moveToPoint(0, multiplier * lateralDist, timeout,
+                                        {.forwards = !reversed});
+            break;
+          case ANGULAR:
+            Robot::chassis->turnToHeading(multiplier * angularDist, timeout);
+            break;
+        }
+
         if (wait) {
-          Robot::chassis->waitUntilDone();
-          print();
+          float prev = getValue(mode);
+          float prevOscillation = 0;
+          float prevVel = 0;
+          int count = 0;
+
+          printf("oscillations\nnum\ttime\tcurr\taccel\n");
+          while (Robot::chassis->isInMotion()) {
+            pros::delay(10);
+            const float curr = getValue(mode);
+            const float vel = (curr - prev) / 0.01;
+            const float smoothVel = vel * 0.75 + prevVel * 0.25;
+            prev = curr;
+
+            // if sign of velocity changes, and this oscillation is not small
+            if (smoothVel * prevVel < 0 && std::fabs(prevOscillation - curr) >
+                                               (mode == LATERAL ? 0.25 : 1)) {
+              printf("%i\t%4.2f\t%4.2f\t%4.2f\n", ++count,
+                     float(pros::millis() - startTime) / 1000, curr,
+                     smoothVel - prevVel);
+              prevOscillation = curr;
+            }
+            prevVel = vel;
+          }
+          printf("\n");
+          print(mode);
         }
       } else if (command == "print" || command == "p") {
-        print();
+        print(mode);
       } else if (command == "stop" || command == "s") {
         Robot::chassis->cancelMotion();
       } else if (command == "exit") {
         break;
+
+      } else if (command == "mode") {
+        if (params.size() < 2) {
+          std::cout << "invalid number of arguments" << std::endl;
+          continue;
+        }
+        std::string newMode = params.at(1);
+
+        if (newMode.find("l") != std::string::npos) {
+          std::cout << "switching to lateral mode" << std::endl;
+          pid = &Robot::chassis->lateralPID;
+          settings = &Robot::chassis->lateralSettings;
+          mode = LATERAL;
+        } else if (newMode.find("a") != std::string::npos) {
+          std::cout << "switching to angular mode" << std::endl;
+          mode = ANGULAR;
+          pid = &Robot::chassis->angularPID;
+          settings = &Robot::chassis->angularSettings;
+        } else {
+          std::cout << "invalid mode" << std::endl;
+        }
+
+      } else if (command == "dist") {
+        if (params.size() < 2) {
+          std::cout << "invalid number of arguments" << std::endl;
+          continue;
+        }
+        float dist;
+        if (std::string(params.at(1)).find("r") != std::string::npos)
+          dist = mode == LATERAL ? defaultLateralDist : defaultAngularDist;
+        dist = std::stof(params.at(1));
+
+        printf("setting %s dist to: %f\n",
+               mode == LATERAL ? "lateral" : "angular", dist);
+
+        if (mode == LATERAL) {
+          lateralDist = dist;
+        } else {
+          angularDist = dist;
+        }
+
       } else {
         std::cout << "invalid command" << std::endl;
       }
@@ -289,17 +404,17 @@ void tuningCLI() {
 const bool tuneModeEnabled = true;
 
 /**
- * Runs the operator control code. This function will be started in its own task
- * with the default priority and stack size whenever the robot is enabled via
- * the Field Management System or the VEX Competition Switch in the operator
- * control mode.
+ * Runs the operator control code. This function will be started in its own
+ * task with the default priority and stack size whenever the robot is enabled
+ * via the Field Management System or the VEX Competition Switch in the
+ * operator control mode.
  *
  * If no competition control is connected, this function will run immediately
  * following initialize().
  *
  * If the robot is disabled or communications is lost, the
- * operator control task will be stopped. Re-enabling the robot will restart the
- * task, not resume it from where it left off.
+ * operator control task will be stopped. Re-enabling the robot will restart
+ * the task, not resume it from where it left off.
  */
 void opcontrol() {
   auton::AutonSelector::disable();
