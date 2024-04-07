@@ -4,6 +4,7 @@
 #include "lemlib/chassis/chassis.hpp"
 #include "driverFeedback.h"
 #include "controllerScreen.h"
+#include "selector.h"
 #include "wings.h"
 #include <memory>
 
@@ -41,6 +42,7 @@ class Robot {
         static pros::Imu imuC;
         static pros::ADILineSensor cataElevationBar;
         static pros::Rotation cata;
+        static pros::Rotation autonSelector;
     };
 
     class Dimensions {
@@ -60,6 +62,8 @@ class Robot {
 
         static constexpr float drivetrainWidth = 14.5;
         static constexpr float drivetrainLength = 25 / 2.0;
+
+        static const int autonSelectorGearTeeth;
     };
 
     class Actions {
@@ -112,7 +116,8 @@ class Robot {
         static DriverFeedback* feedback;
         static ControllerScreen* controller;
         static FourWingSubsystem* wings;
-
+        static auton::AutonSelector* autonSelector;
+        
         static pros::Task* task;
 
         static void initialize();

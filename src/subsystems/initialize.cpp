@@ -1,4 +1,5 @@
 #include "robot.h"
+#include "selector.h"
 
 constexpr int MIN_MILLIS_BETWEEN_UPDATES = 10;
 
@@ -7,6 +8,7 @@ LiftArmStateMachine* Robot::Subsystems::lift = nullptr;
 DriverFeedback* Robot::Subsystems::feedback = nullptr;
 ControllerScreen* Robot::Subsystems::controller = nullptr;
 FourWingSubsystem* Robot::Subsystems::wings = nullptr;
+auton::AutonSelector* Robot::Subsystems::autonSelector = nullptr;
 
 pros::Task* Robot::Subsystems::task = nullptr;
 
@@ -20,11 +22,14 @@ void Robot::Subsystems::initialize() {
   // Robot::Subsystems::feedback = new DriverFeedback();
   Robot::Subsystems::controller = new ControllerScreen(&Robot::control);
   Robot::Subsystems::wings = FourWingSubsystem::makeFromPortConfig(
-                                 Robot::Pistons::wingConfig,
-                                 Robot::Tunables::driverWingJoystickThreshold);
-  
+      Robot::Pistons::wingConfig, Robot::Tunables::driverWingJoystickThreshold);
+
   printf("wings front size: %d\n", Robot::Subsystems::wings->front->size());
   printf("wings back size: %d\n", Robot::Subsystems::wings->back->size());
+  
+  Robot::Subsystems::autonSelector = new auton::AutonSelector(
+      Robot::Sensors::autonSelector, Robot::Dimensions::autonSelectorGearTeeth);
+
 
   Robot::Subsystems::task = new pros::Task([]() {
     while (true) {
@@ -48,4 +53,5 @@ void Robot::Subsystems::update() {
   Robot::Subsystems::lift->update();
   // printf("updating controller\n");
   // Robot::Subsystems::controller->update();
+  Robot::Subsystems::autonSelector->update();
 }

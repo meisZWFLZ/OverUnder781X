@@ -74,12 +74,12 @@ void screen() {
 pros::Task* screenTask;
 
 void addAutons() {
-  auton::AutonSelector::addAuton(&auton::autons::disrupt);
-  auton::AutonSelector::addAuton(&auton::autons::sixBall);
-  auton::AutonSelector::addAuton(&auton::autons::defensive);
-  auton::AutonSelector::addAuton(&auton::autons::sixRush);
-  auton::AutonSelector::addAuton(&auton::autons::doNothing);
-  auton::AutonSelector::addAuton(&auton::autons::skills);
+  Robot::Subsystems::autonSelector->addAuton(&auton::autons::disrupt);
+  Robot::Subsystems::autonSelector->addAuton(&auton::autons::sixBall);
+  Robot::Subsystems::autonSelector->addAuton(&auton::autons::defensive);
+  Robot::Subsystems::autonSelector->addAuton(&auton::autons::sixRush);
+  Robot::Subsystems::autonSelector->addAuton(&auton::autons::doNothing);
+  Robot::Subsystems::autonSelector->addAuton(&auton::autons::skills);
 }
 
 /**
@@ -97,12 +97,11 @@ void initialize() {
   pros::lcd::set_text(1, "Calibrating chassis...");
   Robot::Subsystems::initialize();
   pros::lcd::set_text(1, "Chassis Calibrated!");
-  // Robot::chassis->setPose(0, 0, 0);
-  // Robot::Actions::raiseIntake();
 
   addAutons();
-  auton::AutonSelector::init();
-  auton::AutonSelector::enable();
+  Robot::Subsystems::autonSelector->init();
+  Robot::Subsystems::autonSelector->enable();
+
   // create a task to print the position to the screen
   new pros::Task {screen};
 }
@@ -142,12 +141,12 @@ void printPose() {
  * from where it left off.
  */
 void autonomous() {
-  auton::AutonSelector::disable();
+  Robot::Subsystems::autonSelector->disable();
   autonHasRun = true;
   if (pros::competition::is_connected()) Robot::Actions::prepareRobot();
   // printf("auton start");
 
-  auton::AutonSelector::runAuton();
+  Robot::Subsystems::autonSelector->runAuton();
 }
 
 // class OnRisingEdgeListener {
@@ -417,7 +416,7 @@ const bool tuneModeEnabled = true;
  * the task, not resume it from where it left off.
  */
 void opcontrol() {
-  auton::AutonSelector::disable();
+  Robot::Subsystems::autonSelector->disable();
   Robot::Actions::retractBothWings();
   Robot::Actions::retractBackWing();
 
@@ -430,7 +429,7 @@ void opcontrol() {
 
   bool skills = false;
   if (pros::competition::is_connected() && !autonHasRun) {
-    if (!std::strcmp(auton::AutonSelector::getCurrentAuton(),
+    if (!std::strcmp(Robot::Subsystems::autonSelector->getCurrentAuton(),
                      (char*)("skills")))
       skills = true;
     else Robot::Actions::prepareRobot();

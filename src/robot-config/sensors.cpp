@@ -10,3 +10,4 @@ pros::Imu Robot::Sensors::imuC {16};
 // not used
 pros::ADILineSensor Robot::Sensors::cataElevationBar {'E'};
 pros::Rotation Robot::Sensors::cata {9, true};
+pros::Rotation Robot::Sensors::autonSelector {11};
