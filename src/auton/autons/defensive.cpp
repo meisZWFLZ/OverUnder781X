@@ -1,5 +1,6 @@
 #include "auton.h"
 #include "lemlib/asset.hpp"
+#include "lemlib/chassis/chassis.hpp"
 #include "pros/rtos.hpp"
 #include "robot.h"
 #include "fieldDimensions.h"
@@ -11,12 +12,19 @@ using namespace fieldDimensions;
 using namespace auton::utils;
 
 void runDefensive() {
-  // front right corner of the drivetrain aligned with the inside of the puzzling facing right
+  // front right corner of the drivetrain aligned with the inside of the
+  // puzzling facing right
   Robot::chassis->setPose(
       {MIN_X + TILE_LENGTH + Robot::Dimensions::drivetrainLength / 2,
        MIN_Y + TILE_LENGTH - Robot::Dimensions::drivetrainWidth / 2, RIGHT},
       false);
 
+  // drop intake
+  tank(-48, -48, 150, 0);
+  stop();
+  // let vibrations dissipate
+  pros::delay(1000);
+  
   // back up to get in better position to remove the matchload zone triball
   Robot::chassis->moveToPoint(
       MIN_X + TILE_LENGTH,
@@ -35,17 +43,18 @@ void runDefensive() {
   // let wing expand
   Robot::Actions::expandBackWing();
   pros::delay(500);
-  
+
   // remove the matchload zone triball
-  Robot::chassis->turnToPoint(1000000, 0, 2000);
+  Robot::chassis->turnToHeading(
+      UP + 45, 2000, {.direction = AngularDirection::CCW_COUNTERCLOCKWISE});
   Robot::chassis->waitUntilDone();
-  
+
   // let ball roll away
   pros::delay(1000);
 
   // retract wing so it doesn't get in the way
   Robot::Actions::retractBackWing();
-  
+
   // intake any straggler triballs
   Robot::Actions::intake();
 
