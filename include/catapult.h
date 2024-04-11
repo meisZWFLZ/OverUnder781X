@@ -2,9 +2,27 @@
 
 #include "lemlib/timer.hpp"
 #include "pros/adi.hpp"
+#include "pros/misc.hpp"
 #include "pros/motors.hpp"
 #include "pros/rotation.hpp"
 #include <cstdint>
+#include <unordered_map>
+#include <vector>
+
+struct CataConfig {
+    int lowerMilliVolts;
+    int upperMilliVolts;
+    int interval;
+};
+
+struct RetractionTest {
+    CataConfig config;
+    /** degrees per second */
+    std::vector<float> velocities;
+    uint32_t startTime = pros::millis();
+    float batteryPercent = pros::battery::get_capacity();
+    float motorTemp;
+};
 
 class CatapultStateMachine {
   public:
@@ -65,7 +83,8 @@ class CatapultStateMachine {
      */
     bool isCataLoadable() const;
     /**
-     * @return whether the rotation sensor indicates the catapult is not retracted
+     * @return whether the rotation sensor indicates the catapult is not
+     * retracted
      */
     bool isCataNotLoadable() const;
 
@@ -75,6 +94,13 @@ class CatapultStateMachine {
     void waitUntilDoneMatchloading();
 
     void update();
+
+    CataConfig config = {.lowerMilliVolts = 9000,
+                         .upperMilliVolts = 9000,
+                         .interval = 100};
+
+    /** maps config to retraction time */
+    std::vector<RetractionTest> retractionTests;
   private:
     /**
      * @brief Modify triballsLeftToBeFired and triballsFired to indicate a
@@ -83,7 +109,7 @@ class CatapultStateMachine {
     void indicateTriballFired();
     void retractCataMotor();
     void stopCataMotor();
-    
+
     bool isElevationBarSensed() const;
 
     bool constantFiring = false;

@@ -4,19 +4,21 @@
 #include "robot.h"
 #include "pros/rtos.hpp"
 #include <cmath>
+#include <cstdint>
 #include <cstdio>
 
-CatapultStateMachine::CatapultStateMachine(pros::Motor_Group* cataMotors,
-                                           pros::ADILineSensor* elevationBarSensor,
-                                           pros::Rotation* cataRotation)
-  : motors(cataMotors), elevationBarSensor(elevationBarSensor), rotation(cataRotation) {}
+CatapultStateMachine::CatapultStateMachine(
+    pros::Motor_Group* cataMotors, pros::ADILineSensor* elevationBarSensor,
+    pros::Rotation* cataRotation)
+  : motors(cataMotors), elevationBarSensor(elevationBarSensor),
+    rotation(cataRotation) {}
 
 bool CatapultStateMachine::fire() {
   if (this->state == EMERGENCY_STOPPED) return false;
   printf("fire\n");
   // if (this->state == READY) {
-    this->state = FIRING;
-    return true;
+  this->state = FIRING;
+  return true;
   // }
   // // this->constantFiring = true;
   // return false;
@@ -69,13 +71,13 @@ int start = 0;
 bool prevCataDisconnected = false;
 
 void CatapultStateMachine::update() {
+  static STATE prevState = READY;
+  static float prevCataDegrees = float(this->rotation->get_position()) / 100;
+
+  float currCataDegrees = float(this->rotation->get_position()) / 100;
+
   if (this->matchloading &&
       (this->timer.isDone() || this->triballsLeftToBeFired == 0)) {
-    // printf("stop matchloading\n");
-    // printf("timer: %i\n", this->timer.isDone());
-    // printf("timerLeft: %i\n", this->timer.getTimeLeft());
-    // printf("timerSet: %i\n", this->timer.getTimeSet());
-    // printf("triballs: %i\n", this->triballsLeftToBeFired);
     this->matchloading = false;
   }
   const STATE startState = this->state;
@@ -93,6 +95,28 @@ void CatapultStateMachine::update() {
       }
       break;
     case FIRING:
+      // if we just changed to firing
+      if (prevState != FIRING) {
+        // get the average temperature of the motors
+        std::vector<float> temps = {};
+        for (int i = 0; i < this->motors->size(); i++) {
+          const float temp = this->motors->get_temperatures()[i];
+          // ignore disconnected motors
+          if (temp != PROS_ERR) temps.push_back(temp);
+        }
+        float avgTemp = 0;
+        for (float temp : temps) avgTemp += temp;
+        avgTemp /= temps.size();
+
+        // make a new test entry
+        this->retractionTests.push_back(
+            {.config = this->config,
+             .velocities = {},
+             .startTime = pros::millis(),
+             .batteryPercent = float(pros::battery::get_capacity()),
+             .motorTemp = avgTemp});
+      }
+
       hasFired = true;
       startReadying = false;
       this->retractCataMotor();
@@ -106,7 +130,6 @@ void CatapultStateMachine::update() {
       this->retractCataMotor();
       if (this->isCataLoadable()) {
         {
-          // printf("switch to ready\n");
           this->stopCataMotor();
           this->state = READY;
         }
@@ -114,6 +137,14 @@ void CatapultStateMachine::update() {
         case EMERGENCY_STOPPED: this->stopCataMotor(); break;
       }
   }
+
+  if (this->state != EMERGENCY_STOPPED || this->state != READY) {
+    this->retractionTests.back().velocities.push_back(
+        (currCataDegrees - prevCataDegrees) / 0.01);
+  }
+
+  prevCataDegrees = currCataDegrees;
+
   // problem:
   // If motor disconnects, and then reconnects, the motor no longer has 127
   // power.
@@ -177,7 +208,8 @@ void CatapultStateMachine::update() {
     // if zero curent is currently being detected and has been detected for the
     // last 50ms, report that the cata is not moving
     if (startZeroCurrent != 0 && pros::millis() - startZeroCurrent > 50) {
-      // printf("cata disconnected, time:%i\n", pros::millis() - startZeroCurrent);
+      // printf("cata disconnected, time:%i\n", pros::millis() -
+      // startZeroCurrent);
       notMoving = true;
     } else notMoving = false;
 
@@ -185,6 +217,7 @@ void CatapultStateMachine::update() {
     // prevent the brain from optimizing messages sent to the motor
     if (notMoving) { this->motors->move_voltage(12000 - 120 * (rand() % 3)); }
   }
+  prevState = this->state;
 
   // if state changed, rerun update
   if (startState != this->state) this->update();
@@ -196,8 +229,13 @@ void CatapultStateMachine::indicateTriballFired() {
 }
 
 void CatapultStateMachine::retractCataMotor() {
-  static int run = 0;
-  this->motors->move_voltage(9000);
+  const auto currentTest = this->retractionTests.back();
+  const uint32_t timeSinceStart = pros::millis() - currentTest.startTime;
+  const int intervalNum =
+      floor(float(timeSinceStart) / currentTest.config.interval);
+  this->motors->move_voltage(intervalNum % 2 == 0
+                                 ? currentTest.config.lowerMilliVolts
+                                 : currentTest.config.upperMilliVolts);
 }
 
 void CatapultStateMachine::stopCataMotor() { this->motors->move_voltage(0); }
