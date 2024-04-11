@@ -109,12 +109,12 @@ void CatapultStateMachine::update() {
         avgTemp /= temps.size();
 
         // make a new test entry
-        this->retractionTests.push_back(
-            {.config = this->config,
-             .data = {},
-             .startTime = pros::millis(),
-             .batteryPercent = float(pros::battery::get_capacity()),
-             .motorTemp = avgTemp});
+        this->retractionTests.push_back(new RetractionTest {
+            .config = this->config,
+            .data = {},
+            .startTime = pros::millis(),
+            .batteryPercent = float(pros::battery::get_capacity()),
+            .motorTemp = avgTemp});
       }
 
       hasFired = true;
@@ -157,10 +157,10 @@ void CatapultStateMachine::update() {
     }
     avgWatts /= numMotors;
     avgVolts /= numMotors;
-    this->retractionTests.back().data.push_back(
-        {.velocity = (currCataDegrees - prevCataDegrees) / 0.01F,
-         .wattage = avgWatts,
-         .voltage = avgVolts});
+    this->retractionTests.back()->data.push_back(new RetractionTestDataEntry {
+        .velocity = (currCataDegrees - prevCataDegrees) / 0.01F,
+        .wattage = avgWatts,
+        .voltage = avgVolts});
   }
 
   prevCataDegrees = currCataDegrees;
@@ -250,12 +250,12 @@ void CatapultStateMachine::indicateTriballFired() {
 
 void CatapultStateMachine::retractCataMotor() {
   const auto currentTest = this->retractionTests.back();
-  const uint32_t timeSinceStart = pros::millis() - currentTest.startTime;
+  const uint32_t timeSinceStart = pros::millis() - currentTest->startTime;
   const int intervalNum =
-      floor(float(timeSinceStart) / currentTest.config.interval);
+      floor(float(timeSinceStart) / currentTest->config.interval);
   this->motors->move_voltage(intervalNum % 2 == 0
-                                 ? currentTest.config.milliVoltsA
-                                 : currentTest.config.milliVoltsB);
+                                 ? currentTest->config.milliVoltsA
+                                 : currentTest->config.milliVoltsB);
 }
 
 void CatapultStateMachine::stopCataMotor() { this->motors->move_voltage(0); }

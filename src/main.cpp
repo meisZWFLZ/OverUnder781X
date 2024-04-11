@@ -438,12 +438,12 @@ void opcontrol() {
     Robot::Subsystems::catapult->fireWithConfig(config);
     const auto& test = tests.back();
 
-    printf("%4.2f\t%4.2f\t%4.2f\t%i\t%i\n", test.data[0].velocity,
-           test.data[0].wattage, test.data[0].voltage, test.config.interval,
-           test.startTime);
-    for (int i = 1; i < test.data.size(); i++)
-      printf("%4.2f\t%4.2f\t%4.2f\n", test.data[i].velocity,
-             test.data[i].wattage, test.data[i].voltage);
+    printf("%4.2f\t%4.2f\t%4.2f\t%i\t%i\n", test->data[0]->velocity,
+           test->data[0]->wattage, test->data[0]->voltage,
+           test->config.interval, test->startTime);
+    for (int i = 1; i < test->data.size(); i++)
+      printf("%4.2f\t%4.2f\t%4.2f\n", test->data[i]->velocity,
+             test->data[i]->wattage, test->data[i]->voltage);
   }
 
   return;

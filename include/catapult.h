@@ -28,7 +28,7 @@ struct RetractionTestDataEntry {
 struct RetractionTest {
     CataConfig config;
     /** degrees per second */
-    std::vector<RetractionTestDataEntry> data;
+    std::vector<RetractionTestDataEntry*> data;
     uint32_t startTime = pros::millis();
     float batteryPercent = pros::battery::get_capacity();
     float motorTemp;
@@ -110,7 +110,7 @@ class CatapultStateMachine {
                          .interval = 100};
 
     /** maps config to retraction time */
-    std::vector<RetractionTest> retractionTests;
+    std::vector<RetractionTest*> retractionTests;
 
     void waitUntilDoneFiring();
 
