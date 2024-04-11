@@ -430,19 +430,20 @@ void opcontrol() {
                          .milliVoltsB = milliVoltsB,
                          .interval = i});
   }
-  Robot::Subsystems::catapult->testManyConfigs(configs);
-  auto tests = Robot::Subsystems::catapult->retractionTests;
+  auto& tests = Robot::Subsystems::catapult->retractionTests;
 
-  printf("begin test prints\n");
+  printf("begin cata tests\n");
   printf("velocity\tinterval\ttime\n");
-  for (const auto& test : tests) {
+  for (const auto& config : configs) {
+    Robot::Subsystems::catapult->fireWithConfig(config);
+    const auto& test = tests.back();
+
     printf("%4.2f\t%i\t%i\n", test.velocities[0], test.config.interval,
            test.startTime);
-    for (int i = 1; i < test.velocities.size(); i++) {
+    for (int i = 1; i < test.velocities.size(); i++)
       printf("%4.2f\n", test.velocities[i]);
-    }
   }
-  
+
   return;
   // Robot::Subsystems::autonSelector->disable();
   Robot::Actions::retractBothWings();
