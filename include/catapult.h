@@ -15,10 +15,20 @@ struct CataConfig {
     int interval;
 };
 
+struct RetractionTestDataEntry {
+    float velocity;
+    float wattage;
+    /**
+     * @brief  The voltage that the is actually motor is using.
+     * Not the voltage we want it to use.
+     */
+    float voltage;
+};
+
 struct RetractionTest {
     CataConfig config;
     /** degrees per second */
-    std::vector<float> velocities;
+    std::vector<RetractionTestDataEntry> data;
     uint32_t startTime = pros::millis();
     float batteryPercent = pros::battery::get_capacity();
     float motorTemp;

@@ -111,7 +111,7 @@ void CatapultStateMachine::update() {
         // make a new test entry
         this->retractionTests.push_back(
             {.config = this->config,
-             .velocities = {},
+             .data = {},
              .startTime = pros::millis(),
              .batteryPercent = float(pros::battery::get_capacity()),
              .motorTemp = avgTemp});
@@ -139,8 +139,28 @@ void CatapultStateMachine::update() {
   }
 
   if (this->state != EMERGENCY_STOPPED || this->state != READY) {
-    this->retractionTests.back().velocities.push_back(
-        (currCataDegrees - prevCataDegrees) / 0.01);
+    float avgWatts = INFINITY;
+    float avgVolts = INFINITY;
+    int numMotors = 0;
+    for (int i = 0; i < this->motors->size(); i++) {
+      const float watts = this->motors->at(i).get_power();
+      const float volts = this->motors->at(i).get_voltage();
+      if (watts != PROS_ERR) {
+        if (avgWatts == INFINITY) {
+          avgWatts = 0;
+          avgVolts = 0;
+        }
+        avgWatts += watts;
+        avgVolts += volts;
+        numMotors++;
+      }
+    }
+    avgWatts /= numMotors;
+    avgVolts /= numMotors;
+    this->retractionTests.back().data.push_back(
+        {.velocity = (currCataDegrees - prevCataDegrees) / 0.01F,
+         .wattage = avgWatts,
+         .voltage = avgVolts});
   }
 
   prevCataDegrees = currCataDegrees;
