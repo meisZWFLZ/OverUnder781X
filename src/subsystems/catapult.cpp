@@ -234,8 +234,8 @@ void CatapultStateMachine::retractCataMotor() {
   const int intervalNum =
       floor(float(timeSinceStart) / currentTest.config.interval);
   this->motors->move_voltage(intervalNum % 2 == 0
-                                 ? currentTest.config.lowerMilliVolts
-                                 : currentTest.config.upperMilliVolts);
+                                 ? currentTest.config.milliVoltsA
+                                 : currentTest.config.milliVoltsB);
 }
 
 void CatapultStateMachine::stopCataMotor() { this->motors->move_voltage(0); }
@@ -259,4 +259,19 @@ CatapultStateMachine::STATE CatapultStateMachine::getState() const {
 void CatapultStateMachine::waitUntilDoneMatchloading() {
   while (this->matchloading && !this->timer.isDone() && getTriballsLeft() != 0)
     pros::delay(10);
+}
+
+void CatapultStateMachine::waitUntilDoneFiring() {
+  while (this->state != READY) pros::delay(10);
+}
+
+void CatapultStateMachine::fireWithConfig(CataConfig config, bool isBlocking) {
+  this->waitUntilDoneFiring();
+  this->config = config;
+  this->fire();
+  if (isBlocking) this->waitUntilDoneFiring();
+}
+
+void CatapultStateMachine::testManyConfigs(std::vector<CataConfig> configs) {
+  for (CataConfig config : configs) { this->fireWithConfig(config, true); }
 }

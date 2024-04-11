@@ -10,8 +10,8 @@
 #include <vector>
 
 struct CataConfig {
-    int lowerMilliVolts;
-    int upperMilliVolts;
+    int milliVoltsA;
+    int milliVoltsB;
     int interval;
 };
 
@@ -95,12 +95,24 @@ class CatapultStateMachine {
 
     void update();
 
-    CataConfig config = {.lowerMilliVolts = 9000,
-                         .upperMilliVolts = 9000,
+    CataConfig config = {.milliVoltsA = 9000,
+                         .milliVoltsB = 9000,
                          .interval = 100};
 
     /** maps config to retraction time */
     std::vector<RetractionTest> retractionTests;
+
+    void waitUntilDoneFiring();
+
+    /**
+     * @brief
+     *
+     * @param config
+     * @param isBlocking waits until the catapult is done firing
+     */
+    void fireWithConfig(CataConfig config, bool isBlocking = true);
+
+    void testManyConfigs(std::vector<CataConfig> configs);
   private:
     /**
      * @brief Modify triballsLeftToBeFired and triballsFired to indicate a

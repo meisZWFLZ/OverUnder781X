@@ -12,6 +12,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <vector>
 #include "neil_pid.h"
 #include "fieldDimensions.h"
 #include "selector.h"
@@ -416,6 +417,33 @@ const bool tuneModeEnabled = true;
  * the task, not resume it from where it left off.
  */
 void opcontrol() {
+  int milliVoltsA = 12000 * 1.00;
+  int milliVoltsB = 12000 * 0.99;
+  int minInterval = 10;
+  int maxInterval = 500;
+  int intervalStep = 10;
+  int trials = 1;
+  std::vector<CataConfig> configs;
+  for (int i = minInterval; i <= maxInterval; i += intervalStep) {
+    for (int trial = 0; trial < trials; trial++)
+      configs.push_back({.milliVoltsA = milliVoltsA,
+                         .milliVoltsB = milliVoltsB,
+                         .interval = i});
+  }
+  Robot::Subsystems::catapult->testManyConfigs(configs);
+  auto tests = Robot::Subsystems::catapult->retractionTests;
+
+  printf("begin test prints\n");
+  printf("velocity\tinterval\ttime\n");
+  for (const auto& test : tests) {
+    printf("%4.2f\t%i\t%i\n", test.velocities[0], test.config.interval,
+           test.startTime);
+    for (int i = 1; i < test.velocities.size(); i++) {
+      printf("%4.2f\n", test.velocities[i]);
+    }
+  }
+  
+  return;
   // Robot::Subsystems::autonSelector->disable();
   Robot::Actions::retractBothWings();
   Robot::Actions::retractBackWing();
