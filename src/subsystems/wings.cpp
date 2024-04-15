@@ -123,9 +123,9 @@ void FourWingSubsystem::driverUpdate() {
 
   enum SELECTED_WING_PAIR {
     /** joystick is being pushed outward more than this->joystickThreshold */
-    FRONT,
+    LEFT,
     /** joystick is being pushed inward more than this->joystickThreshold */
-    BACK,
+    RIGHT,
     /** joystick is being within this->joystickThreshold */
     NONE,
   };
@@ -143,13 +143,13 @@ void FourWingSubsystem::driverUpdate() {
         Robot::control.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
 
     // determine which wing the driver is trying to toggle
-    const SELECTED_WING_PAIR left = std::abs(leftX) > this->joystickThreshold
-                                        ? (leftX < 0 ? FRONT : BACK)
-                                        : NONE;
-    const SELECTED_WING_PAIR right = std::abs(rightX) > this->joystickThreshold
-                                         ? (rightX > 0 ? FRONT : BACK)
+    const SELECTED_WING_PAIR front = std::abs(leftX) > this->joystickThreshold
+                                         ? (leftX < 0 ? LEFT : RIGHT)
                                          : NONE;
-    const bool anySelected = left != NONE || right != NONE;
+    const SELECTED_WING_PAIR back = std::abs(rightX) > this->joystickThreshold
+                                        ? (rightX > 0 ? LEFT : RIGHT)
+                                        : NONE;
+    const bool anySelected = front != NONE || back != NONE;
     if (!anySelected) {
       printf("nothing selected\n");
       // if any wing is expanded, then retract all
@@ -162,14 +162,14 @@ void FourWingSubsystem::driverUpdate() {
         this->front->toggleToSame();
     } else {
       printf("something selected\n");
-      if (left == FRONT)
+      if (front == LEFT)
         this->front->toggleIthSolenoid(int(WING_PAIR_INDEX::LEFT));
-      else if (left == BACK)
-        this->back->toggleIthSolenoid(int(WING_PAIR_INDEX::LEFT));
-
-      if (right == FRONT)
+      else if (front == RIGHT)
         this->front->toggleIthSolenoid(int(WING_PAIR_INDEX::RIGHT));
-      else if (right == BACK)
+
+      if (back == LEFT)
+        this->back->toggleIthSolenoid(int(WING_PAIR_INDEX::LEFT));
+      else if (back == RIGHT)
         this->back->toggleIthSolenoid(int(WING_PAIR_INDEX::RIGHT));
     }
   }

@@ -60,8 +60,8 @@ class Robot {
         static const float horiEncDistance;
         static const float horiEncGearRatio;
 
-        static constexpr float drivetrainWidth = 14.5;
-        static constexpr float drivetrainLength = 25 / 2.0;
+        static constexpr float drivetrainWidth = 27 / 2.0;
+        static constexpr float drivetrainLength = 27 / 2.0;
 
         static const int autonSelectorGearTeeth;
     };

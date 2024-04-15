@@ -6,17 +6,18 @@
 #include <cmath>
 #include <cstdio>
 
-CatapultStateMachine::CatapultStateMachine(pros::Motor_Group* cataMotors,
-                                           pros::ADILineSensor* elevationBarSensor,
-                                           pros::Rotation* cataRotation)
-  : motors(cataMotors), elevationBarSensor(elevationBarSensor), rotation(cataRotation) {}
+CatapultStateMachine::CatapultStateMachine(
+    pros::Motor_Group* cataMotors, pros::ADILineSensor* elevationBarSensor,
+    pros::Rotation* cataRotation)
+  : motors(cataMotors), elevationBarSensor(elevationBarSensor),
+    rotation(cataRotation) {}
 
 bool CatapultStateMachine::fire() {
   if (this->state == EMERGENCY_STOPPED) return false;
   printf("fire\n");
   // if (this->state == READY) {
-    this->state = FIRING;
-    return true;
+  this->state = FIRING;
+  return true;
   // }
   // // this->constantFiring = true;
   // return false;
@@ -67,6 +68,8 @@ int timeWasted = 0;
 bool startReadying = false;
 int start = 0;
 bool prevCataDisconnected = false;
+// first is 11w and second is 5.5w
+std::vector<std::pair<float, float>> currents;
 
 void CatapultStateMachine::update() {
   if (this->matchloading &&
@@ -79,6 +82,10 @@ void CatapultStateMachine::update() {
     this->matchloading = false;
   }
   const STATE startState = this->state;
+  if (this->state == FIRING || this->state == RETRACTING) {
+    const auto currMotorCurrents = this->motors->get_current_draws();
+    currents.push_back({currMotorCurrents[0], currMotorCurrents[1]});
+  }
   switch (this->state) {
     case READY:
       if (hasFired && !startReadying) start = pros::millis();
@@ -109,6 +116,40 @@ void CatapultStateMachine::update() {
           // printf("switch to ready\n");
           this->stopCataMotor();
           this->state = READY;
+
+          std::pair<float, float> avgCurrents;
+          float avgCurrentDiff;
+          for (const auto curr : currents) {
+            avgCurrents.first += curr.first;
+            avgCurrents.second += curr.second;
+            avgCurrentDiff += curr.first - curr.second;
+          }
+          avgCurrents.first /= currents.size();
+          avgCurrents.second /= currents.size();
+          avgCurrentDiff /= currents.size();
+
+          std::pair<float, float> currentStdDevs;
+          float currentDiffStdDev;
+          for (const auto curr : currents) {
+            currentStdDevs.first += std::pow(curr.first - avgCurrents.first, 2);
+            currentStdDevs.second +=
+                std::pow(curr.second - avgCurrents.second, 2);
+            currentDiffStdDev +=
+                std::pow((curr.first - curr.second) - avgCurrentDiff, 2);
+          }
+          currentStdDevs.first =
+              std::sqrt(currentStdDevs.first / currents.size());
+          currentStdDevs.second =
+              std::sqrt(currentStdDevs.second / currents.size());
+          currentDiffStdDev = std::sqrt(currentDiffStdDev / currents.size());
+
+          printf("\x1b[35m11w:\t%4.2f  \t%4.2f\n"
+                 "\x1b[32m5.5w:\t%4.2f  \t%4.2f\x1b[0m\n"
+                 "diff:\t%4.2f  \t%4.2f\n\n",
+                 avgCurrents.first, currentStdDevs.first, avgCurrents.second,
+                 currentStdDevs.second, avgCurrentDiff, currentDiffStdDev);
+
+          currents.clear();
         }
         break;
         case EMERGENCY_STOPPED: this->stopCataMotor(); break;
@@ -177,7 +218,8 @@ void CatapultStateMachine::update() {
     // if zero curent is currently being detected and has been detected for the
     // last 50ms, report that the cata is not moving
     if (startZeroCurrent != 0 && pros::millis() - startZeroCurrent > 50) {
-      // printf("cata disconnected, time:%i\n", pros::millis() - startZeroCurrent);
+      // printf("cata disconnected, time:%i\n", pros::millis() -
+      // startZeroCurrent);
       notMoving = true;
     } else notMoving = false;
 
@@ -196,8 +238,7 @@ void CatapultStateMachine::indicateTriballFired() {
 }
 
 void CatapultStateMachine::retractCataMotor() {
-  static int run = 0;
-  this->motors->move_voltage(9000);
+  this->motors->move_voltage(12000 * 0.6625 /* 0.7 */ /* 0.5 */);
 }
 
 void CatapultStateMachine::stopCataMotor() { this->motors->move_voltage(0); }
