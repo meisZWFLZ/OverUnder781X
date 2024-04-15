@@ -2,6 +2,7 @@
 #include "fieldDimensions.h"
 #include "lemlib/chassis/chassis.hpp"
 #include "robot.h"
+#include "wings.h"
 #include <climits>
 
 using namespace fieldDimensions;
@@ -12,9 +13,105 @@ void runDisrupt() {
   // x is where neil decided so
   Robot::chassis->setPose(
       {0 - TILE_LENGTH * 2 + Robot::Dimensions::drivetrainWidth / 2 + 6,
-       MIN_Y + TILE_LENGTH - Robot::Dimensions::drivetrainLength / 2, UP},
+       MIN_Y + TILE_LENGTH - Robot::Dimensions::drivetrainLength / 2 - 2, UP},
       false);
 
+  const lemlib::Pose intakeCenterTriballTarget = {-TILE_LENGTH - 3, -5, UP};
+
+  // intake center triball
+  Robot::chassis->moveToPose(intakeCenterTriballTarget.x,
+                             intakeCenterTriballTarget.y,
+                             intakeCenterTriballTarget.theta, 1500,
+                             {.chasePower = 5, .lead = 0.5, .minSpeed = 127});
+  Robot::Actions::intake();
+  // let intake speed up
+  pros::delay(500);
+  // wait until triball is intaked or we are past y = -18
+  waitUntil(
+      [] {
+        return isTriballInIntake() || !isMotionRunning() ||
+               Robot::chassis->getPose().y > -24;
+      },
+      50);
+  // then slow down
+  Robot::chassis->cancelMotion();
+  Robot::chassis->moveToPose(
+      intakeCenterTriballTarget.x, intakeCenterTriballTarget.y,
+      intakeCenterTriballTarget.theta, 1000,
+      {.maxSpeed = 56}); // minSpeed is not set in order to slow down
+  // wait until triball is intaked or drive train is past neutral zone
+  waitUntil(
+      [] {
+        return isTriballInIntake() || !isMotionRunning() ||
+               Robot::chassis->getPose().y >
+                   -Robot::Dimensions::drivetrainLength / 2 - 8;
+      },
+      50);
+  Robot::chassis->cancelMotion();
+  // let intake fully grab ahold that triball and cancel forwards motion
+  tank(-32, -48, 300, 0);
+
+  // go backwards away from neutral zone
+  Robot::chassis->moveToPoint(Robot::chassis->getPose().x - 3.5,
+                              Robot::chassis->getPose().y - 7.5, 1000,
+                              {
+                                  .forwards = false,
+                                  .minSpeed = 48,
+                              });
+  pros::delay(300);
+  // don't overstress intake
+  Robot::Actions::stopIntake();
+  Robot::chassis->waitUntilDone();
+
+  // wait until facing RIGHT, then expand left front wing
+  Robot::Subsystems::wings->front->setIthState(int(WING_PAIR_INDEX::LEFT),
+                                               true);
+  // turn to face down
+  Robot::chassis->swingToHeading(
+      /* DOWN */ RIGHT, lemlib::DriveSide::RIGHT, 1000,
+      {
+          .direction = AngularDirection::CW_CLOCKWISE,
+          .maxSpeed = 96,
+          .minSpeed = 96,
+      });
+  waitUntil([] { return robotAngDist(RIGHT) < 20 || !isMotionRunning(); });
+  Robot::chassis->cancelMotion();
+  // swing the rest of the way to face down
+  Robot::chassis->turnToHeading(DOWN, 1000,
+                                {.direction = AngularDirection::CW_CLOCKWISE,
+                                 .maxSpeed = 32 /* , .minSpeed = 127 */});
+  Robot::chassis->waitUntilDone();
+  return;
+  // outtake the triball
+  Robot::Actions::outtake();
+  // push over short barrier
+  Robot::chassis->moveToPose(
+      -1 - /*wing length*/ 9 - Robot::Dimensions::drivetrainWidth / 2,
+      -TILE_LENGTH * 2 - Robot::Dimensions::drivetrainLength / 2, DOWN, 2000,
+      {.minSpeed = 64});
+  return;
+  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+  // old v2 code
   // go to intermediate target to avoid hitting the short barrier
   const lemlib::Pose intermediateTarget {-TILE_LENGTH * 1.15,
                                          -TILE_LENGTH * 1.35, 30};
