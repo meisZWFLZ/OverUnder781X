@@ -41,4 +41,4 @@ const float Robot::Tunables::imuCGain =
     (360 * 10) / 3579.97 * (360 * 10) / 3582.93 * (360 * 10) /
     ((3605.22 + 3604.18 + 3603.45 + 3603.83 + 3603.02) / 5);
 
-const float Robot::Tunables::driverWingJoystickThreshold = 64;
+const float Robot::Tunables::driverWingJoystickThreshold = .85 * 127;
