@@ -67,6 +67,8 @@ int timeWasted = 0;
 bool startReadying = false;
 int start = 0;
 bool prevCataDisconnected = false;
+// first is 11w and second is 5.5w
+std::vector<std::pair<float, float>> currents;
 
 void CatapultStateMachine::update() {
   if (this->matchloading &&
@@ -79,6 +81,10 @@ void CatapultStateMachine::update() {
     this->matchloading = false;
   }
   const STATE startState = this->state;
+  if (this->state == FIRING || this->state == RETRACTING) {
+    const auto currMotorCurrents = this->motors->get_current_draws();
+    currents.push_back({currMotorCurrents[0], currMotorCurrents[1]});
+  }
   switch (this->state) {
     case READY:
       if (hasFired && !startReadying) start = pros::millis();
@@ -109,6 +115,40 @@ void CatapultStateMachine::update() {
           // printf("switch to ready\n");
           this->stopCataMotor();
           this->state = READY;
+
+          std::pair<float, float> avgCurrents;
+          float avgCurrentDiff;
+          for (const auto curr : currents) {
+            avgCurrents.first += curr.first;
+            avgCurrents.second += curr.second;
+            avgCurrentDiff += curr.first - curr.second;
+          }
+          avgCurrents.first /= currents.size();
+          avgCurrents.second /= currents.size();
+          avgCurrentDiff /= currents.size();
+
+          std::pair<float, float> currentStdDevs;
+          float currentDiffStdDev;
+          for (const auto curr : currents) {
+            currentStdDevs.first += std::pow(curr.first - avgCurrents.first, 2);
+            currentStdDevs.second +=
+                std::pow(curr.second - avgCurrents.second, 2);
+            currentDiffStdDev +=
+                std::pow((curr.first - curr.second) - avgCurrentDiff, 2);
+          }
+          currentStdDevs.first =
+              std::sqrt(currentStdDevs.first / currents.size());
+          currentStdDevs.second =
+              std::sqrt(currentStdDevs.second / currents.size());
+          currentDiffStdDev = std::sqrt(currentDiffStdDev / currents.size());
+
+          printf("\x1b[35m11w:\t%4.2f  \t%4.2f\n"
+                 "\x1b[32m5.5w:\t%4.2f  \t%4.2f\x1b[0m\n"
+                 "diff:\t%4.2f  \t%4.2f\n\n",
+                 avgCurrents.first, currentStdDevs.first, avgCurrents.second,
+                 currentStdDevs.second, avgCurrentDiff, currentDiffStdDev);
+
+          currents.clear();
         }
         break;
         case EMERGENCY_STOPPED: this->stopCataMotor(); break;
