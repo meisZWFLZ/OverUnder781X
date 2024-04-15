@@ -6,17 +6,18 @@
 #include <cmath>
 #include <cstdio>
 
-CatapultStateMachine::CatapultStateMachine(pros::Motor_Group* cataMotors,
-                                           pros::ADILineSensor* elevationBarSensor,
-                                           pros::Rotation* cataRotation)
-  : motors(cataMotors), elevationBarSensor(elevationBarSensor), rotation(cataRotation) {}
+CatapultStateMachine::CatapultStateMachine(
+    pros::Motor_Group* cataMotors, pros::ADILineSensor* elevationBarSensor,
+    pros::Rotation* cataRotation)
+  : motors(cataMotors), elevationBarSensor(elevationBarSensor),
+    rotation(cataRotation) {}
 
 bool CatapultStateMachine::fire() {
   if (this->state == EMERGENCY_STOPPED) return false;
   printf("fire\n");
   // if (this->state == READY) {
-    this->state = FIRING;
-    return true;
+  this->state = FIRING;
+  return true;
   // }
   // // this->constantFiring = true;
   // return false;
@@ -217,7 +218,8 @@ void CatapultStateMachine::update() {
     // if zero curent is currently being detected and has been detected for the
     // last 50ms, report that the cata is not moving
     if (startZeroCurrent != 0 && pros::millis() - startZeroCurrent > 50) {
-      // printf("cata disconnected, time:%i\n", pros::millis() - startZeroCurrent);
+      // printf("cata disconnected, time:%i\n", pros::millis() -
+      // startZeroCurrent);
       notMoving = true;
     } else notMoving = false;
 
