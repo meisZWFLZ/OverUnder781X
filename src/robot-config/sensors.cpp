@@ -3,8 +3,8 @@
 #include "robot.h"
 
 pros::Rotation Robot::Sensors::vert {15, false};
-pros::Rotation Robot::Sensors::hori {7, false};
-pros::Imu Robot::Sensors::imuA {6}; 
+pros::Rotation Robot::Sensors::hori {6, false};
+pros::Imu Robot::Sensors::imuA {7}; 
 pros::Imu Robot::Sensors::imuB {5};
 pros::Imu Robot::Sensors::imuC {16};
 // not used
