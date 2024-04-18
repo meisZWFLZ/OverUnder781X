@@ -2,7 +2,7 @@
 
 // drivetrain
 // left
-pros::Motor leftDriveA {20, pros::E_MOTOR_GEAR_600, true};
+pros::Motor leftDriveA {17, pros::E_MOTOR_GEAR_600, true};
 pros::Motor leftDriveB {18, pros::E_MOTOR_GEAR_600, true};
 pros::Motor leftDriveC {19, pros::E_MOTOR_GEAR_600, true};
 
