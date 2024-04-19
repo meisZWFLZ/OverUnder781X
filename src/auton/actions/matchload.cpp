@@ -104,8 +104,8 @@ void auton::actions::matchload(int triballs, int until) {
   const lemlib::Pose shootingTarget {MAX_X - TILE_LENGTH, -4};
 
   // where the robot should go to to matchload
-  lemlib::Pose matchloadTarget = {MIN_X + TILE_LENGTH - 5.5,
-                                  MIN_Y + TILE_LENGTH - 2};
+  lemlib::Pose matchloadTarget = {MIN_X + TILE_RADIUS - 0.25,
+                                  MIN_Y + TILE_LENGTH + 8.5};
   const float trigMatchloadTargetTheta = matchloadTarget.angle(shootingTarget);
   // calculate the angle to the shooting target
   matchloadTarget.theta = trigAngleToHeading(trigMatchloadTargetTheta);
@@ -162,34 +162,63 @@ void auton::actions::matchload(int triballs, int until) {
 
   if (checkDriverExit()) return;
   printf("matchload touch done\n");
-  // switch to IMU further from cata
-  Robot::Actions::switchToMatchloadingIMU();
+
+  // touch matchload bar
+  Robot::Actions::expandBackWing();
 
   // run turn pid until done matchloading or driver exits
-  lemlib::PID turnPID {Robot::Tunables::angularController.kP,
-                       Robot::Tunables::angularController.kI,
-                       Robot::Tunables::angularController.kD};
+  lemlib::PID turnPID {
+      Robot::Tunables::angularController.kP,
+      0.05,
+      Robot::Tunables::angularController.kD,
+      Robot::Tunables::angularController.windupRange,
+  };
+  lemlib::PID lateralPID {
+      Robot::Tunables::lateralController.kP,
+      0.2,
+      Robot::Tunables::lateralController.kD,
+      Robot::Tunables::lateralController.windupRange,
+  };
+
   // prevent robot from turning for too fast
   const float maxSpeed = 48;
   while (Robot::Subsystems::catapult->getIsMatchloading() &&
          !checkDriverExit()) {
     const float targetTheta =
         trigAngleToHeading(Robot::chassis->getPose().angle(shootingTarget));
-    const float error =
+    const float angularError =
         lemlib::angleError(targetTheta, Robot::chassis->getPose().theta, false);
-    float output = turnPID.update(error);
-    printf("target: %f\n", targetTheta);
-    printf("error: %f\n", error);
-    printf("output: %f\n", output);
+    const float matchloadTargetAngularErrorRadians =
+        lemlib::angleError(Robot::chassis->getPose().angle(matchloadTarget),
+                           Robot::chassis->getPose(true).theta, true);
+    const float angleErrorRad = lemlib::degToRad(90 - angularError);
+    const float lateralError =
+        Robot::chassis->getPose().distance(matchloadTarget) *
+        cos(matchloadTargetAngularErrorRadians);
+
+    float angularPower = turnPID.update(angularError);
+    float lateralPower = lateralPID.update(lateralError) /* 0 */;
+
+    // limit pid output
+    angularPower = std::clamp(angularPower, -127.0f, 127.0f);
+    lateralPower = std::clamp(lateralPower, -127.0f, 127.0f);
+
+    // overturn
+    if (std::abs(angularError) + std::abs(lateralPower) > maxSpeed) {
+      lateralPower =
+          (maxSpeed - std::abs(angularPower)) * lemlib::sgn(lateralPower);
+    }
+    printf("power:\t%4.2f\t%4.2f\n", angularPower, lateralPower);
 
     // prevent the robot from turning too fast
-    output = std::clamp(output, -maxSpeed, maxSpeed);
 
-    tank(output, /*ensure that we are touching the matchload bar*/ -16, 0, 0);
+    tank(lateralPower + angularPower, lateralPower - angularPower, 0, 0);
     pros::delay(10);
   };
+
+  if (checkDriverExit()) return;
+  Robot::Actions::retractBackWing();
+
   stop();
   printf("exit\n");
-  // switch to IMU further from cata
-  Robot::Actions::switchToNormalIMU();
 }
