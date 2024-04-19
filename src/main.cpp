@@ -322,7 +322,8 @@ void tuningCLI() {
           int count = 0;
 
           printf("oscillations\nnum\ttime\tcurr\taccel\n");
-          while (Robot::chassis->isInMotion()) {
+          while (Robot::chassis->isInMotion() &&
+                 !Robot::control.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
             pros::delay(10);
             const float curr = getValue(mode);
             const float vel = (curr - prev) / 0.01;
