@@ -1,5 +1,6 @@
 #include "auton.h"
 #include "lemlib/asset.hpp"
+#include "lemlib/chassis/chassis.hpp"
 #include "lemlib/pose.hpp"
 #include "lemlib/util.hpp"
 #include "pros/motors.h"
@@ -59,18 +60,43 @@ void runSixRush() {
       {0 - (-TILE_LENGTH * 2 + Robot::Dimensions::drivetrainWidth / 2 + 6),
        MIN_Y + TILE_LENGTH - Robot::Dimensions::drivetrainLength / 2, UP},
       false);
+
+  Robot::Actions::expandRightWing();
+
   // quickly intake first triball
   Robot::chassis->lateralSettings.slew = 7;
   Robot::Actions::intake();
-  Robot::chassis->moveToPoint(TILE_LENGTH, 0, 1100);
+
+  constexpr float intakeCenterTriballTargetTheta = UP - 15;
+  constexpr float intakeCenterTriballTargetThetaRadians =
+      lemlib::degToRad(90 - intakeCenterTriballTargetTheta);
+  constexpr float distanceFromCenterTriball = 5;
+  const lemlib::Pose centerTriball {TILE_LENGTH, 0};
+  const lemlib::Pose intakeCenterTriballTarget =
+      lemlib::Pose {centerTriball.x, centerTriball.y,
+                    intakeCenterTriballTargetTheta} +
+      (lemlib::Pose {float(cos(intakeCenterTriballTargetThetaRadians +
+                               /* rotate by 180*/ M_PI)),
+                     float(sin(intakeCenterTriballTargetThetaRadians +
+                               /* rotate by 180*/ M_PI))} *
+       distanceFromCenterTriball);
+
+  Robot::chassis->moveToPose(
+      intakeCenterTriballTarget.x, intakeCenterTriballTarget.y,
+      intakeCenterTriballTarget.theta, 1100, {.chasePower = 6, .minSpeed = 72});
+  Robot::chassis->waitUntil(6);
+  Robot::Actions::retractRightWing();
 
   // wait until near triball to slow down
   waitUntil([] {
     return Robot::chassis->getPose().y > -TILE_LENGTH || !isMotionRunning();
   });
+  Robot::chassis->cancelMotion();
+
   // slow down to intake triball
-  Robot::chassis->moveToPoint(TILE_LENGTH, 0, 2000,
-                              {.maxSpeed = 64, .minSpeed = 32});
+  Robot::chassis->moveToPose(
+      intakeCenterTriballTarget.x, intakeCenterTriballTarget.y,
+      intakeCenterTriballTarget.theta, 2000, {.chasePower = 6, .minSpeed = 48});
   // give a bit of time for triball sensing to be accurate
   pros::delay(300);
   // wait until robot intakes triball or robot center passes neutral line
@@ -83,12 +109,28 @@ void runSixRush() {
   Robot::chassis->cancelMotion();
 
   const float normalSlew = Robot::chassis->lateralSettings.slew;
+  Robot::chassis->lateralSettings.slew = 5 /* 0 */;
   // get out of neutral zone
-  Robot::chassis->moveToPose(TILE_LENGTH, -TILE_LENGTH * 2.5, RIGHT, 3000,
-                             {.forwards = false, .minSpeed = 127});
-  Robot::chassis->lateralSettings.slew = 5;
+  Robot::chassis->moveToPoint(
+      TILE_LENGTH * 2 - 6 - Robot::Dimensions::drivetrainWidth / 2,
+      -TILE_LENGTH * 2, 1000, {.forwards = false, .minSpeed = 127});
+
+  // wait until robot is past goal cone
+  waitUntil([] {
+    return !isMotionRunning() || Robot::chassis->getPose().y < -TILE_LENGTH;
+  });
+  Robot::chassis->cancelMotion();
+
+  // turn towards goal to outtake
+  Robot::chassis->moveToPose(TILE_LENGTH * 1.4, -TILE_LENGTH * 2.6, RIGHT - 45,
+                             3000, {.forwards = false, .minSpeed = 96});
+
+  // don't spin the ball in the intake
+  pros::delay(350);
+  Robot::Actions::stopIntake();
+
   // wait until facing right side of goal
-  waitUntil([] { return robotAngDist(RIGHT - 45) < 10 || !isMotionRunning(); });
+  waitUntil([] { return robotAngDist(RIGHT - 45) < 35 || !isMotionRunning(); });
   // outtake triball
   Robot::Actions::outtake();
 
@@ -101,48 +143,192 @@ void runSixRush() {
   Robot::chassis->cancelMotion();
   Robot::chassis->lateralSettings.slew = normalSlew;
 
+  const lemlib::Pose intakeBallUnderElevationBarTarget {
+      9, -TILE_LENGTH * 2.5 - 2, LEFT};
+  // go backwards towards triball under elevation bar
+  Robot::chassis->moveToPoint(intakeBallUnderElevationBarTarget.x,
+                              intakeBallUnderElevationBarTarget.y, 500,
+                              {
+                                  .forwards = false,
+                                  .maxSpeed = 72,
+                                  .minSpeed = 48,
+                              });
+
+  // wait until passed short barrier
+  waitUntil([] {
+    return Robot::chassis->getPose().x < TILE_LENGTH + 6 || !isMotionRunning();
+  });
+  Robot::chassis->cancelMotion();
+  // turn to face triball under elevation bar
+  Robot::chassis->turnToPoint(intakeBallUnderElevationBarTarget.x,
+                              intakeBallUnderElevationBarTarget.y, 500,
+                              {.minSpeed = 127, .earlyExitRange = 20});
+
   // intake ball under elevation bar
-  Robot::chassis->moveToPoint(7, -TILE_LENGTH * 2.5, 3000, {.minSpeed = 70});
-  // wait a bit before intaking
-  Robot::chassis->waitUntil(12);
+  Robot::chassis->moveToPoint(
+      intakeBallUnderElevationBarTarget.x, intakeBallUnderElevationBarTarget.y,
+      /* intakeBallUnderElevationBarTarget.theta, */ 1500,
+      {.minSpeed = 72, .earlyExitRange = 0.1});
   Robot::Actions::intake();
   // give a bit of time for triball sensing to be accurate
-  pros::delay(300);
+  pros::delay(500);
+
   // wait until triball in intake or too close to other tiles (we do not want to
   // risk a disqualification)
   waitUntil(
       [] {
         return isTriballInIntake() || !isMotionRunning() ||
                Robot::chassis->getPose().x <
-                   Robot::Dimensions::drivetrainLength / 2 + 1;
+                   Robot::Dimensions::drivetrainLength / 2 + 4;
       },
       50);
   Robot::chassis->cancelMotion();
+  printf("a isTriballInIntake(): %i\n", isTriballInIntake());
+  printf("x: %4.2f\n", Robot::chassis->getPose().x);
   // immediately back away from other offensive zone
   Robot::chassis->moveToPoint(TILE_LENGTH, -TILE_LENGTH * 2.5, 3000,
                               {.forwards = false, .minSpeed = 127});
   Robot::chassis->waitUntilDone();
   Robot::Actions::stopIntake();
-// turn around to face matchload bar
-Robot::chassis->turnToPoint(1000000, 200000, 1000);
-//drive forward into goal
-Robot::chassis->moveToPoint(52, -50, 3000,
-                              {.forwards = true, .minSpeed = 50});
-pros::delay(1500);
-Robot::chassis->cancelMotion();
-//turn to goal
-Robot::chassis->turnToPoint(1000000, 1000000, 1000); 
-Robot::chassis->cancelMotion();
-//RAM!!!!
-     Robot::chassis->moveToPoint(60, 56, 1000,
-                              {.forwards = true, .minSpeed = 127}); 
-    Robot::chassis->cancelMotion(); 
-    //back up
-  //RAM!!!!
-     Robot::chassis->moveToPoint(60, -38, 500,
-                              {.forwards = false, .minSpeed = 50}); 
-    Robot::chassis->cancelMotion(); 
 
+  // turn towards matchload bar
+  Robot::chassis->turnToHeading(RIGHT, 500,
+                                {.direction = AngularDirection::CW_CLOCKWISE,
+                                 .minSpeed = 127,
+                                 .earlyExitRange = 75});
+  // move towards matchload bar (be parallel to it)
+  Robot::chassis->moveToPose(TILE_LENGTH * 2.5, -TILE_LENGTH * 2, 40, 1500,
+                             {.minSpeed = 32});
+  Robot::Actions::expandLeftWing();
+  Robot::chassis->waitUntilDone();
+
+  // remove triball in matchload zone
+  Robot::Actions::expandBackWing();
+  Robot::chassis->turnToHeading(
+      -35, 500,
+      {.direction = lemlib::AngularDirection::CCW_COUNTERCLOCKWISE,
+       .maxSpeed = 64,
+       .minSpeed = 48,
+       .earlyExitRange = 15});
+
+  // turn back to goal
+  Robot::chassis->turnToHeading(0, /* lemlib::DriveSide::LEFT, */ 500,
+                                {.minSpeed = 127, .earlyExitRange = 15});
+  Robot::Actions::retractBackWing();
+  Robot::chassis->waitUntilDone();
+
+  // push balls into goal
+  Robot::chassis->moveToPose(TILE_LENGTH * 2.7, -TILE_LENGTH, UP, 900,
+                             {.minSpeed = 72});
+  // outtake ball into goal
+  Robot::Actions::outtake();
+  // Robot::Actions::expandLeftWing();
+  Robot::chassis->waitUntilDone();
+
+  // second ram
+  Robot::Actions::retractLeftWing();
+  tank(-127, -127, 400, 3);
+  Robot::chassis->moveToPoint(Robot::chassis->getPose().x, 10000000, 700,
+                              {.minSpeed = 127});
+  Robot::chassis->waitUntilDone();
+
+  // back out of goal
+  tank(-127, -127, 350, 3);
+  // turn towards elevation pole
+  Robot::chassis->swingToHeading(LEFT, lemlib::DriveSide::LEFT, 2000,
+                                 {.minSpeed = 127, .earlyExitRange = 45});
+  Robot::chassis->waitUntilDone();
+
+  // prepare to intake last ball
+  Robot::chassis->moveToPoint(TILE_LENGTH * 1.4, -TILE_LENGTH * 1.3, 750,
+                              {.minSpeed = 96, .earlyExitRange = 9});
+
+  // intake last ball for 5 ball
+  Robot::chassis->moveToPose(11, -TILE_LENGTH, LEFT, 2000, {.minSpeed = 48});
+  Robot::Actions::intake();
+  // let intake speed up so triball sensing is accurate
+  pros::delay(500);
+  waitUntil([] { return isTriballInIntake() || !isMotionRunning(); }, 50);
+  Robot::chassis->cancelMotion();
+
+  // turn towards goal
+  const lemlib::Pose pushIntoLastBallsIntoGoalTarget {
+      TILE_LENGTH * 2 - Robot::Dimensions::drivetrainLength / 2, -TILE_RADIUS,
+      RIGHT};
+  Robot::chassis->swingToPoint(pushIntoLastBallsIntoGoalTarget.x,
+                               pushIntoLastBallsIntoGoalTarget.y,
+                               lemlib::DriveSide::RIGHT, 500,
+                               {.direction = AngularDirection::CW_CLOCKWISE,
+                                .minSpeed = 127,
+                                .earlyExitRange = 45});
+  Robot::chassis->moveToPose(
+      pushIntoLastBallsIntoGoalTarget.x, pushIntoLastBallsIntoGoalTarget.y,
+      pushIntoLastBallsIntoGoalTarget.theta, 2000, {.minSpeed = 72});
+  // stop spinning triball in intake
+  Robot::chassis->waitUntil(6);
+  Robot::Actions::stopIntake();
+
+  // outtake ball into goal once we are facing it
+  waitUntil([] { return robotAngDist(RIGHT) < 25 || !isMotionRunning(); });
+  Robot::Actions::outtake();
+
+  Robot::chassis->cancelMotion();
+  // ram straight into goal
+  Robot::chassis->moveToPoint(1000000, Robot::chassis->getPose().y, 1500,
+                              {.minSpeed = 127});
+  waitUntil(
+      [] {
+        return Robot::chassis->getPose().x > TILE_LENGTH * 1.5 ||
+               !isMotionRunning();
+      },
+      100, INT_MAX, true);
+  Robot::chassis->cancelMotion();
+  tank(-127, -64, 200, 3);
+  Robot::chassis->swingToHeading(LEFT, lemlib::DriveSide::RIGHT, 500,
+                                 {.minSpeed = 127, .earlyExitRange = 45});
+
+  Robot::chassis->moveToPose(-Robot::Dimensions::drivetrainLength / 2 - 3,
+                             -TILE_LENGTH * 2 +
+                                 Robot::Dimensions::drivetrainLength / 2 + 3,
+                             DOWN - 45, 1200,
+                             {
+                                 .lead = 0.3,
+                                 .minSpeed = 32,
+                             });
+
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
   return;
   // intake center triball next to barrier
   Robot::Actions::intake();
