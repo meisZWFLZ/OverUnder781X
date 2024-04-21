@@ -110,59 +110,97 @@ void runSixRush() {
 
   const float normalSlew = Robot::chassis->lateralSettings.slew;
   Robot::chassis->lateralSettings.slew = 5 /* 0 */;
-  // get out of neutral zone
-  Robot::chassis->moveToPoint(
-      TILE_LENGTH * 2 - 6 - Robot::Dimensions::drivetrainWidth / 2,
-      -TILE_LENGTH * 2, 1000, {.forwards = false, .minSpeed = 127});
+  // // get out of neutral zone
+  // Robot::chassis->moveToPoint(
+  //     TILE_LENGTH * 2 - 3 - Robot::Dimensions::drivetrainWidth / 2,
+  //     -TILE_LENGTH * 2, 1000, {.forwards = false, .minSpeed = 127});
 
-  // wait until robot is past goal cone
-  waitUntil([] {
-    return !isMotionRunning() || Robot::chassis->getPose().y < -TILE_LENGTH;
-  });
-  Robot::chassis->cancelMotion();
+  // // wait until robot is past goal cone
+  // waitUntil([] {
+  //   return !isMotionRunning() || Robot::chassis->getPose().y < -TILE_LENGTH;
+  // });
+  // Robot::chassis->cancelMotion();
 
-  // turn towards goal to outtake
-  Robot::chassis->moveToPose(TILE_LENGTH * 1.4, -TILE_LENGTH * 2.6, RIGHT - 45,
-                             3000, {.forwards = false, .minSpeed = 96});
+  // // turn towards goal to outtake
+  // Robot::chassis->moveToPose(TILE_LENGTH * 1.4, -TILE_LENGTH * 2.6, RIGHT -
+  // 45,
+  //                            3000, {.forwards = false, .minSpeed = 96});
 
+  // go to next matchload zone to remove the ball
+  const lemlib::Pose removeMatchloadZoneTriballTarget {
+      TILE_LENGTH * 2 + 5, -TILE_LENGTH * 2 - 3, UP - 45};
+  Robot::chassis->moveToPose(removeMatchloadZoneTriballTarget.x,
+                             removeMatchloadZoneTriballTarget.y,
+                             removeMatchloadZoneTriballTarget.theta, 1500,
+                             {.forwards = false, .minSpeed = 127});
   // don't spin the ball in the intake
   pros::delay(350);
   Robot::Actions::stopIntake();
 
-  // wait until facing right side of goal
-  waitUntil([] { return robotAngDist(RIGHT - 45) < 35 || !isMotionRunning(); });
-  // outtake triball
-  Robot::Actions::outtake();
-
-  // wait until past short bar
+  // slow down after a bit
   waitUntil([] {
-    return Robot::chassis->getPose().y <
-               -TILE_LENGTH * 2 - Robot::Dimensions::drivetrainLength / 2 - 1 ||
-           !isMotionRunning();
+    return Robot::chassis->getPose().y < -TILE_LENGTH * 1.5 ||
+           isMotionRunning();
   });
-  Robot::chassis->cancelMotion();
+  Robot::chassis->moveToPose(
+      removeMatchloadZoneTriballTarget.x, removeMatchloadZoneTriballTarget.y,
+      removeMatchloadZoneTriballTarget.theta, 1500, {.forwards = false});
+  Robot::chassis->turnToHeading(UP + 45, 500);
+  pros::delay(200);
+  Robot::Actions::expandBackWing();
+  Robot::chassis->waitUntilDone();
+  Robot::Actions::outtake();
+  Robot::chassis->swingToHeading(
+      UP, lemlib::DriveSide::LEFT, 750,
+      {.direction = lemlib::AngularDirection::CCW_COUNTERCLOCKWISE,
+       .minSpeed = 127,
+       .earlyExitRange = 30});
+  Robot::chassis->waitUntilDone();
+  Robot::Actions::retractBackWing();
+  Robot::chassis->turnToHeading(
+      LEFT - 45, 750,
+      {.direction = lemlib::AngularDirection::CCW_COUNTERCLOCKWISE,
+       .minSpeed = 127,
+       .earlyExitRange = 30});
+  Robot::chassis->waitUntilDone();
+
+  // // wait until facing right side of goal
+  // waitUntil([] { return robotAngDist(RIGHT - 45) < 35 || !isMotionRunning();
+  // });
+  // // outtake triball
+  // Robot::Actions::outtake();
+
+  // // wait until past short bar
+  // waitUntil([] {
+  //   return Robot::chassis->getPose().y <
+  //              -TILE_LENGTH * 2 - Robot::Dimensions::drivetrainLength / 2 - 1
+  //              ||
+  //          !isMotionRunning();
+  // });
+  // Robot::chassis->cancelMotion();
   Robot::chassis->lateralSettings.slew = normalSlew;
 
   const lemlib::Pose intakeBallUnderElevationBarTarget {
       9, -TILE_LENGTH * 2.5 - 2, LEFT};
-  // go backwards towards triball under elevation bar
-  Robot::chassis->moveToPoint(intakeBallUnderElevationBarTarget.x,
-                              intakeBallUnderElevationBarTarget.y, 500,
-                              {
-                                  .forwards = false,
-                                  .maxSpeed = 72,
-                                  .minSpeed = 48,
-                              });
+  // // go backwards towards triball under elevation bar
+  // Robot::chassis->moveToPoint(intakeBallUnderElevationBarTarget.x,
+  //                             intakeBallUnderElevationBarTarget.y, 500,
+  //                             {
+  //                                 .forwards = false,
+  //                                 .maxSpeed = 72,
+  //                                 .minSpeed = 48,
+  //                             });
 
-  // wait until passed short barrier
-  waitUntil([] {
-    return Robot::chassis->getPose().x < TILE_LENGTH + 6 || !isMotionRunning();
-  });
-  Robot::chassis->cancelMotion();
-  // turn to face triball under elevation bar
-  Robot::chassis->turnToPoint(intakeBallUnderElevationBarTarget.x,
-                              intakeBallUnderElevationBarTarget.y, 500,
-                              {.minSpeed = 127, .earlyExitRange = 20});
+  // // wait until passed short barrier
+  // waitUntil([] {
+  //   return Robot::chassis->getPose().x < TILE_LENGTH + 6 ||
+  //   !isMotionRunning();
+  // });
+  // Robot::chassis->cancelMotion();
+  // // turn to face triball under elevation bar
+  // Robot::chassis->turnToPoint(intakeBallUnderElevationBarTarget.x,
+  //                             intakeBallUnderElevationBarTarget.y, 500,
+  //                             {.minSpeed = 127, .earlyExitRange = 20});
 
   // intake ball under elevation bar
   Robot::chassis->moveToPoint(
@@ -179,7 +217,7 @@ void runSixRush() {
       [] {
         return isTriballInIntake() || !isMotionRunning() ||
                Robot::chassis->getPose().x <
-                   Robot::Dimensions::drivetrainLength / 2 + 4;
+                   Robot::Dimensions::drivetrainLength / 2 + 3;
       },
       50);
   Robot::chassis->cancelMotion();
@@ -196,55 +234,65 @@ void runSixRush() {
                                 {.direction = AngularDirection::CW_CLOCKWISE,
                                  .minSpeed = 127,
                                  .earlyExitRange = 75});
-  // move towards matchload bar (be parallel to it)
-  Robot::chassis->moveToPose(TILE_LENGTH * 2.5, -TILE_LENGTH * 2, 40, 1500,
-                             {.minSpeed = 32});
+  // // move towards matchload bar (be parallel to it)
+  // Robot::chassis->moveToPose(TILE_LENGTH * 2.5, -TILE_LENGTH * 2, 40, 1500,
+  //                            {.minSpeed = 32});
+  Robot::chassis->waitUntilDone();
   Robot::Actions::expandLeftWing();
-  Robot::chassis->waitUntilDone();
 
-  // remove triball in matchload zone
-  Robot::Actions::expandBackWing();
-  Robot::chassis->turnToHeading(
-      -35, 500,
-      {.direction = lemlib::AngularDirection::CCW_COUNTERCLOCKWISE,
-       .maxSpeed = 64,
-       .minSpeed = 48,
-       .earlyExitRange = 15});
+  // // remove triball in matchload zone
+  // Robot::Actions::expandBackWing();
+  // Robot::chassis->turnToHeading(
+  //     -35, 500,
+  //     {.direction = lemlib::AngularDirection::CCW_COUNTERCLOCKWISE,
+  //      .maxSpeed = 64,
+  //      .minSpeed = 48,
+  //      .earlyExitRange = 15});
 
-  // turn back to goal
-  Robot::chassis->turnToHeading(0, /* lemlib::DriveSide::LEFT, */ 500,
-                                {.minSpeed = 127, .earlyExitRange = 15});
-  Robot::Actions::retractBackWing();
-  Robot::chassis->waitUntilDone();
-
-  // push balls into goal
-  Robot::chassis->moveToPose(TILE_LENGTH * 2.7, -TILE_LENGTH, UP, 900,
-                             {.minSpeed = 72});
+  // // turn back to goal
+  // Robot::chassis->turnToHeading(15, /* lemlib::DriveSide::LEFT, */ 500,
+  //                               {.minSpeed = 127, .earlyExitRange = 15});
   // outtake ball into goal
   Robot::Actions::outtake();
+  pros::delay(500);
+  // Robot::Actions::retractBackWing();
+  // Robot::chassis->waitUntilDone();
+
+  // push balls into goal
+  Robot::chassis->moveToPose(TILE_LENGTH * 2.7, -TILE_LENGTH, UP, 2500,
+                             {.lead = 0.8, .minSpeed = 127});
+  pros::delay(500);
+
   // Robot::Actions::expandLeftWing();
   Robot::chassis->waitUntilDone();
 
-  // second ram
-  Robot::Actions::retractLeftWing();
-  tank(-127, -127, 400, 3);
-  Robot::chassis->moveToPoint(Robot::chassis->getPose().x, 10000000, 700,
-                              {.minSpeed = 127});
-  Robot::chassis->waitUntilDone();
+  // // second ram
+  // tank(-127, -127, 400, 3);
+  // Robot::chassis->moveToPoint(Robot::chassis->getPose().x, 10000000, 700,
+  //                             {.minSpeed = 127});
+  // Robot::chassis->waitUntilDone();
 
   // back out of goal
-  tank(-127, -127, 350, 3);
+  tank(-127, -127, 450, 3);
   // turn towards elevation pole
-  Robot::chassis->swingToHeading(LEFT, lemlib::DriveSide::LEFT, 2000,
+  Robot::chassis->swingToHeading(LEFT, lemlib::DriveSide::LEFT, 750,
                                  {.minSpeed = 127, .earlyExitRange = 45});
+  // bop straggler triballs into goal
+  pros::delay(300);
+  Robot::Actions::expandRightWing();
+
   Robot::chassis->waitUntilDone();
+  Robot::Actions::retractLeftWing();
 
   // prepare to intake last ball
   Robot::chassis->moveToPoint(TILE_LENGTH * 1.4, -TILE_LENGTH * 1.3, 750,
-                              {.minSpeed = 96, .earlyExitRange = 9});
+                              {.minSpeed = 127, .earlyExitRange = 12});
+  // dont break right wing please
+  pros::delay(300);
+  Robot::Actions::retractRightWing();
 
   // intake last ball for 5 ball
-  Robot::chassis->moveToPose(11, -TILE_LENGTH, LEFT, 2000, {.minSpeed = 48});
+  Robot::chassis->moveToPose(11, -TILE_LENGTH, LEFT, 2000, {.minSpeed = 72});
   Robot::Actions::intake();
   // let intake speed up so triball sensing is accurate
   pros::delay(500);
@@ -269,32 +317,33 @@ void runSixRush() {
   Robot::Actions::stopIntake();
 
   // outtake ball into goal once we are facing it
-  waitUntil([] { return robotAngDist(RIGHT) < 25 || !isMotionRunning(); });
+  waitUntil([] { return robotAngDist(RIGHT) < 35 || !isMotionRunning(); });
   Robot::Actions::outtake();
 
   Robot::chassis->cancelMotion();
   // ram straight into goal
   Robot::chassis->moveToPoint(1000000, Robot::chassis->getPose().y, 1500,
                               {.minSpeed = 127});
-  waitUntil(
-      [] {
-        return Robot::chassis->getPose().x > TILE_LENGTH * 1.5 ||
-               !isMotionRunning();
-      },
-      100, INT_MAX, true);
+  waitUntil([] {
+    return Robot::chassis->getPose().x > TILE_LENGTH * 1.5 ||
+           !isMotionRunning();
+  });
+
+  pros::delay(300);
   Robot::chassis->cancelMotion();
   tank(-127, -64, 200, 3);
   Robot::chassis->swingToHeading(LEFT, lemlib::DriveSide::RIGHT, 500,
                                  {.minSpeed = 127, .earlyExitRange = 45});
 
-  Robot::chassis->moveToPose(-Robot::Dimensions::drivetrainLength / 2 - 3,
-                             -TILE_LENGTH * 2 +
-                                 Robot::Dimensions::drivetrainLength / 2 + 3,
-                             DOWN - 45, 1200,
-                             {
-                                 .lead = 0.3,
-                                 .minSpeed = 32,
-                             });
+  Robot::chassis->moveToPose(
+      -5, -TILE_LENGTH * 2 + Robot::Dimensions::drivetrainLength / 2 - 6,
+      DOWN - 45, 1200,
+      {
+          .lead = 0.3,
+          .minSpeed = 72,
+      });
+  Robot::chassis->waitUntilDone();
+  Robot::Actions::expandLeftWing();
 
   //
   //
