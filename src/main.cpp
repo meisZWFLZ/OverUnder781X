@@ -5,6 +5,7 @@
 #include "lift.h"
 #include "pros/misc.h"
 #include "pros/misc.hpp"
+#include "pros/motors.h"
 #include "pros/rtos.hpp"
 #include "robot.h"
 #include "auton.h"
@@ -77,7 +78,8 @@ void addAutons() {
   Robot::Subsystems::autonSelector->addAuton(&auton::autons::disrupt);
   Robot::Subsystems::autonSelector->addAuton(&auton::autons::sixBall);
   Robot::Subsystems::autonSelector->addAuton(&auton::autons::defensive);
-  Robot::Subsystems::autonSelector->addAuton(&auton::autons::sixRush);
+  Robot::Subsystems::autonSelector->addAuton(&auton::autons::fiveRush);
+  Robot::Subsystems::autonSelector->addAuton(&auton::autons::sixRushElims);
   Robot::Subsystems::autonSelector->addAuton(&auton::autons::doNothing);
   Robot::Subsystems::autonSelector->addAuton(&auton::autons::skills);
 }
@@ -111,7 +113,10 @@ void initialize() {
  * the VEX Competition Switch, following either autonomous or opcontrol. When
  * the robot is enabled, this task will exit.
  */
-void disabled() {}
+void disabled() {
+  Robot::Motors::leftDrive.brake();
+  Robot::Motors::rightDrive.brake();
+}
 
 /**
  * Runs after initialize(), and before autonomous when connected to the Field
@@ -417,6 +422,7 @@ const bool tuneModeEnabled = true;
  * the task, not resume it from where it left off.
  */
 void opcontrol() {
+  Robot::chassis->setBrakeMode(pros::E_MOTOR_BRAKE_COAST);
   // Robot::Subsystems::autonSelector->disable();
   Robot::Actions::retractBothWings();
   Robot::Actions::retractBackWing();
