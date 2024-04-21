@@ -111,7 +111,7 @@ void auton::actions::matchload(int triballs, int until) {
   matchloadTarget.theta = trigAngleToHeading(trigMatchloadTargetTheta);
 
   // where the robot should go to to smoothly go to matchload bar
-  const float stagingTargetDistance = 12;
+  const float stagingTargetDistance = 9;
   lemlib::Pose stagingTarget =
       matchloadTarget +
       lemlib::Pose {
@@ -151,7 +151,7 @@ void auton::actions::matchload(int triballs, int until) {
   if (checkDriverExit()) return;
   printf("matchload boomerang touch done\n");
   // make sure the robot is touching the matchload bar
-  tank(-48, -48, 0, 0);
+  tank(-64, -64, 0, 0);
 
   const float startingTheta = Robot::chassis->getPose().theta;
 
@@ -181,7 +181,7 @@ void auton::actions::matchload(int triballs, int until) {
   };
 
   // prevent robot from turning for too fast
-  const float maxSpeed = 48;
+  const float maxSpeed = 127;
   while (Robot::Subsystems::catapult->getIsMatchloading() &&
          !checkDriverExit()) {
     const float targetTheta =
