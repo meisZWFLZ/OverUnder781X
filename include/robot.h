@@ -62,6 +62,7 @@ class Robot {
 
         static constexpr float drivetrainWidth = 27 / 2.0;
         static constexpr float drivetrainLength = 27 / 2.0;
+        static constexpr float frontWingLength = 17 / 2.0;
 
         static const int autonSelectorGearTeeth;
     };
@@ -117,7 +118,7 @@ class Robot {
         static ControllerScreen* controller;
         static FourWingSubsystem* wings;
         static auton::AutonSelector* autonSelector;
-        
+
         static pros::Task* task;
 
         static void initialize();
