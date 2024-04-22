@@ -26,7 +26,7 @@ bool exitForDriver = false;
 /**
  * @brief how much the driver must move the joysticks for the macro to exit
  */
-const int inputThreshold = 24;
+const int inputThreshold = 127*0.375;
 
 /**
  * @brief exits the macro because the driver has exited and ensure motion stops
@@ -101,10 +101,10 @@ void auton::actions::matchload(int triballs, int until) {
 
   // POSES
   // where the robot should be shooting to
-  const lemlib::Pose shootingTarget {MAX_X - TILE_LENGTH, -4};
+  const lemlib::Pose shootingTarget {MAX_X - TILE_LENGTH, -2};
 
   // where the robot should go to to matchload
-  lemlib::Pose matchloadTarget = {MIN_X + TILE_RADIUS - 0.25,
+  lemlib::Pose matchloadTarget = {MIN_X + TILE_RADIUS + 0.5,
                                   MIN_Y + TILE_LENGTH + 8.5};
   const float trigMatchloadTargetTheta = matchloadTarget.angle(shootingTarget);
   // calculate the angle to the shooting target
@@ -217,8 +217,54 @@ void auton::actions::matchload(int triballs, int until) {
   };
 
   if (checkDriverExit()) return;
-  Robot::Actions::retractBackWing();
 
+  Robot::Actions::retractBackWing();
+  // set slew to 5 for skills
+  Robot::chassis->lateralSettings.slew = 5;
+
+  constexpr float halfRobotWidthWithWingsExpanded =
+      Robot::Dimensions::drivetrainWidth / 2 +
+      Robot::Dimensions::frontWingLength;
+  constexpr float xForRunningAlongLongBarrier =
+      -halfRobotWidthWithWingsExpanded;
+
+  // don't hit close short barrier
+  Robot::chassis->moveToPose(
+      -TILE_LENGTH, MIN_Y + TILE_LENGTH - 2 + halfRobotWidthWithWingsExpanded,
+      RIGHT, 1750, {.minSpeed = 96});
+  // wait until past short barrier
+  waitUntil([] {
+    return !betterIsMotionRunning() ||
+           Robot::chassis->getPose().x > -TILE_LENGTH;
+  });
+  if (checkDriverExit()) return;
+
+  // then smack wings into balls
+  Robot::Subsystems::wings->front->enable();
+  Robot::Actions::outtake();
+
+  // arc to face parallel to long barrier and push balls beside it
+  Robot::chassis->moveToPose(xForRunningAlongLongBarrier, -TILE_RADIUS + 6, UP,
+                             1500, {.minSpeed = 72});
+
+  // wait until bot is almost mid way
+  waitUntil([] {
+    return Robot::chassis->getPose().y > -TILE_RADIUS ||
+           !betterIsMotionRunning();
+  });
+  Robot::chassis->cancelMotion();
+  if (checkDriverExit()) return;
+
+  // push balls towards short barrier
+  Robot::chassis->moveToPose(xForRunningAlongLongBarrier, 2 * TILE_LENGTH + 3,
+                             UP, 2000, {.minSpeed = 96});
+  waitUntil([] {
+    return !betterIsMotionRunning() ||
+           Robot::chassis->getPose().y >
+               TILE_LENGTH + Robot::Dimensions::drivetrainLength / 2;
+  });
+  Robot::chassis->cancelMotion();
+  if (checkDriverExit()) return;
   stop();
   printf("exit\n");
 }
