@@ -156,8 +156,6 @@ class SolenoidSet {
       printf("size: %d\n", this->solenoids.size());
       printf("not null?: %d\n", (bool)this->solenoids.at(i));
 
-      pros::delay(200);
-
       this->solenoids.at(i)->setState(newState);
     };
 
