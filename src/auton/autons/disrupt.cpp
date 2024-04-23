@@ -1,40 +1,94 @@
 #include "auton.h"
 #include "fieldDimensions.h"
+#include "lemlib/chassis/chassis.hpp"
+#include "pros/rtos.hpp"
+#include "robot.h"
+#include "wings.h"
+#include <climits>
 
 using namespace fieldDimensions;
 using namespace auton::utils;
 
 void runDisrupt() {
+  const int startTime = pros::millis();
   // front of drivetrain should be aligned with closer edge of puzzle pattern
   // x is where neil decided so
   Robot::chassis->setPose(
       {0 - TILE_LENGTH * 2 + Robot::Dimensions::drivetrainWidth / 2 + 6,
-       MIN_Y + TILE_LENGTH - Robot::Dimensions::drivetrainLength / 2, UP},
+       MIN_Y + TILE_LENGTH - Robot::Dimensions::drivetrainLength / 2 - 2, UP},
       false);
 
-  // position the robot to disrupt center triballs
-  Robot::chassis->moveToPose(-TILE_LENGTH - 3, -TILE_LENGTH + 6, RIGHT, 3000,
-                             {.lead = .3, .minSpeed = 127});
-  // wait until facing right to push triballs
-  waitUntil([] { return robotAngDist(RIGHT) < 30 || !isMotionRunning(); });
-  Robot::chassis->cancelMotion();
+  const lemlib::Pose intakeCenterTriballTarget = {-TILE_LENGTH - 3, -5.25, UP};
 
-  // prepare to push triballs
-  Robot::Actions::expandBothWings();
-  Robot::Actions::outtake();
-
-  // full speed into the triballs
-  Robot::chassis->moveToPoint(10000000, 0, 3000, {.minSpeed = 127});
-
-  // wait until near barrier
+  // intake center triball
+  Robot::chassis->moveToPose(intakeCenterTriballTarget.x,
+                             intakeCenterTriballTarget.y,
+                             intakeCenterTriballTarget.theta, 1500,
+                             {.chasePower = 5, .lead = 0.5, .minSpeed = 127});
+  Robot::Actions::intake();
+  // let intake speed up
+  pros::delay(500);
+  // wait until triball is intaked or we are past y = -18
   waitUntil(
-      [] { return Robot::chassis->getPose().x > -12.5 || !isMotionRunning(); });
+      [] {
+        return isTriballInIntake() || !isMotionRunning() ||
+               Robot::chassis->getPose().y > -24;
+      },
+      50);
+  // then slow down
   Robot::chassis->cancelMotion();
+  Robot::chassis->moveToPose(
+      intakeCenterTriballTarget.x, intakeCenterTriballTarget.y,
+      intakeCenterTriballTarget.theta, 1000,
+      {.maxSpeed = 56}); // minSpeed is not set in order to slow down
+  // wait until triball is intaked or drive train is past neutral zone
+  waitUntil(
+      [] {
+        return isTriballInIntake() || !isMotionRunning() ||
+               Robot::chassis->getPose().y >
+                   -Robot::Dimensions::drivetrainLength / 2 - 8;
+      },
+      50);
+  Robot::chassis->cancelMotion();
+  // let intake fully grab ahold that triball and cancel forwards motion
+  tank(-32, -48, 300, 0);
+
+  // go backwards away from neutral zone
+  Robot::chassis->moveToPoint(Robot::chassis->getPose().x - 2,
+                              Robot::chassis->getPose().y - 8.5, 1000,
+                              {
+                                  .forwards = false,
+                                  .minSpeed = 48,
+                              });
+  pros::delay(300);
+  // don't overstress intake
+  Robot::Actions::stopIntake();
+  Robot::chassis->waitUntilDone();
+
+  // wait until facing RIGHT, then expand left front wing
+  Robot::Subsystems::wings->front->setIthState(int(WING_PAIR_INDEX::LEFT),
+                                               true);
+  // swing to face right
+  Robot::chassis->swingToHeading(
+      /* DOWN */ RIGHT, lemlib::DriveSide::RIGHT, 1000,
+      {
+          .direction = AngularDirection::CW_CLOCKWISE,
+          .maxSpeed = 96,
+          .minSpeed = 96,
+          .earlyExitRange = 20,
+      });
+
+  // turn the rest of the way to face down
+  Robot::chassis->turnToHeading(DOWN + 30, 1000,
+                                {.direction = AngularDirection::CW_CLOCKWISE,
+                                 .minSpeed = 96,
+                                 .earlyExitRange = 20});
+  Robot::chassis->waitUntilDone();
 
   // done disrupting
   // position the robot to clear matchload zone
-  Robot::chassis->moveToPoint(-TILE_LENGTH * 2 - 1.5, -TILE_LENGTH * 2 - 6.5,
-                              3000, {.forwards = false});
+  Robot::chassis->moveToPoint(-TILE_LENGTH * 2 - 4, -TILE_LENGTH * 2 - 9.5,
+                              3000);
 
   // retract wings
   Robot::chassis->waitUntil(5);
@@ -43,36 +97,46 @@ void runDisrupt() {
   Robot::chassis->waitUntilDone();
 
   // turn to be parallel to the matchload pipe
-  Robot::chassis->turnToPoint(1000000, -1000000, 2000);
+  Robot::chassis->turnToHeading(DOWN - 45, 750);
   Robot::chassis->waitUntilDone();
 
   // expand wing
-  // Robot::Actions::expandBackWing();
-  pros::delay(1000);
+  Robot::Actions::expandBackWing();
+  pros::delay((startTime + 15000) - pros::millis() - 4000);
 
   // move in an arc to sweep ball out
-  // tank(32, 127, 0, 0);
+  tank(28, 127, 0, 0);
   // wait until facing right or if we are far from the matchload zone
-  // waitUntil(
-  //     [] {
-  //       return robotAngDist(RIGHT) < 10 ||
-  //              Robot::chassis->getPose().x > -TILE_LENGTH * 1.5;
-  //     },
-  //     0, 1000);
-  // stop();
+  waitUntil(
+      [] {
+        return robotAngDist(RIGHT - 15) < 10 ||
+               Robot::chassis->getPose().x > -TILE_LENGTH * 1.5;
+      },
+      0, 1000);
 
-  // // ensure we don't bend back wing
-  // Robot::Actions::retractBackWing();
+  Robot::chassis->turnToHeading(UP + 45, 500);
+  Robot::chassis->turnToHeading(RIGHT, 500);
 
+  // ensure we don't bend back wing
+  Robot::Actions::retractBackWing();
+
+  // get rid of intaked triball
+  Robot::Actions::outtake();
+
+  // let matchload zone triball get ahead of us
+  pros::delay(500);
   // intake any straggler balls
   Robot::Actions::intake();
 
-  // // let matchload zone triball get ahead of us
-  // pros::delay(1000);
-
   // touch horizontal elevation bar
-  Robot::chassis->moveToPose(0 - Robot::Dimensions::drivetrainLength / 2 - 3,
-                             MIN_Y + TILE_RADIUS, RIGHT, 2100);
+  Robot::chassis->moveToPose(0 - Robot::Dimensions::drivetrainLength / 2 - 4,
+                             MIN_Y + Robot::Dimensions::drivetrainWidth / 2 + 2,
+                             RIGHT, 2000);
+  // waitUntil([] {
+  //   return (Robot::chassis->getPose().y < MIN_Y - TILE_RADIUS &&
+  //           Robot::chassis->getPose().x > -TILE_LENGTH) ||
+  //          !isMotionRunning();
+  // });
 
   // if a triball enters the intake, outtake it
   while (pros::competition::is_autonomous() && isMotionRunning()) {
@@ -84,15 +148,6 @@ void runDisrupt() {
   }
   pros::delay(1000);
   Robot::Actions::outtake();
-  tank(-64, -64, 0, 0);
-  pros::delay(500);
-  const float startingTheta = Robot::chassis->getPose().theta;
-
-  // when the robot touches the bar it should begin to turn
-  waitUntil([startingTheta] {
-    return robotAngDist(startingTheta) > 5;
-  });
-  stop();
 }
 
 auton::Auton auton::autons::disrupt = {(char*)("disrupt / left"), runDisrupt};
