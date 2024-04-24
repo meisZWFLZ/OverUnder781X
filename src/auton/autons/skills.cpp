@@ -1,6 +1,7 @@
 #include "auton.h"
 #include "fieldDimensions.h"
-#include "pros/rtos.hpp"
+#include "lemlib/chassis/chassis.hpp"
+#include "lemlib/pose.hpp"
 #include "robot.h"
 
 using namespace fieldDimensions;
@@ -27,264 +28,379 @@ void delayForMatchLoading(int delay) {
 
 void runSkills() {
   lemlib::Timer timer {60000};
-  // matchload(2, INT_MAX);
-  matchload();
+  matchload(5, INT_MAX);
+  // matchload();
+  Robot::Actions::retractRightWing();
+  // turn to left and scoop balls away from short barrier
+  Robot::chassis->turnToHeading(LEFT, /* lemlib::DriveSide::LEFT, */ 1000,
+                                {.minSpeed = 32, .earlyExitRange = 5});
+  Robot::chassis->waitUntilDone();
 
-  // set slew to 5 for skills
-  Robot::chassis->lateralSettings.slew = 5;
+  // use long barrier to adjust odom
+  tank(-96, -96, 500, 0);
+  // wait until aligned with barrier
+  waitUntil([] { return robotAngDist(LEFT) < 10; }, 50, 500, true);
+  // if aligned with barrier then set odom
+  if (robotAngDist(LEFT) < 10)
+    Robot::chassis->setPose({-Robot::Dimensions::drivetrainLength / 2 - 2,
+                             Robot::chassis->getPose().y,
+                             Robot::chassis->getPose().theta},
+                            false);
 
-  // intake matchload for jumping over bar
+  Robot::Actions::stopIntake();
+  Robot::Actions::retractLeftWing();
+
+  // scoop balls near matchload bar to other side of field
+  Robot::chassis->moveToPoint(
+      -TILE_LENGTH * 2 + 4, TILE_LENGTH * 2 - Robot::Dimensions::trackWidth / 2,
+      2500, {.minSpeed = 127, .earlyExitRange = 4});
+
+  constexpr float halfRobotWidthWithWingsExpanded =
+      Robot::Dimensions::drivetrainWidth / 2 +
+      Robot::Dimensions::frontWingLength;
+  constexpr float yForRunningAlongAlley =
+      MAX_Y - Robot::Dimensions::drivetrainWidth / 2 + 4;
+
+  // swing around to face alley
+  Robot::chassis->swingToPoint(-TILE_LENGTH, yForRunningAlongAlley,
+                               lemlib::DriveSide::RIGHT, 750,
+                               {.direction = AngularDirection::CW_CLOCKWISE,
+                                .minSpeed = 127,
+                                .earlyExitRange = 15});
+  // wait until bot is facing right to expand right wing
+  waitUntil([] { return robotAngDist(UP - 45) < 15 || !isMotionRunning(); });
+  Robot::Actions::expandRightWing();
+  Robot::chassis->waitUntilDone();
+
   Robot::Actions::intake();
+  /** whether we have intaked a ball*/
+  bool hasIntakedBall = false;
 
-  // go down elevation alley
-  // make sure we don't hit short barrier
-  Robot::chassis->moveToPoint(-TILE_LENGTH * .75, -TILE_LENGTH * 2.65, 5000,
-                              {.minSpeed = 127});
+  Robot::chassis->moveToPose(-TILE_LENGTH + 6,
+                             MAX_Y - Robot::Dimensions::drivetrainWidth / 2,
+                             RIGHT, 2000, {.chasePower = 8, .minSpeed = 96});
   pros::delay(500);
-  // wait until the robot's y position is past the short barrier
-  waitUntil([] {
-    return Robot::chassis->getPose().y < -TILE_LENGTH * 2.3 ||
-           !isMotionRunning();
+  waitUntil([&hasIntakedBall] {
+    return (!hasIntakedBall && isTriballInIntake()) ||
+           robotAngDist(RIGHT) < 15 || !isMotionRunning();
   });
+
+  if (isTriballInIntake()) {
+    bool hasIntakedBall = true;
+    Robot::Actions::stopIntake();
+    waitUntil([] { return robotAngDist(RIGHT) < 15 || !isMotionRunning(); });
+  }
   Robot::chassis->cancelMotion();
-
-  // get past second short barrier
-  Robot::chassis->moveToPoint(TILE_LENGTH, -TILE_LENGTH * 2.5, 5000,
-                              {.minSpeed = 127});
-
-  // time catapult retract as we go under elevation bar
-  waitUntil([] {
-    return Robot::chassis->getPose().x > -TILE_LENGTH * .75 ||
-           !isMotionRunning();
-  });
-  printf("fire\n");
-  Robot::Subsystems::catapult->fire();
-
-  // wait until the robot's x position is past the elevation bar
-  waitUntil([] {
-    return Robot::chassis->getPose().x > -TILE_LENGTH * .5 ||
-           !isMotionRunning();
-  });
-  Robot::chassis->cancelMotion();
-  Robot::chassis->setPose(Robot::chassis->getPose() + lemlib::Pose {0, -3},
-                          false);
-
-  // go to the right side of the goal
-  Robot::chassis->moveToPose(TILE_LENGTH * 2.5, -TILE_LENGTH, UP, 5000);
-  // wait until facing towards goal
-  waitUntil([] { return robotAngDist(UP) < 15 || !isMotionRunning(); });
-  // give a bit of time to ram
-  Robot::chassis->cancelMotion();
-  Robot::chassis->moveToPoint(TILE_LENGTH * 2.5, 0, 700, {.minSpeed = 127});
-  Robot::chassis->waitUntilDone();
-  printf("ram!!!\n");
-
-  // remove triball from intake
   Robot::Actions::outtake();
-  // second ram
-  // back out of goal
-  tank(-127, -127, 300, 3);
-  tank(127, 127, 150, 3);
-  // ram into goal
-  Robot::chassis->moveToPoint(0, 100000000, 600, {.minSpeed = 127});
-  Robot::chassis->waitUntilDone();
-  // adjust y a bit: y = y + 4
-  Robot::chassis->setPose(Robot::chassis->getPose().x,
-                          Robot::chassis->getPose().y + 4,
-                          Robot::chassis->getPose().theta);
-  // back out of goal
-  tank(-127, -127, 400, 0);
-
-  Robot::Actions::intake();
-  // go around center triballs
-  lemlib::Pose aroundFrontTriballsTarget {TILE_LENGTH * .75,
-                                          -TILE_LENGTH * 1.35};
-  Robot::chassis->moveToPoint(aroundFrontTriballsTarget.x,
-                              aroundFrontTriballsTarget.y, 5000,
+  Robot::chassis->moveToPoint(TILE_LENGTH, yForRunningAlongAlley, 750,
                               {.minSpeed = 127});
-  // wait until in front of goal to scoop triballs beside the goal
-  Robot::chassis->waitUntil(12);
-  Robot::Actions::expandBackWing();
 
-  // wait until having gone around center triballs
-  waitUntilDistToPose(aroundFrontTriballsTarget, 12, 100, true);
+  const lemlib::Pose ramIntoLeftSideOfGoalTarget {
+      MAX_X - Robot::Dimensions::drivetrainWidth / 2 + 4,
+      TILE_LENGTH + Robot::Dimensions::drivetrainLength / 2, DOWN};
+  // ram balls into left side of goal
+  Robot::chassis->moveToPose(
+      ramIntoLeftSideOfGoalTarget.x, ramIntoLeftSideOfGoalTarget.y,
+      ramIntoLeftSideOfGoalTarget.theta, 1000, {.minSpeed = 72});
+
+  // go full speed once facing goal
+  waitUntil([] { return !isMotionRunning() || robotAngDist(DOWN) < 15; });
+  Robot::chassis->cancelMotion();
+  // dont spin balls up above goal
+  Robot::Actions::stopIntake();
+  Robot::chassis->moveToPose(ramIntoLeftSideOfGoalTarget.x, 0,
+                             ramIntoLeftSideOfGoalTarget.theta, 800,
+                             {.minSpeed = 127});
+
+  // back up for second ram
+  Robot::chassis->moveToPoint(
+      Robot::chassis->getPose().x + 3, Robot::chassis->getPose().y + 12, 500,
+      {.forwards = false, .minSpeed = 127, .earlyExitRange = 3});
+  Robot::chassis->waitUntilDone();
+  // dont get wing stuck in goal
+  Robot::Actions::retractRightWing();
+  // second ram balls into goal
+  Robot::chassis->moveToPose(Robot::chassis->getPose().x + 3, 0,
+                             ramIntoLeftSideOfGoalTarget.theta, 1350,
+                             {.minSpeed = 127});
+  pros::delay(700);
+  // use wall and goal to adjust odom
+  // wait until aligned with goal
+  waitUntil([] { return robotAngDist(DOWN) < 5 || !isMotionRunning(); }, 50,
+            INT_MAX, true);
+  // if aligned with goal then set odom
+  if (robotAngDist(DOWN) < 10)
+    Robot::chassis->setPose(
+        {MAX_X - Robot::Dimensions::drivetrainWidth / 2,
+         TILE_LENGTH + Robot::Dimensions::drivetrainLength / 2,
+         Robot::chassis->getPose().theta},
+        false);
   Robot::chassis->cancelMotion();
 
-  Robot::Actions::retractBackWing();
+  Robot::chassis->moveToPoint(
+      Robot::chassis->getPose().x - 2, Robot::chassis->getPose().y + 8, 750,
+      {.forwards = false, .minSpeed = 127, .earlyExitRange = 3});
 
-  // prevent sudden jolt
-  tank(96, 96, 0, 0);
-  tank(64, -64, 600, 5);
+  // turn to face away from goal
+  Robot::chassis->swingToHeading(LEFT, lemlib::DriveSide::LEFT, 500,
+                                 {.minSpeed = 127, .earlyExitRange = 20});
+  Robot::chassis->waitUntilDone();
+  // use right wing for scooping balls
+  Robot::Actions::expandRightWing();
 
-  // face towards center triballs
-  Robot::chassis->moveToPose(TILE_LENGTH * 1.75, -TILE_LENGTH * 0.5, RIGHT - 20,
-                             2000, {.minSpeed = 64});
-  // wait until roughly facing towards center triballs
-  waitUntil([] { return robotAngDist(RIGHT - 20) < 35 || !isMotionRunning(); });
-  // expand the wings and outtake in preparation for ram into center
+  // scoop balls in short barrier corner
+  Robot::chassis->moveToPoint(halfRobotWidthWithWingsExpanded + 10,
+                              TILE_LENGTH * 2 -
+                                  halfRobotWidthWithWingsExpanded - 1,
+                              1000, {.minSpeed = 127, .earlyExitRange = 6});
+
+  const lemlib::Pose firstFrontGoalRam {TILE_LENGTH * 2, TILE_RADIUS,
+                                        RIGHT + 25};
+
+  // turn towards front face of goal
+  Robot::chassis->swingToPoint(
+      firstFrontGoalRam.x, firstFrontGoalRam.y, lemlib::DriveSide::LEFT, 750,
+      {.direction = AngularDirection::CCW_COUNTERCLOCKWISE,
+       .minSpeed = 56,
+       .earlyExitRange = 20});
+
+  // wait a bit to expand left wing
+  waitUntil([] { return !isMotionRunning() || robotAngDist(DOWN) < 15; });
   Robot::Actions::expandBothWings();
-  Robot::Actions::outtake();
-
-  // wait until facing towards center triballs
-  waitUntil([] { return robotAngDist(RIGHT - 20) < 10 || !isMotionRunning(); });
-  Robot::chassis->cancelMotion();
-
-  // ram into front of goal
-  Robot::chassis->moveToPoint(MAX_X, -TILE_RADIUS - 2, 1000, {.minSpeed = 127});
   Robot::chassis->waitUntilDone();
 
-  // adjust odom
-  Robot::chassis->setPose(Robot::chassis->getPose() + lemlib::Pose {-4, 2},
-                          false);
+  // odom goofing so lets fix it
+  Robot::chassis->setPose(Robot::chassis->getPose() + lemlib::Pose {0, -5});
 
-  // get out of the goal in the same way we went in the goal
-  Robot::Actions::retractBothWings();
-  const lemlib::Pose outOfTheGoalTarget1 {
-      0 + Robot::Dimensions::drivetrainWidth / 2 + 2,
-      Robot::chassis->getPose().y - 9, UP};
-  Robot::chassis->moveToPose(outOfTheGoalTarget1.x, outOfTheGoalTarget1.y,
-                             outOfTheGoalTarget1.theta, 3000,
-                             {.forwards = false, .minSpeed = 64});
-  // stop mid way to let triballs in wing go past
-  Robot::chassis->waitUntil(24);
+  // first ram into front of goal (left)
+  Robot::chassis->moveToPose(firstFrontGoalRam.x, firstFrontGoalRam.y,
+                             firstFrontGoalRam.theta, 2000, {.minSpeed = 96});
+  pros::delay(1500);
+
+  // wait until aligned with goal
+  waitUntil([] { return !isMotionRunning() || robotAngDist(RIGHT) < 5; }, 50,
+            2000, true);
+  // wait for another 300ms
+  waitUntil([] { return isMotionRunning(); }, 0, 300);
+
+  // if aligned with goal set pose
+  if (robotAngDist(RIGHT) < 5)
+    Robot::chassis->setPose(
+        {TILE_LENGTH * 2 - Robot::Dimensions::drivetrainLength / 2,
+         Robot::chassis->getPose().y, Robot::chassis->getPose().theta});
+  // move on to backing out
   Robot::chassis->cancelMotion();
-  pros::delay(300);
-  Robot::chassis->moveToPose(outOfTheGoalTarget1.x, outOfTheGoalTarget1.y,
-                             outOfTheGoalTarget1.theta, 3000,
-                             {.forwards = false, .minSpeed = 64});
-  // wait until near pose
-  waitUntil([&outOfTheGoalTarget1] {
-    return !isMotionRunning() ||
-           (/* outOfTheGoalTarget1.distance(Robot::chassis->getPose()) < 5 && */
-            robotAngDist(outOfTheGoalTarget1.theta) < 10);
-  });
-  Robot::chassis->moveToPoint(Robot::Dimensions::drivetrainWidth / 2,
-                              TILE_LENGTH, 1000);
-  // second center ram
-  // face towards center triballs
-  Robot::chassis->moveToPose(TILE_LENGTH * 1.75, TILE_LENGTH * .4, RIGHT + 20,
-                             2000,
+
+  // back out
+  Robot::chassis->waitUntilDone();
+  Robot::Actions::retractBothWings();
+  const float xForBackingOutOfFrontOfGoal =
+      Robot::Dimensions::drivetrainWidth / 2 + 6;
+  Robot::chassis->moveToPose(xForBackingOutOfFrontOfGoal, TILE_LENGTH * 1.2,
+                             DOWN, 2000,
                              {
-                                 .lead = .7,
+                                 .forwards = false,
+                                 .chasePower = 6,
+                                 .minSpeed = 72,
+                             });
+
+  // wait until facing down
+  waitUntil([] { return !isMotionRunning() || robotAngDist(DOWN) < 20; });
+  Robot::chassis->cancelMotion();
+
+  // second ram into front of goal (center)
+  Robot::Actions::expandBothWings();
+  Robot::chassis->moveToPose(TILE_LENGTH * 2, 0, RIGHT, 2000, {.minSpeed = 80});
+  // let bot ram into goal
+  pros::delay(1500);
+
+  // wait until aligned with goal
+  waitUntil([] { return !isMotionRunning() || robotAngDist(RIGHT) < 5; }, 50,
+            2000, true);
+  // wait for another 300ms
+  waitUntil([] { return isMotionRunning(); }, 0, 300);
+
+  // if aligned with goal set pose
+  if (robotAngDist(RIGHT) < 5)
+    Robot::chassis->setPose(
+        {TILE_LENGTH * 2 - Robot::Dimensions::drivetrainLength / 2,
+         Robot::chassis->getPose().y, Robot::chassis->getPose().theta});
+  // move on to backing out
+  Robot::chassis->cancelMotion();
+
+  // back out
+  Robot::Actions::retractBothWings();
+  Robot::chassis->moveToPose(xForBackingOutOfFrontOfGoal, -5, UP, 2000,
+                             {
+                                 .forwards = false,
+                                 .chasePower = 6,
                                  .minSpeed = 64,
                              });
-  pros::delay(500);
-  // wait until facing towards center triballs
-  waitUntil([] { return robotAngDist(RIGHT) < 10 || !isMotionRunning(); });
+  // wait until facing up
+  waitUntil([] { return !isMotionRunning() || robotAngDist(UP) < 20; });
   Robot::chassis->cancelMotion();
 
-  // expand the wings in preparation for ram into center
-  Robot::Actions::expandBothWings();
+  // go backwards to prepare for third ram into front of goal(right)
+  Robot::chassis->moveToPoint(
+      Robot::chassis->getPose().x, Robot::chassis->getPose().y - 12, 1000,
+      {.forwards = false, .minSpeed = 127, .earlyExitRange = 3});
 
-  // ram into center second time
-  Robot::chassis->moveToPoint(MAX_X, TILE_RADIUS, 1300, {.minSpeed = 127});
+  const lemlib::Pose thirdRamGoalTarget {TILE_LENGTH * 2, -7.5, RIGHT - 25};
+
+  Robot::chassis->swingToPoint(thirdRamGoalTarget.x, thirdRamGoalTarget.y,
+                               lemlib::DriveSide::LEFT, 500,
+                               {.minSpeed = 127, .earlyExitRange = 30});
+  Robot::chassis->waitUntilDone();
+
+  // third ram into front of goal (right)
+  Robot::Actions::expandBothWings();
+  Robot::chassis->moveToPose(TILE_LENGTH * 2, -7.5, RIGHT - 25, 2000,
+                             {.minSpeed = 72});
   Robot::chassis->waitUntilDone();
   Robot::Actions::retractBothWings();
 
-  // get out of goal
-  lemlib::Pose outOfTheGoalTarget2 {Robot::Dimensions::drivetrainLength / 2 + 2,
-                                    TILE_LENGTH - 3};
-  Robot::chassis->moveToPoint(outOfTheGoalTarget2.x, outOfTheGoalTarget2.y,
-                              1000, {.forwards = false, .minSpeed = 64});
-  // wait near pose
-  waitUntilDistToPose(outOfTheGoalTarget2, 9, 100, true);
+  // get outta there
+  Robot::chassis->moveToPoint(
+      Robot::Dimensions::trackWidth / 2 + Robot::Dimensions::frontWingLength +
+          1,
+      Robot::chassis->getPose().y, 1500,
+      {.forwards = false, .minSpeed = 80, .earlyExitRange = 3});
 
-  // then face down
-  Robot::chassis->turnToPoint(0, -10000000, 1000);
-  // wait until facing down
-  waitUntil([] { return robotAngDist(DOWN) < 30 || !isMotionRunning(); });
-  Robot::chassis->cancelMotion();
+  // then turn
+  Robot::chassis->swingToHeading(DOWN, lemlib::DriveSide::LEFT, 2500,
+                                 {.minSpeed = 64, .earlyExitRange = 20});
+  Robot::chassis->waitUntilDone();
 
-  // sweep triballs in barrier corner
-  lemlib::Pose barrierCornerSweepTarget {
-      TILE_LENGTH * 1.9,
-      TILE_LENGTH * 2 - Robot::Dimensions::drivetrainWidth / 2 - 2};
-  Robot::chassis->moveToPose(barrierCornerSweepTarget.x,
-                             barrierCornerSweepTarget.y, LEFT - 15, 1500,
-                             {.forwards = false, .minSpeed = 64});
-  Robot::Actions::expandBackWing();
-  // wait until near pose
-  waitUntilDistToPose(barrierCornerSweepTarget, 8, 100, true);
-  Robot::chassis->cancelMotion();
+  // scoop balls out of barrier corner
+  Robot::Actions::expandBothWings();
+  Robot::chassis->moveToPoint(Robot::Dimensions::trackWidth / 2 +
+                                  Robot::Dimensions::frontWingLength + 1,
+                              Robot::Dimensions::trackWidth / 2 +
+                                  Robot::Dimensions::frontWingLength + 1 -
+                                  TILE_LENGTH * 2,
+                              1000, {.minSpeed = 48, .earlyExitRange = 3});
 
-  // prepare to sweep triballs next to matchload zone
-  Robot::chassis->moveToPose(TILE_RADIUS,
-                             MAX_Y - Robot::Dimensions::drivetrainWidth / 2 - 1,
-                             LEFT, 3000, {.lead = .7});
-  // wait until a bit before retracting back wing
-  pros::delay(300);
-  Robot::Actions::retractBackWing();
-  // wait until y position is just barely touching field perimeter
+  // slowly scoop so as to not throw balls over k
+  Robot::chassis->swingToHeading(RIGHT, lemlib::DriveSide::LEFT, 750,
+                                 {.minSpeed = 64, .earlyExitRange = 25});
+
+  const lemlib::Pose goPastShortBarrierTarget {
+      TILE_LENGTH + Robot::Dimensions::drivetrainWidth / 2 + 2,
+      -TILE_LENGTH * 2, DOWN};
+
+  // fling the balls hopefully into the right side of the goal and prepare to go
+  // past the short barrier
+  Robot::chassis->swingToPoint(
+      goPastShortBarrierTarget.x, goPastShortBarrierTarget.y,
+      lemlib::DriveSide::LEFT, 750,
+      {.forwards = false, .minSpeed = 127, .earlyExitRange = 25});
+  Robot::chassis->waitUntilDone();
+
+  // don't break wings
+  Robot::Actions::retractBothWings();
+  // go past short barrier
+  Robot::chassis->moveToPose(goPastShortBarrierTarget.x,
+                             goPastShortBarrierTarget.y,
+                             goPastShortBarrierTarget.theta, 1000,
+                             {
+                                 .forwards = false,
+                                 .minSpeed = 92,
+                             });
+
+  // wait until past short barrier
   waitUntil([] {
-    return Robot::chassis->getPose().y >
-               MAX_Y - Robot::Dimensions::drivetrainWidth / 2 - 1 ||
-           !isMotionRunning();
+    return Robot::chassis->getPose().y < -TILE_LENGTH * 2 || !isMotionRunning();
   });
   Robot::chassis->cancelMotion();
 
-  // ram into left side of goal in an arc
-  Robot::chassis->moveToPose(MAX_X - Robot::Dimensions::drivetrainWidth / 2 - 4,
-                             TILE_LENGTH, UP, 3000,
-                             {.forwards = false, .minSpeed = 64});
-  // // wait until next to matchload zone to deploy back wing
-  // waitUntil([] {
-  //   return Robot::chassis->getPose().x > TILE_LENGTH * 2 ||
-  //   !isMotionRunning();
-  // });
-  // Robot::Actions::expandBackWing();
-
-  // // wait until past matchload zone to retract back wing
-  // waitUntil([] {
-  //   return Robot::chassis->getPose().y < TILE_LENGTH * 2 ||
-  //   !isMotionRunning();
-  // });
-  // Robot::Actions::retractBackWing();
-
-  // wait until near goal to ram at full power
-  waitUntil([] {
-    return Robot::chassis->getPose().y < TILE_LENGTH * 1.5 ||
-           !isMotionRunning();
-  });
+  // become parallel with the wall and face towards the right side of the goal
+  Robot::chassis->moveToPose(TILE_LENGTH,
+                             MIN_Y + Robot::Dimensions::drivetrainWidth / 2 + 3,
+                             RIGHT, 1000, {.forwards = false, .minSpeed = 64});
+  // once we are parallel with the wall, ram into the goal
+  waitUntil([] { return robotAngDist(RIGHT) < 15 || !isMotionRunning(); });
   Robot::chassis->cancelMotion();
 
-  // ram at full power into left side of goal
-  Robot::chassis->moveToPoint(Robot::chassis->getPose().x, TILE_LENGTH, 800,
-                              {.forwards = false, .minSpeed = 127});
-  Robot::chassis->waitUntilDone();
+  // use left wing to scoop balls
+  Robot::Actions::expandLeftWing();
 
-  // second ram
-  // back out of goal
-  tank(127, 127, 400, 3);
-  // ram into goal
-  Robot::chassis->moveToPoint(0, -10000000, 800,
-                              {.forwards = false, .minSpeed = 127});
-  Robot::chassis->waitUntilDone();
-  // back out of goal
-  tank(64, 127, 400, 0);
+  const lemlib::Pose ramIntoRightSideOfGoalTarget {
+      MAX_X - Robot::Dimensions::drivetrainWidth / 2, -TILE_LENGTH * 2, UP};
+  // ram balls into right side of goal
+  Robot::chassis->moveToPose(
+      ramIntoRightSideOfGoalTarget.x, ramIntoRightSideOfGoalTarget.y,
+      ramIntoRightSideOfGoalTarget.theta, 1200, {.minSpeed = 72});
 
-  // elevation
-  Robot::chassis->moveToPose(0, TILE_LENGTH * 2.5, LEFT, 5000,
+  // go full speed once facing goal
+  waitUntil([&ramIntoRightSideOfGoalTarget] {
+    return !isMotionRunning() ||
+           robotAngDist(ramIntoRightSideOfGoalTarget.theta) < 15;
+  });
+  Robot::chassis->cancelMotion();
+  // dont spin balls up above goal
+  Robot::Actions::stopIntake();
+  Robot::chassis->moveToPose(ramIntoRightSideOfGoalTarget.x, 0,
+                             ramIntoRightSideOfGoalTarget.theta, 800,
                              {.minSpeed = 127});
-  Robot::chassis->waitUntil(12);
-  Robot::Subsystems::lift->extend();
 
-  // wait until 2 seconds left in auton to retract the lift
-  waitUntil(
-      [&timer] { return !isMotionRunning() || timer.getTimeLeft() < 2000; });
-
-  // make sure we're on the bar by ramming into it
-  Robot::chassis->moveToPoint(-10000000, 0, 5000, {.minSpeed = 127});
-  // wait until 1.2 seconds left in auton to cancel motion
-  waitUntil(
-      [&timer] { return !isMotionRunning() || timer.getTimeLeft() < 1200; });
+  // back up for second ram
+  Robot::chassis->moveToPoint(
+      Robot::chassis->getPose().x + 3, Robot::chassis->getPose().y - 12, 500,
+      {.forwards = false, .minSpeed = 127, .earlyExitRange = 3});
+  Robot::chassis->waitUntilDone();
+  // dont get wing stuck in goal
+  Robot::Actions::retractLeftWing();
+  // second ram balls into goal
+  Robot::chassis->moveToPose(Robot::chassis->getPose().x + 3, 0,
+                             ramIntoRightSideOfGoalTarget.theta, 1350,
+                             {.minSpeed = 127});
+  pros::delay(700);
+  // use wall and goal to adjust odom
+  // wait until aligned with goal
+  waitUntil([] { return robotAngDist(UP) < 5 || !isMotionRunning(); }, 50,
+            INT_MAX, true);
+  // if aligned with goal then set odom
+  if (robotAngDist(UP) < 10)
+    Robot::chassis->setPose(
+        {MAX_X - Robot::Dimensions::drivetrainWidth / 2,
+         -TILE_LENGTH - Robot::Dimensions::drivetrainLength / 2,
+         Robot::chassis->getPose().theta},
+        false);
   Robot::chassis->cancelMotion();
 
-  // let the bot chill
-  stop();
-  pros::delay(900);
+  // back up
+  Robot::chassis->moveToPoint(
+      Robot::chassis->getPose().x - 3, Robot::chassis->getPose().y - 12, 750,
+      {.forwards = false, .minSpeed = 127, .earlyExitRange = 3});
 
+  const lemlib::Pose goPastShortBarrierForHangTarget {
+      TILE_LENGTH, MIN_Y - TILE_RADIUS, LEFT};
+
+  // face towards elevation bar
+  Robot::chassis->swingToPoint(
+      goPastShortBarrierForHangTarget.x, goPastShortBarrierForHangTarget.y,
+      lemlib::DriveSide::RIGHT, 500, {.minSpeed = 127, .earlyExitRange = 30});
+  Robot::chassis->waitUntilDone();
+  // expand hang early in order to permit it enough time to expand
+  Robot::Subsystems::lift->extend();
+  // go to intermediate target in order to prevent hitting short barrier
+  Robot::chassis->moveToPose(
+      goPastShortBarrierForHangTarget.x, goPastShortBarrierForHangTarget.y,
+      goPastShortBarrierForHangTarget.theta, 2000, {.minSpeed = 72});
+
+  // wait until past short barrier
+  waitUntil([&goPastShortBarrierForHangTarget] {
+    return Robot::chassis->getPose().x < goPastShortBarrierForHangTarget.x ||
+           !isMotionRunning();
+  });
+  Robot::chassis->cancelMotion();
+
+  // go full speed into elevation bar
+  Robot::chassis->moveToPoint(-1000000, Robot::chassis->getPose().y, 1500,
+                              {.minSpeed = 127});
+  Robot::chassis->waitUntilDone();
   // then move robot up
-  // Robot::Subsystems::lift->retract();
+  Robot::Subsystems::lift->retract();
 }
 
 auton::Auton auton::autons::skills = {(char*)("skills"), runSkills};
