@@ -404,7 +404,7 @@ void tuningCLI() {
   }
 }
 
-const bool tuneModeEnabled = true;
+const bool tuneModeEnabled = false;
 
 /**
  * Runs the operator control code. This function will be started in its own
