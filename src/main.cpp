@@ -111,7 +111,10 @@ void initialize() {
  * the VEX Competition Switch, following either autonomous or opcontrol. When
  * the robot is enabled, this task will exit.
  */
-void disabled() {}
+void disabled() {
+  if (Robot::Subsystems::lift->getState() == LiftArmStateMachine::EXTENDING)
+    Robot::Subsystems::lift->retract();
+}
 
 /**
  * Runs after initialize(), and before autonomous when connected to the Field
