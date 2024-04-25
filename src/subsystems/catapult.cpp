@@ -238,7 +238,7 @@ void CatapultStateMachine::indicateTriballFired() {
 }
 
 void CatapultStateMachine::retractCataMotor() {
-  this->motors->move_voltage(12000 * 0.6625 /* 0.7 */ /* 0.5 */);
+  this->motors->move_voltage(12000 * 0.625 /* 0.7 */ /* 0.5 */);
 }
 
 void CatapultStateMachine::stopCataMotor() { this->motors->move_voltage(0); }
