@@ -84,7 +84,8 @@ void waitUntil(std::function<bool(void)> condition, int timeConditionIsTrue = 0,
 
 namespace autons {
 extern Auton defensive;
-extern Auton sixRush;
+extern Auton fiveRush;
+extern Auton sixRushElims;
 extern Auton sixBall;
 extern Auton skills;
 extern Auton disrupt;
