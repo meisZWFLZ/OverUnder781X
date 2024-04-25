@@ -87,8 +87,8 @@ void runDisrupt() {
 
   // done disrupting
   // position the robot to clear matchload zone
-  Robot::chassis->moveToPoint(-TILE_LENGTH * 2 - 4, -TILE_LENGTH * 2 - 9.5,
-                              3000);
+  Robot::chassis->moveToPoint(-TILE_LENGTH * 2 - 4.5, -TILE_LENGTH * 2 - 11,
+                              6000, {.maxSpeed=64});
 
   // retract wings
   Robot::chassis->waitUntil(5);
