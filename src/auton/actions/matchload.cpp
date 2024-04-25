@@ -213,8 +213,12 @@ void auton::actions::matchload(int triballs, int until) {
     // prevent the robot from turning too fast
 
     tank(lateralPower + angularPower, lateralPower - angularPower, 0, 0);
+    if (pros::millis() % 2250 < 1500) Robot::Actions::outtake();
+    else Robot::Actions::stopIntake();
+
     pros::delay(10);
   };
+  Robot::Actions::stopIntake();
 
   if (checkDriverExit()) return;
 
