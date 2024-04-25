@@ -28,8 +28,8 @@ void delayForMatchLoading(int delay) {
 
 void runSkills() {
   lemlib::Timer timer {60000};
-  matchload(5, INT_MAX);
-  // matchload();
+  // matchload(5, INT_MAX);
+  matchload();
   Robot::Actions::retractRightWing();
   // turn to left and scoop balls away from short barrier
   Robot::chassis->turnToHeading(LEFT, /* lemlib::DriveSide::LEFT, */ 1000,
@@ -131,7 +131,7 @@ void runSkills() {
   // if aligned with goal then set odom
   if (robotAngDist(DOWN) < 10)
     Robot::chassis->setPose(
-        {MAX_X - Robot::Dimensions::drivetrainWidth / 2,
+        {MAX_X - Robot::Dimensions::drivetrainWidth / 2 - 1,
          TILE_LENGTH + Robot::Dimensions::drivetrainLength / 2,
          Robot::chassis->getPose().theta},
         false);
@@ -170,7 +170,7 @@ void runSkills() {
   Robot::chassis->waitUntilDone();
 
   // odom goofing so lets fix it
-  Robot::chassis->setPose(Robot::chassis->getPose() + lemlib::Pose {0, -5});
+  Robot::chassis->setPose(Robot::chassis->getPose() + lemlib::Pose {-4, -5});
 
   // first ram into front of goal (left)
   Robot::chassis->moveToPose(firstFrontGoalRam.x, firstFrontGoalRam.y,
@@ -195,7 +195,7 @@ void runSkills() {
   Robot::chassis->waitUntilDone();
   Robot::Actions::retractBothWings();
   const float xForBackingOutOfFrontOfGoal =
-      Robot::Dimensions::drivetrainWidth / 2 + 6;
+      Robot::Dimensions::drivetrainWidth / 2 + 8;
   Robot::chassis->moveToPose(xForBackingOutOfFrontOfGoal, TILE_LENGTH * 1.2,
                              DOWN, 2000,
                              {
@@ -210,7 +210,7 @@ void runSkills() {
 
   // second ram into front of goal (center)
   Robot::Actions::expandBothWings();
-  Robot::chassis->moveToPose(TILE_LENGTH * 2, 0, RIGHT, 2000, {.minSpeed = 80});
+  Robot::chassis->moveToPose(TILE_LENGTH * 2, 0, RIGHT, 2000, {.minSpeed = 88});
   // let bot ram into goal
   pros::delay(1500);
 
@@ -255,7 +255,7 @@ void runSkills() {
   // third ram into front of goal (right)
   Robot::Actions::expandBothWings();
   Robot::chassis->moveToPose(TILE_LENGTH * 2, -7.5, RIGHT - 25, 2000,
-                             {.minSpeed = 72});
+                             {.minSpeed = 88});
   Robot::chassis->waitUntilDone();
   Robot::Actions::retractBothWings();
 
