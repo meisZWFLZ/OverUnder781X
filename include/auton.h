@@ -25,7 +25,7 @@ void intakeTriball(lemlib::Pose pose);
  * @param triballs number of triballs to shoot
  * @param until timestamp to run until
  */
-void matchload(int triballs= 46, int until = pros::millis() + 35000);
+void matchload(int triballs= 46, int until = pros::millis() + 27000);
 } // namespace actions
 
 namespace utils {
