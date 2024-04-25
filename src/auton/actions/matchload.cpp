@@ -26,7 +26,7 @@ bool exitForDriver = false;
 /**
  * @brief how much the driver must move the joysticks for the macro to exit
  */
-const int inputThreshold = 127*0.375;
+const int inputThreshold = 127 * 0.375;
 
 /**
  * @brief exits the macro because the driver has exited and ensure motion stops
@@ -104,7 +104,7 @@ void auton::actions::matchload(int triballs, int until) {
   const lemlib::Pose shootingTarget {MAX_X - TILE_LENGTH, -2};
 
   // where the robot should go to to matchload
-  lemlib::Pose matchloadTarget = {MIN_X + TILE_RADIUS + 0.5,
+  lemlib::Pose matchloadTarget = {MIN_X + TILE_RADIUS + 1.5,
                                   MIN_Y + TILE_LENGTH + 8.5};
   const float trigMatchloadTargetTheta = matchloadTarget.angle(shootingTarget);
   // calculate the angle to the shooting target
