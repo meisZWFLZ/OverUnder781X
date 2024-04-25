@@ -88,8 +88,8 @@ class SolenoidGroup : public AbstractSolenoid {
 class SolenoidSet {
   public:
     SolenoidSet(std::vector<AbstractSolenoid*> solenoids) {
-      printf("constructing solenoid set\n");
-      printf("size: %d\n", solenoids.size());
+      // printf("constructing solenoid set\n");
+      // printf("size: %d\n", solenoids.size());
       solenoids.swap(this->solenoids);
     };
 
@@ -97,7 +97,7 @@ class SolenoidSet {
      * @brief enables all solenoids
      */
     void enable() {
-      printf("enabling\n");
+      // printf("enabling\n");
       this->setAllSolenoids(true);
     };
 
@@ -105,7 +105,7 @@ class SolenoidSet {
      * @brief disables all solenoids
      */
     void disable() {
-      printf("disabling\n");
+      // printf("disabling\n");
       this->setAllSolenoids(false);
     };
 
@@ -113,7 +113,7 @@ class SolenoidSet {
      * @brief toggle each solenoid independently
      */
     void toggleEach() {
-      printf("toggle each -ing\n");
+      // printf("toggle each -ing\n");
       for (auto& solenoid : this->solenoids) solenoid->toggle();
     }
 
@@ -125,7 +125,7 @@ class SolenoidSet {
      * @return true if the solenoids were in different states, false otherwise
      */
     bool toggleToSame(bool ifDiffState = false) {
-      printf("toggle same -ing\n");
+      // printf("toggle same -ing\n");
       // could be optimized, but this is the most readable
       switch (this->summarizeStates()) {
         case DIFFERENT: this->setAllSolenoids(ifDiffState); return true;
@@ -140,7 +140,7 @@ class SolenoidSet {
      * @param newState the new state of the solenoids
      */
     void setAllSolenoids(bool newState) {
-      printf("setting all to %d\n", newState);
+      // printf("setting all to %d\n", newState);
       for (auto& solenoid : this->solenoids) solenoid->setState(newState);
     };
 
@@ -151,10 +151,10 @@ class SolenoidSet {
      * @param newState new state
      */
     void setIthState(size_t i, bool newState) {
-      printf("i: %d\n", i);
-      printf("setting to %d\n", newState);
-      printf("size: %d\n", this->solenoids.size());
-      printf("not null?: %d\n", (bool)this->solenoids.at(i));
+      // printf("i: %d\n", i);
+      // printf("setting to %d\n", newState);
+      // printf("size: %d\n", this->solenoids.size());
+      // printf("not null?: %d\n", (bool)this->solenoids.at(i));
 
       this->solenoids.at(i)->setState(newState);
     };
@@ -172,7 +172,7 @@ class SolenoidSet {
      * @brief summarize the states of the solenoids
      */
     STATE_SUMMARY summarizeStates() const {
-      printf("summarizing states\n");
+      // printf("summarizing states\n");
       bool firstState = this->getIthState(0);
       for (auto state : this->getStates())
         if (state != firstState) return DIFFERENT;
@@ -185,7 +185,7 @@ class SolenoidSet {
      * @return an array of the states of the solenoids
      */
     std::vector<bool> getStates() const {
-      printf("getting states\n");
+      // printf("getting states\n");
       std::vector<bool> states;
       for (int i = 0; i < this->solenoids.size(); i++)
         states.push_back(this->solenoids[i]->getState());
@@ -198,7 +198,7 @@ class SolenoidSet {
      * @return the state of the ith solenoid
      */
     bool getIthState(size_t i) const {
-      printf("getting %dth solenoid state\n", i);
+      // printf("getting %dth solenoid state\n", i);
       return solenoids.at(i)->getState();
     }
 
@@ -207,7 +207,7 @@ class SolenoidSet {
      * @param i the index of the solenoid
      */
     void toggleIthSolenoid(size_t i) {
-      printf("toggling %dth solenoid\n", i);
+      // printf("toggling %dth solenoid\n", i);
       solenoids.at(i)->toggle();
     }
 

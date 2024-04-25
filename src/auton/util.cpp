@@ -29,7 +29,6 @@ void waitUntilDistToPose(lemlib::Pose pose, float error, int time,
   printf("start wait\n");
   const int start = pros::millis();
   int inRangeStartTime = 0;
-  pros::delay(100);
   do {
     if (inRangeStartTime == 0) {
       if (Robot::chassis->getPose().distance(pose) < error)
