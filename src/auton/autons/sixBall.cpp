@@ -20,16 +20,11 @@ void run6Ball() {
        MIN_Y + TILE_LENGTH - Robot::Dimensions::drivetrainWidth / 2, RIGHT},
       false);
 
-  // drop intake
-  tank(48, 48, 150, 0);
-  stop();
-  // let vibrations dissipate
-  pros::delay(1000);
-
   // go into goal
-  Robot::chassis->moveToPose(
-      MAX_X - TILE_RADIUS,
-      0 - TILE_LENGTH - Robot::Dimensions::drivetrainLength, UP, 3000);
+  Robot::chassis->moveToPose(MAX_X - TILE_RADIUS,
+                             0 - TILE_LENGTH -
+                                 Robot::Dimensions::drivetrainLength,
+                             UP, 3000, {.lead = 0.45});
 
   // once near the goal stop intaking
   Robot::chassis->waitUntil(20);
@@ -40,10 +35,75 @@ void run6Ball() {
   // make sure triball goes into goal
   Robot::Actions::outtake();
   tank(127, 127, 500, 0);
-
-  // back out of goal
-  tank(-40, -40, 500, 0);
   Robot::Actions::stopIntake();
+  // back out to matchload bar
+  Robot::chassis->moveToPose(TILE_LENGTH * 2 + 8, -TILE_LENGTH * 2, UP + 45,
+                             2000, {.forwards = false});
+  Robot::chassis->waitUntilDone();
+
+  // remove ball
+  Robot::Actions::expandBackWing();
+  pros::delay(500);
+
+  // spin to remove ball
+  Robot::chassis->turnToHeading(
+      UP - 45, 750,
+      {.direction = AngularDirection::CCW_COUNTERCLOCKWISE,
+       .minSpeed = 127,
+       .earlyExitRange = 30});
+  Robot::chassis->waitUntilDone();
+  // dont break back wing
+  pros::delay(300);
+  Robot::Actions::retractBackWing();
+
+  Robot::chassis->moveToPoint(TILE_LENGTH * 1.5, -TILE_LENGTH * 1.5, 1000,
+                              {.minSpeed = 127, .earlyExitRange = 9});
+
+  Robot::chassis->moveToPose(9, -TILE_LENGTH, LEFT, 2000);
+  Robot::Actions::intake();
+
+  waitUntil([] { return !isMotionRunning() || isTriballInIntake(); }, 50,
+            INT_MAX, true);
+
+  Robot::chassis->cancelMotion();
+  pros::delay(250);
+  Robot::Actions::stopIntake();
+
+  Robot::chassis->turnToHeading(RIGHT, 1000,
+                                {.direction = AngularDirection::CW_CLOCKWISE,
+                                 .maxSpeed = 48,
+                                 .earlyExitRange = 30});
+  // push into goal
+  Robot::chassis->moveToPose(TILE_LENGTH * 2 -
+                                 Robot::Dimensions::drivetrainLength,
+                             -TILE_RADIUS, RIGHT, 2000);
+  Robot::chassis->waitUntilDone();
+  Robot::Actions::outtake();
+  pros::delay(300);
+  tank(127, 127, 500, 0);
+
+  tank(-64, -64, 100, 0);
+  Robot::chassis->swingToPoint(TILE_LENGTH, 0, lemlib::DriveSide::RIGHT, 1000,
+                               {.minSpeed = 64, .earlyExitRange = 30});
+  Robot::chassis->waitUntilDone();
+  // touch bar
+  // Robot::chassis->moveToPose(
+  //     6, -TILE_LENGTH * 2 + Robot::Dimensions::drivetrainLength / 2 + 4,
+  //     LEFT, 1500,
+  //     {
+  //         .minSpeed = 127,
+  //     });
+  // Robot::chassis->waitUntilDone();
+  // Robot::Actions::expandLeftWing();
+  // Robot::chassis->setBrakeMode(pros::E_MOTOR_BRAKE_HOLD);
+  // tank(127, 127, 0);
+  // waitUntil([] { return Robot::Sensors::imuA.get_pitch() > 30; }, 50,
+  // INT_MAX,
+  //           true);
+  // stop();
+
+  return;
+
   lemlib::Pose elevationBarTarget {Robot::Dimensions::drivetrainLength / 2 + 2,
                                    MIN_Y + TILE_RADIUS - 0.5, LEFT};
   // go under elevation bar to touch triball

@@ -161,7 +161,7 @@ void score4Balls() {
   printf("isNotionRunning: %i\n", isMotionRunning());
   printf("theta: %4.2f\n", Robot::chassis->getPose().theta);
 
-  const lemlib::Pose plowBallsIntoSideOfGoalTarget {TILE_LENGTH * 2.625,
+  const lemlib::Pose plowBallsIntoSideOfGoalTarget {TILE_LENGTH * 2.575,
                                                     -TILE_LENGTH, DOWN};
   // immediately back away from other offensive zone
   // push balls into goal

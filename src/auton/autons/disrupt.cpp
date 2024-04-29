@@ -1,6 +1,7 @@
 #include "auton.h"
 #include "fieldDimensions.h"
 #include "lemlib/chassis/chassis.hpp"
+#include "pros/motors.h"
 #include "pros/rtos.hpp"
 #include "robot.h"
 #include "wings.h"
@@ -54,8 +55,8 @@ void runDisrupt() {
   tank(-32, -48, 300, 0);
 
   // go backwards away from neutral zone
-  Robot::chassis->moveToPoint(Robot::chassis->getPose().x - 2,
-                              Robot::chassis->getPose().y - 8.5, 1000,
+  Robot::chassis->moveToPoint(Robot::chassis->getPose().x + 1,
+                              Robot::chassis->getPose().y - 7.5, 1000,
                               {
                                   .forwards = false,
                                   .minSpeed = 48,
@@ -73,22 +74,22 @@ void runDisrupt() {
       /* DOWN */ RIGHT, lemlib::DriveSide::RIGHT, 1000,
       {
           .direction = AngularDirection::CW_CLOCKWISE,
-          .maxSpeed = 96,
-          .minSpeed = 96,
+          .maxSpeed = 127,
+          .minSpeed = 127,
           .earlyExitRange = 20,
       });
 
   // turn the rest of the way to face down
   Robot::chassis->turnToHeading(DOWN + 30, 1000,
                                 {.direction = AngularDirection::CW_CLOCKWISE,
-                                 .minSpeed = 96,
+                                 .minSpeed = 127,
                                  .earlyExitRange = 20});
   Robot::chassis->waitUntilDone();
 
   // done disrupting
   // position the robot to clear matchload zone
-  Robot::chassis->moveToPoint(-TILE_LENGTH * 2 - 3, -TILE_LENGTH * 2 - 11.5,
-                              6000, {.maxSpeed=64});
+  Robot::chassis->moveToPoint(-TILE_LENGTH * 2 - 2, -TILE_LENGTH * 2 - 11,
+                              6000, {.maxSpeed = 64});
 
   // retract wings
   Robot::chassis->waitUntil(5);
@@ -102,10 +103,10 @@ void runDisrupt() {
 
   // expand wing
   Robot::Actions::expandBackWing();
-  pros::delay((startTime + 15000) - pros::millis() - 4000);
+  pros::delay((startTime + 15000) - pros::millis() - 5000);
 
   // move in an arc to sweep ball out
-  tank(28, 127, 0, 0);
+  tank(0, 127, 0, 0);
   // wait until facing right or if we are far from the matchload zone
   waitUntil(
       [] {
@@ -129,7 +130,7 @@ void runDisrupt() {
   Robot::Actions::intake();
 
   // touch horizontal elevation bar
-  Robot::chassis->moveToPose(0 - Robot::Dimensions::drivetrainLength / 2 - 4,
+  Robot::chassis->moveToPose(0 - Robot::Dimensions::drivetrainLength / 2 - 5.5,
                              MIN_Y + Robot::Dimensions::drivetrainWidth / 2 + 2,
                              RIGHT, 2000);
   // waitUntil([] {
@@ -139,15 +140,10 @@ void runDisrupt() {
   // });
 
   // if a triball enters the intake, outtake it
-  while (pros::competition::is_autonomous() && isMotionRunning()) {
-    if (isTriballInIntake()) {
-      Robot::Actions::outtake();
-      pros::delay(500);
-    }
-    pros::delay(10);
-  }
-  pros::delay(1000);
+  Robot::chassis->moveToPoint(-TILE_LENGTH * 2 - 4, -TILE_LENGTH * 2.5 - 3,
+                              2000, {.forwards = false, .minSpeed = 127});
   Robot::Actions::outtake();
+  Robot::chassis->setBrakeMode(pros::E_MOTOR_BRAKE_HOLD);
 }
 
 auton::Auton auton::autons::disrupt = {(char*)("disrupt / left"), runDisrupt};
